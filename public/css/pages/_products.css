@@ -1,0 +1,618 @@
+/* Estilos exclusivos da página de produtos, principalmente os filtros. */
+.pagina-produtos {
+    /* Tokens editoriais espelhados da homepage */
+    --p-accent: var(--cor-accent);
+    --p-accent-soft: var(--cor-accent-soft);
+    --p-ink: var(--tema-ink);
+    --p-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+}
+
+.pagina-produtos .loja-header {
+    display: block;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--cor-divisor-pagina);
+    padding-bottom: 22px;
+}
+.pagina-produtos .loja-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    max-width: none;
+    margin: 0 0 .7rem;
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: var(--p-accent);
+    text-align: left;
+}
+.pagina-produtos .loja-kicker::before {
+    content: "";
+    width: 24px;
+    height: 1.5px;
+    background: currentColor;
+    opacity: .55;
+}
+.pagina-produtos .loja-header h2 {
+    font-family: var(--p-display);
+    font-size: clamp(1.9rem, 3.2vw, 2.6rem);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: -.01em;
+    color: var(--p-ink);
+    text-align: left;
+    margin-bottom: 0;
+}
+
+.loja-container {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 30px;
+    align-items: start; /* Importante para o sticky funcionar corretamente */
+}
+
+/* ── Barra Lateral de Filtros (Sticky no Desktop) ── */
+.filtros-sidebar {
+    border-right: 1px solid var(--cor-divisor-pagina);
+    padding-right: 20px;
+    position: sticky;
+    top: 120px; /* Altura do header (101px) mais espaçamento (19px) */
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+    z-index: 90;
+}
+
+/* Personalização da scrollbar da sidebar para ser mais premium */
+.filtros-sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+.filtros-sidebar::-webkit-scrollbar-thumb {
+    background-color: #ddd;
+    border-radius: 4px;
+}
+
+/* ── Cabeçalho Mobile ── */
+.filtros-mobile-header {
+    display: none;
+}
+
+.sidebar-desktop-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 25px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid var(--cor-divisor-pagina);
+}
+
+.sidebar-desktop-header svg {
+    color: #000;
+}
+
+.sidebar-desktop-header span {
+    font-size: 1.1rem;
+    font-weight: 800;
+    text-transform: lowercase;
+    letter-spacing: -0.02em;
+    color: #000;
+}
+
+/* ── Acordeão de Filtros ── */
+.filtro-grupo {
+    padding-bottom: 24px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--cor-divisor-pagina);
+}
+
+.filtro-grupo:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.filtro-titulo {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 0;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.filtro-titulo:hover {
+    color: var(--p-accent, #475569);
+}
+
+.filtro-titulo svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filtro-grupo.aberto .filtro-titulo {
+    margin-bottom: 20px;
+}
+
+.filtro-grupo.aberto .filtro-titulo svg {
+    transform: rotate(180deg);
+}
+
+.filtro-conteudo {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.filtro-grupo.aberto .filtro-conteudo {
+    grid-template-rows: 1fr;
+    opacity: 1;
+}
+
+.filtro-conteudo-inner {
+    min-height: 0;
+}
+
+/* Ajuste na lista para o novo wrapper inner */
+.lista-filtros {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 5px; /* Pequeno respiro após o título */
+}
+
+.filtro-checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #64748b; /* Slate 500 */
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.filtro-checkbox:hover {
+    color: #000;
+}
+
+.filtro-checkbox input[type="checkbox"] {
+    display: none;
+}
+
+.custom-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 6px;
+    margin-right: 12px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    background-color: #fff;
+    flex-shrink: 0;
+}
+
+.filtro-checkbox:hover .custom-checkbox {
+    border-color: #cbd5e1;
+}
+
+.filtro-checkbox input[type="checkbox"]:checked + .custom-checkbox {
+    background-color: var(--p-accent, #000);
+    border-color: var(--p-accent, #000);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    background-size: 12px;
+    background-position: center;
+    background-repeat: no-repeat;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.filtro-checkbox input[type="checkbox"]:checked ~ .filtro-label-text {
+    color: #000;
+    font-weight: 600;
+}
+
+/* Checkbox Destaque (Apenas promoções) */
+.filtro-checkbox.principal {
+    font-weight: 600;
+    color: #111;
+}
+
+/* ── Ações de Filtro ── */
+.filtro-acoes {
+    margin-top: 10px;
+    padding-top: 4px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+.filtro-acoes .link-limpar {
+    width: auto !important;
+    min-height: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-align: left;
+    font-size: 0.85rem;
+    font-weight: 650;
+    color: #64748b !important;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+.filtro-acoes .link-limpar:hover {
+    color: var(--p-accent, #111) !important;
+    background: transparent !important;
+    transform: none !important;
+}
+
+.botao-filtros-mobile {
+    display: none;
+}
+
+.mobile-filter-bar {
+    display: none;
+}
+
+.filtro-sort-mobile {
+    display: none;
+}
+
+/* Grelha e Ordenação */
+#produtos-grid-container {
+    transition: opacity 0.3s ease;
+}
+.cabecalho-grelha {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--cor-divisor-pagina);
+}
+
+
+.ordenar-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.ordenar-container label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--cor-cinza-medio);
+    white-space: nowrap;
+}
+
+/* Responsividade dos Filtros */
+.page-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 42, 0.32);
+    backdrop-filter: none;
+    z-index: 10002;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+.page-overlay.ativo {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.desktop-only-flex {
+    display: flex !important;
+}
+
+.mobile-only-flex {
+    display: none !important;
+}
+
+.sidebar-promo-toggle {
+    padding: 0 0 25px 0;
+    margin-bottom: 25px;
+    border-bottom: 1px solid var(--cor-divisor-pagina);
+}
+
+.site-bg-dark .pagina-produtos .loja-header h2,
+.site-bg-dark .sidebar-desktop-header,
+.site-bg-dark .sidebar-desktop-header svg,
+.site-bg-dark .sidebar-desktop-header span,
+.site-bg-dark .filtro-titulo,
+.site-bg-dark .filtro-checkbox.principal,
+.site-bg-dark .filtro-checkbox input[type="checkbox"]:checked ~ .filtro-label-text {
+    color: var(--cor-texto-pagina);
+}
+
+.site-bg-dark .filtro-checkbox,
+.site-bg-dark .ordenar-container label,
+.site-bg-dark .filtro-acoes .link-limpar {
+    color: var(--cor-texto-pagina-suave) !important;
+}
+
+.site-bg-dark .filtro-checkbox:hover,
+.site-bg-dark .filtro-titulo:hover,
+.site-bg-dark .filtro-acoes .link-limpar:hover {
+    color: var(--cor-texto-pagina) !important;
+}
+
+@media (max-width: 768px) {
+    .pagina-produtos .loja-header {
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    .pagina-produtos .loja-header h2 {
+        min-width: 0;
+        font-size: 1.35rem;
+        text-align: left;
+        width: 100%;
+    }
+
+    .mobile-filter-bar {
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    .cabecalho-grelha {
+        display: none;
+    }
+
+    .desktop-only-flex {
+        display: none !important;
+    }
+    .mobile-only-flex {
+        display: flex !important;
+    }
+    .sidebar-promo-toggle {
+        padding: 0 0 18px 0;
+        margin-bottom: 18px;
+        border-bottom: 1px solid var(--cor-divisor-cartao);
+    }
+
+    .filtro-sort-mobile {
+        display: block;
+        padding: 0 0 18px 0;
+        margin-bottom: 18px;
+        border-bottom: 1px solid var(--cor-divisor-cartao);
+    }
+
+    .filtro-sort-mobile label {
+        display: block;
+        margin-bottom: 10px;
+        color: #111;
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .filtro-sort-mobile .select-wrapper,
+    .filtro-sort-mobile select {
+        width: 100%;
+    }
+
+    .filtro-sort-mobile select {
+        min-height: 46px;
+        border: 1px solid #dfe3ea;
+        border-radius: 999px;
+        background-color: #fff;
+        color: #111;
+        font-size: 0.92rem;
+        font-weight: 600;
+        padding: 0 44px 0 16px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+
+    .loja-container {
+        grid-template-columns: 1fr;
+    }
+
+    .pagina-produtos .produtos-grid {
+        margin-top: 0;
+    }
+    
+    .filtros-sidebar {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: auto;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        max-width: none;
+        height: min(88dvh, 720px);
+        max-height: calc(100dvh - 18px);
+        background-color: var(--cor-fundo);
+        z-index: 10003;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(105%);
+        transition: opacity 0.24s ease, visibility 0.24s ease, transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+        padding: 0;
+        overflow: hidden;
+        box-shadow: 0 -18px 45px rgba(15, 23, 42, 0.18);
+        border-right: none;
+        border-radius: 22px 22px 0 0;
+    }
+    .filtros-sidebar.ativo {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+
+    /* O painel mobile é uma superfície branca, mesmo quando a página é escura. */
+    .site-bg-dark .filtros-sidebar,
+    .site-bg-dark .filtros-sidebar .filtro-titulo,
+    .site-bg-dark .filtros-sidebar .filtro-sort-mobile label,
+    .site-bg-dark .filtros-sidebar .filtro-checkbox.principal,
+    .site-bg-dark .filtros-sidebar .filtro-checkbox input[type="checkbox"]:checked ~ .filtro-label-text {
+        color: #111827;
+    }
+
+    .site-bg-dark .filtros-sidebar .filtro-checkbox,
+    .site-bg-dark .filtros-sidebar .filtro-acoes .link-limpar {
+        color: #64748b !important;
+    }
+
+    .site-bg-dark .filtros-sidebar .filtro-checkbox:hover,
+    .site-bg-dark .filtros-sidebar .filtro-titulo:hover,
+    .site-bg-dark .filtros-sidebar .filtro-acoes .link-limpar:hover {
+        color: #111827 !important;
+    }
+    
+    .filtros-mobile-header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
+        padding: 30px 22px 18px;
+        border-bottom: 1px solid var(--cor-divisor-cartao);
+        background-color: #fff;
+        position: relative;
+        cursor: grab;
+        touch-action: none;
+        user-select: none;
+    }
+    .filtros-mobile-header::before {
+        content: "";
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        width: 42px;
+        height: 4px;
+        border-radius: 999px;
+        background: #d9dde4;
+        transform: translateX(-50%);
+    }
+    .filtros-mobile-header:active {
+        cursor: grabbing;
+    }
+    .filtros-mobile-header h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-align: center;
+    }
+    .btn-fechar-filtros {
+        width: 38px;
+        height: 38px;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 50%;
+        font-size: 1.55rem;
+        line-height: 1;
+        color: #111;
+        cursor: pointer;
+        padding: 0 !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn-fechar-filtros:hover {
+        background: #f1f5f9 !important;
+        color: #111;
+        transform: none !important;
+    }
+    
+    #form-filtros {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 20px 22px calc(28px + env(safe-area-inset-bottom));
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .filtro-grupo {
+        padding-bottom: 18px;
+        margin-bottom: 18px;
+    }
+
+    .filtro-titulo {
+        font-size: 0.82rem;
+    }
+
+    .lista-filtros {
+        gap: 10px;
+    }
+
+    .filtro-checkbox {
+        min-height: 38px;
+        padding: 4px 0;
+    }
+    
+    .filtro-acoes {
+        position: static;
+        width: 100%;
+        padding: 2px 0 0;
+        background: transparent;
+        border-top: 0;
+        margin: -2px 0 0;
+        box-shadow: none;
+        backdrop-filter: none;
+    }
+
+    .filtro-acoes .link-limpar {
+        background: transparent !important;
+        color: #64748b !important;
+        box-shadow: none !important;
+        border: 0 !important;
+        padding: 0 !important;
+        min-height: auto;
+        font-size: 0.82rem;
+    }
+
+    .botao-filtros-mobile {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        flex-shrink: 0;
+        padding: 12px 18px !important;
+        min-height: 48px;
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.08em !important;
+        text-transform: uppercase !important;
+        background-color: #fff !important;
+        color: var(--cor-texto) !important;
+        border: 1px solid #dfe3ea !important;
+        border-radius: 999px !important;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05) !important;
+        transform: none !important;
+    }
+    .botao-filtros-mobile:hover {
+        background-color: #f8fafc !important;
+        transform: none !important;
+    }
+    .botao-filtros-mobile svg {
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linejoin: round;
+    }
+}

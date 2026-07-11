@@ -1,0 +1,274 @@
+/* Estilos genéricos para formulários. */
+form label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
+    font-size: 0.9rem;
+    margin-top: 8px;
+}
+
+form input[type="text"],
+form input[type="number"],
+form input[type="password"],
+form input[type="email"],
+form input[type="tel"],
+form select,
+form textarea {
+    padding: 12px;
+    border-radius: var(--border-radius-pequeno);
+    border: 1px solid var(--cor-borda-subtil);
+    width: 100%;
+    max-width: 100%;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    font-family: 'Inter', sans-serif;
+    background-color: #fcfcfc;
+}
+
+form textarea {
+    resize: none;
+}
+
+form input:focus, form select:focus, form textarea:focus {
+    outline: none;
+    border-color: var(--cor-texto);
+    box-shadow: 0 0 0 3px rgba(28, 28, 28, 0.1);
+}
+
+/* Password Visibility Toggle */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.toggle-senha {
+    position: absolute;
+    right: 0;
+    height: 100%;
+    width: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--cor-cinza-medio);
+    user-select: none;
+    z-index: 5;
+    transition: all 0.2s ease;
+}
+
+.toggle-senha:hover {
+    color: var(--cor-texto);
+    transform: scale(1.1);
+}
+
+.toggle-senha svg {
+    pointer-events: none;
+    width: 20px;
+    height: 20px;
+}
+
+/* Garante que o input tem espaço para o ícone */
+.password-wrapper input {
+    padding-right: 45px !important;
+}
+
+/* Estrutura de Formulários do Admin */
+.admin-form-container {
+    display: inline-block;
+    text-align: left;
+    width: 100%;
+    max-width: 700px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.form-actions {
+    margin-top: 30px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Mensagens de Autenticação/Feedback */
+.auth-message {
+    max-width: 350px;
+    margin: 20px auto;
+    padding: 15px;
+    border: 1px solid;
+    border-radius: var(--border-radius-pequeno);
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.admin-main-content .auth-message {
+    max-width: 100%;
+    margin: 20px 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.auth-message.error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+.auth-message.success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+.auth-message.warning { background-color: #fff3cd; border-color: #ffeeba; color: #856404; font-weight: bold; }
+
+@media (max-width: 768px) {
+    .admin-form-container {
+        display: block;
+        width: 100%;
+    }
+    .input-com-olho {
+        max-width: 100%;
+    }
+}
+
+/* --- INÍCIO DO NOVO LAYOUT DE LOGIN (MODERNO E ELEGANTE) --- */
+.login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    padding: 20px;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 440px;
+    background-color: #ffffff;
+    padding: 45px 50px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    box-sizing: border-box;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-card:hover {
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.08), 0 2px 5px rgba(0, 0, 0, 0.03);
+    transform: translateY(-2px);
+}
+
+.login-card h2 {
+    text-align: center;
+    margin-bottom: 35px;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    letter-spacing: -0.02em;
+}
+
+.login-card p {
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.login-card .form-group {
+    margin-bottom: 22px;
+}
+
+.login-card label {
+    font-size: 0.9rem;
+    color: #4a4a4a;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.login-card input[type="text"],
+.login-card input[type="email"],
+.login-card input[type="password"],
+.login-card input[type="tel"],
+.login-card input[type="number"] {
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    background-color: #fcfcfc;
+    font-size: 1rem;
+    line-height: 1.2; /* Altura de linha fixa */
+    height: 52px;      /* Altura total fixa para consistência absoluta */
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+    box-sizing: border-box;
+}
+
+.login-card input:focus {
+    background-color: #ffffff;
+    border-color: #000000;
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.login-card input[type="submit"] {
+    width: 100%;
+    padding: 15px;
+    margin-top: 10px;
+    background-color: #000000;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.login-card input[type="submit"]:hover {
+    background-color: #333333;
+}
+
+.login-card input[type="submit"]:active {
+    transform: scale(0.98);
+}
+
+.form-actions-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.link-recuperar {
+    font-size: 0.9rem;
+    color: #666666;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.link-recuperar:hover {
+    color: #000000;
+}
+
+.login-card .input-com-olho {
+    max-width: 100%;
+    margin-bottom: 22px;
+}
+
+@media (max-width: 600px) {
+    .login-container {
+        min-height: 0;
+        align-items: flex-start;
+        padding: 0;
+    }
+
+    .login-card {
+        max-width: 100%;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        padding: 36px 22px 48px;
+    }
+
+    .login-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+}
+/* --- FIM DO NOVO LAYOUT DE LOGIN --- */

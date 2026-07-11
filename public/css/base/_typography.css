@@ -1,0 +1,61 @@
+/* Estilos globais para a tipografia do site. */
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--cor-texto);
+    line-height: 1.6;
+    background-color: var(--cor-fundo-pagina, #FAF8F4);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Sticky Footer */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/*
+ * Fundo global configurável.
+ * A especificidade e o !important impedem páginas como checkout,
+ * autenticação, sucesso e 404 de voltarem a impor um fundo fixo.
+ * Cartões, formulários e painéis internos mantêm os seus próprios fundos.
+ */
+body > main {
+    background-color: var(--cor-fundo-pagina, #FAF8F4) !important;
+    color: var(--cor-texto-pagina, #1C1C1C);
+}
+
+
+main h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 25px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+main p {
+    font-size: 1rem;
+    margin-bottom: 30px;
+    color: var(--cor-cinza-medio);
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+/* ESTILO BASE PARA H3 (MODIFICADO) */
+main h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 25px;
+    color: var(--cor-texto);
+    text-align: left; /* Alinhado à esquerda por defeito */
+}
+
+/* MODIFICADOR PARA H3 CENTRALIZADO (NOVO) */
+main h3.centrado {
+    text-align: center;
+}

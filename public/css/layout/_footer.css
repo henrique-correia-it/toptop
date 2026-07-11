@@ -1,0 +1,228 @@
+/* Estilos para o rodapé do site. */
+.site-footer {
+    position: relative;
+    background-color: #ffffff;
+    border-top: 1px solid var(--cor-borda-subtil);
+    color: var(--cor-cinza-medio);
+    padding: clamp(48px, 6vw, 72px) clamp(24px, 5vw, 40px) 28px;
+    font-size: 0.9rem;
+}
+
+.site-footer-home {
+    border-top: 0;
+    padding-top: clamp(78px, 10vw, 120px);
+}
+
+.site-footer-home.site-footer-white-bg {
+    border-top: 1px solid var(--cor-borda-subtil);
+    padding-top: clamp(48px, 6vw, 72px);
+}
+
+/* Onda bege exclusiva da homepage. */
+.site-footer-home::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: clamp(54px, 7vw, 88px);
+    background-color: var(--cor-fundo-pagina, #FAF8F4);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201440%2090'%20preserveAspectRatio='none'%3E%3Cpath%20d='M0,0%20H1440%20V46%20C1150,84%20870,14%20600,44%20C380,68%20170,30%200,50%20Z'%20fill='%23000'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201440%2090'%20preserveAspectRatio='none'%3E%3Cpath%20d='M0,0%20H1440%20V46%20C1150,84%20870,14%20600,44%20C380,68%20170,30%200,50%20Z'%20fill='%23000'/%3E%3C/svg%3E");
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    pointer-events: none;
+}
+
+.footer-grid {
+    position: relative;
+    display: grid;
+    /* Larguras proporcionais ao conteúdo: texto (Sobre/Pagamento) mais largo,
+       links (Informações) mais estreito — evita o espaçamento desequilibrado. */
+    grid-template-columns: 1.6fr 1fr 1.3fr 1.7fr;
+    gap: clamp(32px, 4vw, 56px);
+    max-width: 1280px;
+    margin: 0 auto clamp(34px, 4vw, 48px) auto;
+    text-align: left;
+}
+
+@media (max-width: 900px) {
+    .footer-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 520px) {
+    .footer-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.footer-coluna h4 {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--cor-texto);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.footer-coluna p {
+    margin-bottom: 0;
+    line-height: 1.85;
+    max-width: 100%;
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: auto;
+    color: var(--cor-cinza-medio);
+}
+
+.footer-coluna p a,
+.footer-links a {
+    /* Regra modificada para incluir os links da lista */
+    color: var(--cor-cinza-medio);
+    text-decoration: none;
+    transition: color 0.25s ease;
+}
+
+.footer-coluna p a:hover,
+.footer-links a:hover {
+    /* Regra modificada para incluir o hover */
+    color: var(--cor-texto);
+}
+
+/* --- LISTA DE LINKS --- */
+.footer-links {
+    list-style: none;
+    /* Remove os pontos */
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links li {
+    margin-bottom: 0px;
+    line-height: 2;
+}
+
+/* Sublinhado subtil no hover */
+.footer-links a {
+    position: relative;
+    display: inline-block;
+}
+
+.footer-links a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 2px;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.3s ease;
+}
+
+.footer-links a:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+}
+
+/* ── Lista de Contatos ── */
+.footer-contato-info {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-contato-info li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 13px;
+    line-height: 1.5;
+}
+
+.footer-contato-info li svg {
+    flex-shrink: 0;
+    color: var(--cor-texto);
+    margin-top: 2px;
+    opacity: 0.75;
+}
+
+.footer-contato-info li span,
+.footer-contato-info li a {
+    color: var(--cor-cinza-medio);
+    text-decoration: none;
+    transition: color 0.25s ease;
+}
+
+.footer-contato-info li a:hover {
+    color: var(--cor-texto);
+}
+
+/* ── Redes Sociais (botões circulares, inspirado na referência) ── */
+.footer-social {
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.footer-social-link {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    border: 1px solid var(--cor-borda-subtil);
+    background-color: #ffffff;
+    color: var(--cor-cinza-medio);
+    text-decoration: none;
+    opacity: 1;
+    transition: color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, transform 0.25s cubic-bezier(.22, .61, .25, 1);
+}
+
+.footer-social-link svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+}
+
+.footer-social-link:hover {
+    color: #ffffff;
+    border-color: transparent;
+    transform: translateY(-3px);
+}
+
+.footer-social-link.wa:hover { background-color: #25D366; }
+.footer-social-link.ig:hover { background-color: #E1306C; }
+.footer-social-link.fb:hover { background-color: #1877F2; }
+
+/* ── Copyright ── */
+.footer-copyright {
+    max-width: 1280px;
+    margin: 0 auto;
+    text-align: center;
+    padding-top: 26px;
+    border-top: 1px solid var(--cor-borda-subtil);
+    color: var(--cor-cinza-medio);
+    font-size: 0.82rem;
+}
+
+.footer-copyright p {
+    margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .footer-links a::after,
+    .footer-social-link {
+        transition: none;
+    }
+}

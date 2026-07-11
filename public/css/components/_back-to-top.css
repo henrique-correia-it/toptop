@@ -1,0 +1,90 @@
+/* public/css/components/_back-to-top.css */
+.voltar-ao-topo-btn {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, var(--cor-destaque, #1a1a1a) 0%, #333 100%);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px) scale(0.8);
+    transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, background 0.25s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 1px 4px rgba(0, 0, 0, 0.15);
+    /* Borda subtil com glass effect */
+    outline: 1.5px solid rgba(255, 255, 255, 0.12);
+    outline-offset: -1px;
+}
+
+.voltar-ao-topo-btn svg {
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    flex-shrink: 0;
+}
+
+.voltar-ao-topo-btn.ativo {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+body.app-panel-open .voltar-ao-topo-btn,
+body.app-panel-open .voltar-ao-topo-btn.ativo {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(20px) scale(0.8);
+    animation: none;
+}
+
+.voltar-ao-topo-btn:hover {
+    background: linear-gradient(135deg, #444 0%, #111 100%);
+    transform: translateY(-4px) scale(1.08);
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.voltar-ao-topo-btn:hover svg {
+    transform: translateY(-2px);
+}
+
+.voltar-ao-topo-btn:active {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    transition-duration: 0.1s;
+}
+
+/* Animação de pulso suave enquanto visível */
+@keyframes pulse-ring {
+    0% {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 0 0 0 rgba(0, 0, 0, 0.12);
+    }
+
+    70% {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 0 0 10px rgba(0, 0, 0, 0);
+    }
+
+    100% {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 0 0 0 rgba(0, 0, 0, 0);
+    }
+}
+
+.voltar-ao-topo-btn.ativo {
+    animation: pulse-ring 2.5s ease-out 1s 1;
+}
+
+/* Responsivo: um pouco menor em mobile */
+@media (max-width: 768px) {
+    .voltar-ao-topo-btn {
+        width: 46px;
+        height: 46px;
+        bottom: 20px;
+        right: 20px;
+    }
+}

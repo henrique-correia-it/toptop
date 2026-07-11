@@ -1,0 +1,541 @@
+/* Inline editors for header/footer content */
+
+/* ── Edição INLINE (sem modal): escreve-se direto no elemento ──
+   Aplica-se aos elementos de texto que não são links/imagens. Não mostra
+   o lápis (não há modal a abrir); contorno azul no hover e sólido no foco. */
+.global-edit-mode-active .inline-editavel {
+    cursor: text;
+}
+.global-edit-mode-active .inline-editavel::after {
+    content: none !important;
+    display: none !important;
+}
+.global-edit-mode-active .inline-editavel:hover {
+    cursor: text !important;
+}
+.global-edit-mode-active .inline-editavel:focus {
+    outline: 2px solid #2563eb !important;
+    outline-offset: 6px;
+    background-color: rgba(37, 99, 235, 0.08) !important;
+    border-radius: 4px;
+}
+.global-edit-mode-active .inline-editavel.inline-a-guardar {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.site-footer h4.footer-editable {
+    display: inline-block;
+    margin-bottom: 15px;
+}
+
+.footer-editable,
+.header-editable,
+.home-editable {
+    position: relative;
+    border-radius: 4px;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Suggestive element: a small floating edit icon */
+.global-edit-mode-active .footer-editable::after,
+.global-edit-mode-active .header-editable::after {
+    content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'%3E%3C/path%3E%3Cpath d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z'%3E%3C/path%3E%3C/svg%3E");
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #fff;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.5) translateY(5px);
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: auto;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+    z-index: 10;
+}
+
+.global-edit-mode-active .footer-editable:hover,
+.global-edit-mode-active .header-editable:hover {
+    outline: 1.5px dashed rgba(37, 99, 235, 0.4);
+    outline-offset: 6px;
+    background-color: rgba(37, 99, 235, 0.04);
+}
+
+.global-edit-mode-active .footer-editable:hover::after,
+.global-edit-mode-active .header-editable:hover::after {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+.global-edit-mode-active .footer-editable.editing-current,
+.global-edit-mode-active .header-editable.editing-current,
+.global-edit-mode-active .home-editable.editing-current {
+    outline: 2px solid #2563eb;
+    outline-offset: 6px;
+    background-color: rgba(37, 99, 235, 0.08);
+    animation: pulseActive 2s infinite ease-in-out;
+}
+
+.global-edit-mode-active .footer-editable.editing-current::after,
+.global-edit-mode-active .header-editable.editing-current::after,
+.global-edit-mode-active .home-editable.editing-current::after {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    background: #2563eb;
+    content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'%3E%3C/path%3E%3Cpath d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z'%3E%3C/path%3E%3C/svg%3E");
+    border-color: #2563eb;
+}
+
+/* Ajustes específicos para o Logo (evita transbordar o cabeçalho) */
+.logo.header-editable:hover {
+    outline-offset: -3px;
+    background-color: rgba(37, 99, 235, 0.04);
+}
+.logo.header-editable.editing-current {
+    outline-offset: -3px;
+    background-color: rgba(37, 99, 235, 0.08);
+    animation: pulseActiveLogo 2s infinite ease-in-out;
+}
+.logo.header-editable::after {
+    top: 5px;
+    right: 5px;
+}
+
+@keyframes pulseActiveLogo {
+    0% { box-shadow: inset 0 0 0 0 rgba(37, 99, 235, 0.4); }
+    70% { box-shadow: inset 0 0 0 10px rgba(37, 99, 235, 0); }
+    100% { box-shadow: inset 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+
+@keyframes pulseActive {
+    0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+
+.footer-editor-modal.active {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 10001 !important;
+}
+
+.footer-editor-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.54);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 20px;
+}
+
+.footer-editor-modal .qe-card {
+    width: min(520px, 100%);
+    max-width: 520px;
+    max-height: calc(100vh - 40px);
+    overflow: auto;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+    animation: editorCardIn 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes editorCardIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.footer-editor-modal .form-card-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #fff;
+}
+
+.footer-editor-modal .form-card-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.25;
+    color: #0f172a;
+}
+
+.footer-editor-modal .card-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #0f172a;
+    color: #fff;
+}
+
+.footer-editor-modal .form-card-body {
+    padding: 22px;
+}
+
+.footer-editor-modal .form-group label {
+    display: block;
+    margin-bottom: 7px;
+    color: #334155;
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.footer-editor-modal .form-footer-actions {
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.admin-warning-box {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    font-size: 0.85rem;
+    color: #92400e;
+}
+
+.admin-warning-icon {
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+#footer-sync-warning,
+#footer-edit-address-fields,
+#footer-edit-social-fields,
+#footer-edit-schedule-fields,
+#header-edit-logo-fields {
+    display: none;
+}
+
+.footer-editor-modal.schedule-editor-active .qe-card {
+    width: min(960px, 100%);
+    max-width: 960px;
+}
+
+.horario-editor-head {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border: 1px solid #dbe4ee;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.86rem;
+    line-height: 1.45;
+}
+
+.horario-editor-list {
+    display: grid;
+    gap: 10px;
+}
+
+.horario-editor-row {
+    display: grid;
+    grid-template-columns: 130px 108px minmax(280px, 320px) minmax(180px, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.horario-editor-row.is-closed {
+    background: #f8fafc;
+}
+
+.horario-editor-day {
+    color: #0f172a;
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.horario-editor-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    color: #475569;
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+.horario-editor-toggle input {
+    width: 16px;
+    height: 16px;
+    accent-color: #0f172a;
+}
+
+.horario-editor-times {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(128px, 1fr));
+    gap: 8px;
+}
+
+.horario-editor-time-field,
+.horario-editor-text-field {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+    margin: 0;
+}
+
+.horario-editor-time-field span,
+.horario-editor-text-field span {
+    color: #64748b;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.horario-editor-row .admin-input-style {
+    min-width: 0;
+    padding: 9px 10px;
+    font-size: 0.88rem;
+    box-sizing: border-box;
+}
+
+.horario-editor-row input[type="time"] {
+    width: 100%;
+    min-width: 128px;
+    height: 40px;
+    padding-right: 7px;
+}
+
+.horario-editor-row input:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    background: #eef2f7;
+}
+
+.horario-note-group {
+    margin-top: 14px;
+}
+
+.admin-textarea {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    padding: 12px 13px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    background: #fff;
+    color: #0f172a;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.admin-textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.admin-input-style {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    padding: 11px 12px;
+    font-size: 0.95rem;
+    outline: none;
+    background: #fff;
+    color: #0f172a;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.admin-input-style:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.header-logo-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 118px;
+    margin-bottom: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+}
+
+.header-logo-preview img {
+    display: block;
+    max-width: 180px;
+    max-height: 86px;
+    object-fit: contain;
+}
+
+.header-logo-hint {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+@media (max-width: 920px) {
+    .horario-editor-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "day toggle"
+            "times times"
+            "text text";
+    }
+
+    .horario-editor-day { grid-area: day; }
+    .horario-editor-toggle { grid-area: toggle; }
+    .horario-editor-times { grid-area: times; }
+    .horario-editor-text-field { grid-area: text; }
+}
+
+@media (max-width: 640px) {
+    .footer-editor-modal {
+        align-items: flex-end;
+        padding: 10px;
+    }
+
+    .footer-editor-modal .qe-card {
+        max-height: calc(100vh - 20px);
+        border-radius: 12px;
+    }
+
+    .footer-editor-modal .form-card-header,
+    .footer-editor-modal .form-card-body {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .horario-editor-times {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .horario-editor-row input[type="time"] {
+        min-width: 0;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 390px) {
+    .horario-editor-times {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 992px) {
+    .footer-editable,
+    .header-editable,
+    .footer-editable:hover,
+    .header-editable:hover,
+    .footer-editable:active,
+    .header-editable:active {
+        pointer-events: none !important;
+        outline: none !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+    .footer-editable > *,
+    .header-editable > * {
+        pointer-events: auto !important;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .footer-editable::after,
+    .header-editable::after {
+        display: none !important;
+    }
+}
+
+/* Home Edit Mode */
+.global-edit-mode-active .home-editable {
+    position: relative !important;
+}
+
+.global-edit-mode-active .home-editable:hover {
+    outline: 1.5px dashed rgba(37, 99, 235, 0.4) !important;
+    outline-offset: 6px !important;
+    cursor: pointer !important;
+    background-color: rgba(37, 99, 235, 0.04) !important;
+}
+
+.global-edit-mode-active .home-editable::after {
+    content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'%3E%3C/path%3E%3Cpath d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z'%3E%3C/path%3E%3C/svg%3E");
+    position: absolute !important;
+    top: -10px !important;
+    right: -10px !important;
+    left: auto !important;
+    background: #fff;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+    z-index: 10;
+    opacity: 0;
+    transform: scale(0.5) translateY(5px);
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: auto;
+}
+
+.global-edit-mode-active .home-editable:hover::after {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+/* Ajustes para Hero Section */
+.global-edit-mode-active section.home-editable::after {
+    top: 30px !important;
+    right: 30px !important;
+}
+
+.global-edit-mode-active .hero-section.home-editable:hover {
+    background-color: transparent !important;
+}
+
+.global-edit-mode-active .hero-section.home-editable:hover::before {
+    background:
+        linear-gradient(rgba(37, 99, 235, 0.22), rgba(37, 99, 235, 0.22)),
+        linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%);
+    box-shadow: none;
+}
+
+.global-edit-mode-active .hero-section.home-editable.editing-current::before {
+    background:
+        linear-gradient(rgba(37, 99, 235, 0.28), rgba(37, 99, 235, 0.28)),
+        linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%);
+    box-shadow: none;
+}
+
+.global-edit-mode-active .hero-section.home-editable:hover .hero-content,
+.global-edit-mode-active .hero-section.home-editable.editing-current .hero-content {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(5px) saturate(0.75);
+    -webkit-backdrop-filter: blur(5px) saturate(0.75);
+}
+
+.global-edit-mode-active .hero-section.home-editable:has(.hero-content:hover)::before {
+    background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%);
+    box-shadow: none;
+}
+
+.global-edit-mode-active .hero-section.home-editable:has(.hero-content:hover) .hero-content {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}

@@ -1,0 +1,316 @@
+/* Gerir Categorias */
+.gc-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+}
+
+.admin-page-header .btn-primary {
+    margin-left: auto;
+}
+
+.gc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.gc-item {
+    display: grid;
+    grid-template-columns: 100px 1fr auto;
+    align-items: center;
+    gap: 20px;
+    background: #fff;
+    border: 1px solid #f1f5f9;
+    border-radius: 16px;
+    padding: 15px 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
+}
+
+.gc-item:hover {
+    border-color: #e2e8f0;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+
+.gc-foto {
+    position: relative;
+    width: 100px;
+    height: 80px;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #f1f5f9;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease;
+}
+
+.gc-foto:hover {
+    transform: scale(1.05);
+}
+
+.gc-foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.gc-foto-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    background: #f8fafc;
+}
+
+.gc-foto-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.gc-foto:hover .gc-foto-overlay {
+    opacity: 1;
+}
+
+.gc-foto-overlay span {
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.gc-foto.uploading::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.gc-foto.uploading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 6;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #e2e8f0;
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: gc-spin 0.6s linear infinite;
+}
+
+@keyframes gc-spin {
+    to { transform: rotate(360deg); }
+}
+
+.gc-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.gc-nome-input {
+    width: 100%;
+    max-width: 280px;
+    margin-left: -12px;
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: #0f172a;
+    font-family: inherit;
+    font-size: 1.1rem;
+    font-weight: 700;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gc-nome-input:hover {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.gc-nome-input:focus {
+    outline: none;
+    background: #fff;
+    border-color: #000;
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.03);
+}
+
+.gc-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.gc-meta .toggle-visiveis {
+    gap: 0;
+}
+
+.gc-meta .toggle-track {
+    width: 34px !important;
+    height: 20px !important;
+}
+
+.gc-meta .toggle-thumb {
+    top: 3px !important;
+    left: 3px !important;
+    width: 14px !important;
+    height: 14px !important;
+}
+
+.gc-meta input:checked ~ .toggle-track .toggle-thumb {
+    transform: translateX(14px) !important;
+}
+
+.gc-tag {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.gc-tag.visivel {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.gc-tag.invisivel {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.gc-acoes {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.gc-btn-guardar {
+    padding: 8px 18px;
+    border: 1px solid #111;
+    border-radius: 8px;
+    background: #111;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.gc-btn-guardar:hover {
+    background: #000;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.gc-btn-guardar:active {
+    transform: translateY(0);
+}
+
+.modal-cat-card {
+    max-width: 500px !important;
+}
+
+.gc-empty {
+    padding: 80px 20px;
+    border: 2px dashed #e2e8f0;
+    border-radius: 20px;
+    background: #fff;
+    color: #94a3b8;
+    text-align: center;
+    font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    .gc-wrap {
+        padding: 15px 15px 60px;
+    }
+
+    .admin-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .admin-page-header .btn-primary {
+        width: 100%;
+        margin: 0;
+        justify-content: center;
+        padding: 14px;
+    }
+
+    .gc-item {
+        grid-template-columns: 80px 1fr;
+        grid-template-areas:
+            "foto info"
+            "foto actions";
+        gap: 12px;
+        padding: 15px;
+    }
+
+    .gc-foto {
+        grid-area: foto;
+        width: 80px;
+        height: 80px;
+    }
+
+    .gc-info {
+        grid-area: info;
+    }
+
+    .gc-acoes {
+        grid-area: actions;
+        justify-content: flex-end;
+        padding-top: 10px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .gc-nome-input {
+        height: 46px;
+        font-size: 1rem;
+        background: #f8fafc;
+    }
+}
+
+@media (max-width: 480px) {
+    .gc-item {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "foto"
+            "info"
+            "actions";
+        text-align: center;
+    }
+
+    .gc-foto {
+        width: 100%;
+        height: 140px;
+    }
+
+    .gc-meta,
+    .gc-acoes {
+        justify-content: center;
+    }
+}

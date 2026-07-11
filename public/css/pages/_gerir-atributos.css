@@ -1,0 +1,294 @@
+/* ===================================================
+   PÁGINA: GERIR ATRIBUTOS (REFORMULAÇÃO COMPLETA)
+   Sistema de Cards e Listas Flexíveis
+   =================================================== */
+
+.admin-main-content.full-width {
+    max-width: none;
+    padding: 30px 20px;
+}
+
+.admin-container.large {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* --- Formulário de Adicionar Grupo (Novo Estilo) --- */
+.add-group-card {
+    background: #fff;
+    border: 1px solid var(--cor-borda-subtil);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 40px;
+    box-shadow: var(--sombra-subtil);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.add-group-card form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+}
+
+.add-group-card .input-group {
+    flex-grow: 2;
+    min-width: 250px;
+}
+
+.add-group-card .checkbox-group {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.add-group-card .btn-add {
+    flex-shrink: 0;
+}
+
+/* --- Grid de Cards de Atributos --- */
+.attributes-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 25px;
+}
+
+.attribute-card {
+    background: #fff;
+    border: 1px solid var(--cor-borda-subtil);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.attribute-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+    border-color: #ddd;
+}
+
+/* Header do Card */
+.attribute-card-header {
+    padding: 20px 25px;
+    background: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.attribute-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    /* Indica que o header é clicável para colapsar */
+    flex-grow: 1;
+}
+
+.attribute-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--cor-texto);
+}
+
+.attribute-card .chevron-icon {
+    transition: transform 0.3s ease;
+    color: var(--cor-cinza-medio);
+}
+
+.attribute-card.collapsed .chevron-icon {
+    transform: rotate(-90deg);
+}
+
+.attribute-card.collapsed .values-container,
+.attribute-card.collapsed .attribute-card-footer {
+    display: none;
+}
+
+.attribute-badge {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: #f1f3f5;
+    color: #666;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.attribute-badge.filterable {
+    background: #e7f5ff;
+    color: #1c7ed6;
+}
+
+.filter-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 10px;
+}
+
+.attribute-actions {
+    display: flex;
+    gap: 8px;
+}
+
+
+/* Lista de Valores (Flex-based) */
+.values-container {
+    padding: 10px 0;
+}
+
+.value-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 25px;
+    border-bottom: 1px solid #f8f9fa;
+    transition: background-color 0.2s ease;
+}
+
+.value-item:last-child {
+    border-bottom: none;
+}
+
+.value-item:hover {
+    background-color: #fcfcfc;
+}
+
+.value-drag-handle {
+    width: 30px;
+    color: #ced4da;
+    cursor: grab;
+    font-size: 1.2rem;
+    user-select: none;
+}
+
+.value-name {
+    flex-grow: 1;
+    font-size: 0.95rem;
+    color: #444;
+}
+
+.value-actions {
+    display: flex;
+    gap: 8px;
+    opacity: 0.3;
+    transition: opacity 0.2s ease;
+}
+
+
+.value-item:hover .value-actions {
+    opacity: 1;
+}
+
+/* Footer do Card (Add Value) */
+.attribute-card-footer {
+    padding: 20px 25px;
+    background: #f9fafb;
+    border-top: 1px solid #f1f1f1;
+}
+
+.add-value-form {
+    display: flex;
+    gap: 10px;
+}
+
+.add-value-form input {
+    flex-grow: 1;
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+/* Sortable Specifics */
+.ghost-class {
+    opacity: 0.4;
+    background-color: #e9ecef !important;
+}
+
+/* --- Edição Inline Simplificada --- */
+.editable-container-wrapper {
+    position: relative;
+    padding: 5px;
+    margin: -5px;
+    background-color: #fff;
+    border: 1px solid var(--cor-texto);
+    border-radius: 8px;
+    z-index: 100;
+}
+
+.editable-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.editable-container .edit-input {
+    flex-grow: 1;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    outline: none;
+}
+
+.editable-container .edit-input:focus {
+    border-color: #ccc;
+}
+
+.editable-container .save-btn,
+.editable-container .cancel-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.editable-container .save-btn {
+    background: var(--cor-texto);
+    color: #fff;
+    border: none;
+}
+
+.editable-container .cancel-btn {
+    background: #f8f9fa;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+
+/* Responsividade */
+@media (max-width: 600px) {
+    .add-group-card form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .attribute-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .attribute-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .value-actions {
+        opacity: 1;
+    }
+}

@@ -1,0 +1,17 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /dev/
+Disallow: /minha-conta
+Disallow: /config/
+Disallow: /includes/
+Disallow: /scratch/
+Disallow: /entrar
+Disallow: /registar
+Disallow: /recuperar-conta
+Disallow: /redefinir-conta
+Disallow: /verificar-email
+Disallow: /checkout
+Disallow: /sucesso
+Disallow: /ajax_
+
+Sitemap: https://www.toptop.pt/sitemap.php

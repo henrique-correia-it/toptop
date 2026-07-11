@@ -1,0 +1,13 @@
+PHPMailer 6.10.0 e distribuido sob a GNU Lesser General Public License,
+versao 2.1 (LGPL-2.1), juntamente com o GPL Cooperation Commitment.
+
+Texto integral da LGPL-2.1:
+https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+
+Projeto e avisos oficiais:
+https://github.com/PHPMailer/PHPMailer
+https://github.com/PHPMailer/PHPMailer/blob/master/COMMITMENT
+
+Os avisos de autoria, copyright e licenca presentes nos ficheiros-fonte
+desta pasta fazem parte das condicoes de distribuicao e nao devem ser
+removidos.

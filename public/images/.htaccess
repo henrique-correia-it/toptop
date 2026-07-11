@@ -1,0 +1,10 @@
+# Bloqueia execução de PHP e scripts nesta pasta de imagens.
+# Previne que ficheiros enviados por utilizadores sejam executados como código.
+<FilesMatch "\.(php|php\d|phtml|phar|cgi|pl|py|sh)$">
+    Require all denied
+</FilesMatch>
+
+# Força o Content-Type correto para imagens (evita MIME sniffing)
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>

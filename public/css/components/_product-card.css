@@ -1,0 +1,180 @@
+/* ===================================================
+   CSS FINAL PARA O CARTÃO DE PRODUTO - VERSÃO DEFINITIVA
+   =================================================== */
+
+.produto {
+    background-color: var(--cor-superficie-cartao);
+    border-radius: var(--border-radius-medio);
+    overflow: hidden;
+    box-shadow: var(--sombra-subtil);
+    /* MODIFICADO */
+    border: 1px solid var(--cor-borda-cartao);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    text-decoration: none;
+    color: var(--cor-texto);
+}
+
+.produto:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--sombra-media);
+    /* MODIFICADO */
+}
+
+.produto-imagem-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3/4;
+    /* ALTERADO AQUI */
+    background-color: #f0f0f0;
+    overflow: hidden;
+}
+
+.produto-imagem-container img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 101%;
+    height: 101%;
+    object-fit: cover;
+    transition: opacity 0.4s ease-in-out;
+}
+
+.produto-imagem-container .imagem-secundaria {
+    opacity: 0;
+}
+
+.produto-info {
+    padding: 20px;
+    text-align: center;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.produto h4 {
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.produto p {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--cor-texto);
+    margin: 0;
+}
+
+.preco-promocao del {
+    color: var(--cor-cinza-medio);
+    font-weight: 400;
+    font-size: 0.9em;
+}
+
+.preco-promocao strong {
+    margin-left: 8px;
+    color: var(--cor-erro);
+    font-weight: 700;
+}
+
+.badge.promocao {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background-color: var(--cor-erro);
+    color: #fff;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    z-index: 5;
+}
+
+.badge-esgotado-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.5);
+    color: var(--cor-texto);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    backdrop-filter: blur(2px);
+    z-index: 10;
+}
+
+.btn-adicionar-rapido {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: center;
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    width: 85%;
+    padding: 14px 10px;
+    font-size: 0.85rem;
+    z-index: 5;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: var(--cor-texto);
+    border: 1px solid var(--cor-borda-subtil);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.btn-adicionar-rapido:hover {
+    background-color: var(--cor-texto);
+    color: #fff;
+    border-color: var(--cor-texto);
+}
+
+
+/* --- CORREÇÃO FINAL E DEFINITIVA PARA MOBILE/DESKTOP --- */
+
+/* Regra para MOBILE: A visibilidade é controlada APENAS pela classe do JavaScript */
+.produto.mobile-actions-visible .btn-adicionar-rapido {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+.produto.mobile-actions-visible .produto-imagem-container .imagem-secundaria {
+    opacity: 1;
+}
+
+/* Regra para DESKTOP: A visibilidade é controlada APENAS pelo hover do rato.
+   A media query garante que estas regras são ignoradas em dispositivos de toque. */
+@media (hover: hover) and (pointer: fine) {
+    .produto:hover .btn-adicionar-rapido {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+        pointer-events: auto;
+    }
+
+    .produto:hover .produto-imagem-container .imagem-secundaria {
+        opacity: 1;
+    }
+}

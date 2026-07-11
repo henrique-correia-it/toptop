@@ -1,0 +1,85 @@
+/* public/css/components/_close-button.css */
+
+/* 
+   UNIFIED CLOSE BUTTON
+   This class provides a shared base for all "X" buttons.
+   It uses !important only for essential overrides (background/border) 
+   to allow contextual styles (like in cart/checkout) to prevail.
+*/
+
+.btn-close-unified {
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    outline: none;
+    /* Default color and size - can be overridden by specific classes */
+    color: var(--cor-texto, #111);
+    font-size: 1.5rem;
+}
+
+.btn-close-unified:hover {
+    color: var(--cor-erro, #c0392b);
+    background: none !important;
+}
+
+.btn-close-unified:active {
+    transform: scale(0.9);
+}
+
+/* ── Contexts that REQUIRE Absolute Positioning (Modals/Popups) ── */
+.qe-modal .btn-close-unified,
+.modal .btn-close-unified,
+.filtros-sidebar .btn-close-unified,
+.gal-lb .btn-close-unified,
+.modal-header-shipping .btn-close-unified {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 2.5rem;
+    font-weight: 300;
+    z-index: 1000;
+}
+
+/* ── EXACT REPLICATION OF ORIGINAL STYLES FOR CART & CHECKOUT ── */
+
+/* 1. Side Cart Header Button */
+.btn-fechar-side-cart.btn-close-unified {
+    font-size: 2rem;
+    color: var(--cor-cinza-medio);
+}
+.btn-fechar-side-cart.btn-close-unified:hover {
+    color: var(--cor-texto); /* Side cart header turns black, not red */
+}
+
+/* 2. Cart & Checkout Item Removal Button */
+.remover-item-btn.btn-close-unified {
+    font-size: 1.2rem;
+    color: var(--cor-cinza-medio);
+    position: static; /* Maintains original layout flow */
+}
+.remover-item-btn.btn-close-unified:hover {
+    color: var(--cor-erro);
+}
+
+/* 3. Popup Notification Button */
+.popup .btn-close-unified {
+    padding: 0 15px;
+}
+
+/* ── Responsive adjustments for Modals ── */
+@media (max-width: 768px) {
+    .qe-modal .btn-close-unified,
+    .modal .btn-close-unified,
+    .filtros-sidebar .btn-close-unified {
+        top: 15px;
+        right: 15px;
+        font-size: 1.4rem;
+    }
+}

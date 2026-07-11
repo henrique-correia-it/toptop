@@ -1,0 +1,27 @@
+/* Estilos para o contentor principal <main> do site */
+main {
+    padding: 60px 40px;
+    max-width: 1280px;
+    margin: 0 auto;
+    flex: 1; /* Sticky Footer */
+    width: 100%;
+}
+
+/* Estilos específicos para o <main> da homepage, que não tem padding */
+.main-home {
+    padding: 0;
+    max-width: none;
+}
+
+/* Responsividade do <main> */
+@media (max-width: 1024px) {
+    main {
+        padding: 30px 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    main {
+        padding: 24px 16px;
+    }
+}

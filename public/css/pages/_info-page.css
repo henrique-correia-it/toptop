@@ -1,0 +1,763 @@
+/* ===== PÁGINAS DE INFORMAÇÃO (trocas, envios, consultar-encomenda...) =====
+   Design editorial alinhado com a homepage: serif Fraunces, accent quente,
+   cards sólidos com borda subtil, ícones accent, botões pílula. */
+
+.pagina-info {
+    /* Tokens espelhados da homepage */
+    --i-surface: var(--tema-superficie);
+    --i-ink: var(--tema-ink);
+    --i-ink-soft: var(--tema-ink-suave);
+    --i-muted: var(--tema-muted);
+    --i-line: var(--tema-linha);
+    --i-accent: var(--cor-accent);
+    --i-accent-soft: var(--cor-accent-soft);
+    --i-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --i-ease: cubic-bezier(.22, .61, .25, 1);
+    --i-radius: 18px;
+
+    max-width: 1100px;
+    margin-inline: auto;
+    padding: clamp(2.6rem, 5vw, 4.6rem) clamp(20px, 5vw, 40px) clamp(4rem, 7vw, 6.5rem);
+}
+
+.info-premium {
+    animation: fadeInPage 0.7s var(--i-ease, ease-out);
+}
+
+@keyframes fadeInPage {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- CABEÇALHO (kicker + título serif) ---- */
+.pagina-info-header {
+    text-align: center;
+    margin-bottom: clamp(2.6rem, 5vw, 4rem);
+}
+.pagina-info .info-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: .65rem;
+    max-width: none;
+    margin: 0 auto 1rem;
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: var(--i-accent);
+}
+.pagina-info .info-kicker::before,
+.pagina-info .info-kicker::after {
+    content: "";
+    width: 24px;
+    height: 1.5px;
+    background: currentColor;
+    opacity: .55;
+}
+.pagina-info-header h2 {
+    display: block;
+    font-family: var(--i-display);
+    font-size: clamp(2.1rem, 4.4vw, 3.2rem);
+    font-weight: 500;
+    line-height: 1.08;
+    letter-spacing: -.01em;
+    color: var(--i-ink);
+    text-transform: none;
+    margin: 0 0 1rem;
+    /* anula o gradient-clip antigo */
+    background: none;
+    -webkit-text-fill-color: currentColor;
+}
+.pagina-info-header p {
+    max-width: 38rem;
+    margin: 0 auto;
+    font-size: clamp(1rem, 1.3vw, 1.1rem);
+    line-height: 1.7;
+    color: var(--i-muted);
+}
+.pagina-info-header p a {
+    color: var(--i-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+}
+
+/* ---- BLOCO GENÉRICO (ex.: formulário consultar-encomenda) ---- */
+.pagina-info .info-bloco {
+    background: var(--i-surface);
+    border: 1px solid var(--i-line);
+    border-radius: var(--i-radius);
+    padding: clamp(2rem, 3vw, 2.6rem);
+    margin: 0 auto;
+    box-shadow: 0 14px 38px -28px rgba(28, 28, 28, .35);
+}
+.pagina-info .info-bloco-estreito {
+    max-width: 500px;
+}
+
+/* ---- GRELHA DE CARDS ---- */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: clamp(1.1rem, 2vw, 1.6rem);
+    margin-top: 0;
+}
+
+.pagina-info .info-card {
+    position: relative;
+    overflow: hidden;
+    background: var(--i-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid var(--i-line);
+    border-radius: var(--i-radius);
+    padding: clamp(1.8rem, 2.6vw, 2.4rem);
+    box-shadow: 0 14px 38px -28px rgba(28, 28, 28, .35);
+    transition: transform .4s var(--i-ease), box-shadow .4s var(--i-ease), border-color .4s ease;
+}
+.pagina-info .info-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 22px 46px -26px rgba(28, 28, 28, .35);
+    border-color: var(--i-accent-soft);
+    background: var(--i-surface);
+}
+.pagina-info .info-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--i-accent), var(--i-accent-soft));
+    opacity: 0;
+    transition: opacity .4s ease;
+}
+.pagina-info .info-card:hover::before {
+    opacity: 1;
+}
+
+/* título do card + ícone accent (estilo trust-badge da home) */
+.pagina-info .info-card h3 {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    margin-bottom: 1.3rem;
+    font-family: var(--i-display);
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--i-ink);
+    text-align: left;
+}
+.pagina-info .info-card h3 svg {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    color: var(--i-accent);
+    background: color-mix(in srgb, var(--cor-accent) 12%, transparent);
+    border-radius: 12px;
+    padding: 9px;
+    box-sizing: content-box;
+    transition: background .35s var(--i-ease), color .35s var(--i-ease), transform .35s var(--i-ease);
+}
+.pagina-info .info-card:hover h3 svg {
+    background: var(--i-accent);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.pagina-info .info-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.pagina-info .info-card ul li {
+    position: relative;
+    padding: .85rem 0 .85rem 1.5rem;
+    font-size: .95rem;
+    line-height: 1.6;
+    color: var(--i-ink-soft);
+    border-bottom: 1px solid var(--i-line);
+}
+.pagina-info .info-card ul li:last-child {
+    border-bottom: none;
+}
+.pagina-info .info-card ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 1.35rem;
+    width: 6px;
+    height: 6px;
+    background: var(--i-accent);
+    border-radius: 50%;
+}
+.pagina-info .info-card ul li strong {
+    color: var(--i-ink);
+    font-weight: 650;
+}
+.pagina-info .info-card p {
+    text-align: left;
+    max-width: none;
+    margin: 0;
+    font-size: .95rem;
+    color: var(--i-ink-soft);
+    line-height: 1.6;
+}
+
+/* ---- TABELA DE PORTES (envios) ---- */
+.pagina-info .portes-free-shipping {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: min(100%, 720px);
+    margin: 0 auto;
+    padding: 15px 18px;
+    border: 1px solid var(--i-line);
+    border-left: 3px solid var(--i-accent);
+    border-radius: 6px;
+    background: var(--i-surface);
+}
+
+.pagina-info .portes-free-shipping svg {
+    flex: 0 0 auto;
+    color: var(--i-accent);
+}
+
+.pagina-info .portes-free-shipping p {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    margin: 0;
+    color: var(--i-muted);
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.pagina-info .portes-free-shipping strong {
+    color: var(--i-ink);
+}
+
+.pagina-info .portes-container {
+    margin-top: clamp(2.2rem, 4vw, 3.2rem);
+    background: var(--i-surface);
+    border: 1px solid var(--i-line);
+    border-radius: var(--i-radius);
+    overflow: hidden;
+    box-shadow: 0 14px 38px -28px rgba(28, 28, 28, .35);
+}
+.pagina-info .portes-header {
+    padding: clamp(1.4rem, 2.5vw, 2rem);
+    background: transparent;
+    border-bottom: 1px solid var(--i-line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 18px;
+}
+.pagina-info .portes-header h3 {
+    margin: 0;
+    font-family: var(--i-display);
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--i-ink);
+}
+.pagina-info .portes-vazio {
+    text-align: center;
+    padding: 40px;
+    color: var(--i-muted);
+}
+.pagina-info .info-grid.portes-info-extra {
+    margin-top: clamp(2.5rem, 5vw, 3.75rem);
+}
+.portes-filtro {
+    position: relative;
+    min-width: 250px;
+}
+.portes-filtro input {
+    width: 100%;
+    padding: .8rem 1.2rem .8rem 2.8rem;
+    border-radius: 999px;
+    border: 1px solid var(--i-line);
+    background: var(--tema-tinte);
+    font-size: .95rem;
+    font-family: inherit;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.portes-filtro input:focus {
+    outline: none;
+    background: #fff;
+    border-color: var(--i-accent-soft);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--cor-accent) 16%, transparent);
+}
+.portes-filtro svg {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--i-muted);
+}
+
+.portes-tabela-wrapper { overflow-x: auto; }
+.portes-tabela {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+.portes-tabela th {
+    background: transparent;
+    padding: 16px 26px;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--i-ink);
+    border-bottom: 1px solid var(--i-line);
+}
+.portes-tabela td {
+    padding: 16px 26px;
+    border-bottom: 1px solid var(--i-line);
+    font-size: 1rem;
+    color: var(--i-ink);
+}
+.portes-tabela tr:last-child td { border-bottom: none; }
+.portes-tabela tr:hover td { background: var(--tema-tinte); }
+
+.badge-pais {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--i-ink);
+}
+.iso-code {
+    background: color-mix(in srgb, var(--cor-accent) 15%, transparent);
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--i-accent);
+}
+.preco-tag {
+    font-weight: 700;
+    color: var(--i-ink);
+    font-size: 1.05rem;
+}
+
+/* ---- ACORDEÃO DE PAÍSES ---- */
+.accordion-pais {
+    border-bottom: 1px solid var(--i-line);
+}
+.accordion-pais:last-child { border-bottom: none; }
+.accordion-header {
+    position: relative;
+    width: 100%;
+    padding: 18px clamp(1.4rem, 2.5vw, 2rem);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--i-surface);
+    border: none;
+    cursor: pointer;
+}
+.accordion-header:hover {
+    background: var(--i-surface);
+    color: inherit;
+}
+/* Realce arredondado e recolhido das margens — consistente em todas as linhas
+   (não toca nos cantos do container, evitando o efeito meio-redondo na última). */
+.accordion-header::before {
+    content: "";
+    position: absolute;
+    inset: 5px clamp(.5rem, 1.2vw, .9rem);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--cor-accent) 9%, var(--i-surface));
+    opacity: 0;
+    transition: opacity .25s ease;
+    pointer-events: none;
+}
+.accordion-header:hover::before {
+    opacity: 1;
+}
+.accordion-header .badge-pais,
+.accordion-header .accordion-icon {
+    position: relative;
+    z-index: 1;
+}
+.accordion-header .badge-pais {
+    font-size: 1.05rem;
+    color: var(--i-ink);
+    transition: color .3s ease, transform .3s ease;
+}
+.accordion-header:hover .badge-pais {
+    transform: translateX(4px);
+    color: var(--i-ink);
+}
+.accordion-icon {
+    transition: transform .45s var(--i-ease), color .3s ease;
+    color: var(--i-muted);
+}
+.accordion-pais.active .accordion-icon {
+    transform: rotate(180deg);
+    color: var(--i-accent);
+}
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .55s var(--i-ease), padding .35s ease;
+    background: var(--tema-tinte);
+}
+.accordion-pais.active .accordion-content {
+    max-height: 1000px;
+    padding-bottom: 18px;
+}
+
+/* ---- FORMULÁRIO (consultar-encomenda) ---- */
+.pagina-info .form-group {
+    margin-bottom: 1.3rem;
+}
+.pagina-info .form-group label {
+    display: block;
+    margin-bottom: .5rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--i-muted);
+    text-align: left;
+}
+.pagina-info .form-group input {
+    width: 100%;
+    padding: .85rem 1rem;
+    border: 1px solid var(--i-line);
+    border-radius: 12px;
+    background: var(--tema-tinte);
+    color: var(--i-ink);
+    font-size: .95rem;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.pagina-info .form-group #encomenda_id,
+.pagina-info .form-group #cliente_email,
+.pagina-info .form-group #encomenda_id:valid,
+.pagina-info .form-group #encomenda_id:invalid,
+.pagina-info .form-group #cliente_email:valid,
+.pagina-info .form-group #cliente_email:invalid {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid var(--i-line) !important;
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+.pagina-info .form-group #cliente_email,
+.pagina-info .form-group #cliente_email:valid,
+.pagina-info .form-group #cliente_email:invalid {
+    background: #fff;
+}
+
+.pagina-info .form-group input:focus {
+    outline: none;
+    background: #fff;
+    border-color: var(--i-accent-soft);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--cor-accent) 16%, transparent);
+}
+
+.pagina-info .form-group #encomenda_id:focus,
+.pagina-info .form-group #cliente_email:focus {
+    border-color: var(--i-accent-soft) !important;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--cor-accent) 16%, transparent);
+}
+.pagina-info .form-actions {
+    margin-top: 1.6rem;
+}
+.pagina-info .button.add-btn,
+.pagina-info .form-actions .add-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .55rem;
+    width: 100%;
+    padding: 1rem 2.4rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--i-ink);
+    color: #fff;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 18px 40px -20px rgba(28, 28, 28, .55);
+    transition: transform .45s var(--i-ease), background .35s ease;
+}
+.pagina-info .button.add-btn:hover,
+.pagina-info .form-actions .add-btn:hover {
+    background: var(--i-accent);
+    transform: translateY(-3px);
+}
+.pagina-info .button.add-btn::after,
+.pagina-info .form-actions .add-btn::after {
+    content: "\2192";
+    display: inline-block;
+    transition: transform .35s var(--i-ease);
+}
+.pagina-info .button.add-btn:hover::after,
+.pagina-info .form-actions .add-btn:hover::after {
+    transform: translateX(4px);
+}
+
+.pagina-info .auth-message.error {
+    margin-bottom: 1.2rem;
+    padding: .9rem 1rem;
+    border-radius: 12px;
+    background: #FCEFEF;
+    border: 1px solid #E9C9C9;
+    color: var(--cor-erro, #c0392b);
+    font-size: .9rem;
+    text-align: left;
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 768px) {
+    .pagina-info .info-card {
+        padding: 1.6rem;
+    }
+    .pagina-info .portes-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .portes-filtro {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .info-premium { animation: none; }
+    .pagina-info .info-card:hover,
+    .pagina-info .info-card:hover h3 svg,
+    .pagina-info .button.add-btn:hover { transform: none; }
+}
+
+/* ===================================================================
+   MODO DE EDIÇÃO DA PÁGINA DE TROCAS (apenas admin com edição ativa)
+   Adiciona/remove cards e linhas + edição inline com auto-save. Só aplica
+   quando o markup de edição está presente (.troca-editavel).
+   =================================================================== */
+
+/* Campos editáveis — contorno azul tracejado no hover, sólido no foco
+   (sem lápis, porque a edição é inline e não abre modal). */
+.troca-editavel [contenteditable="true"] {
+    position: relative;
+    cursor: text;
+    border-radius: 4px;
+    outline: 1.5px dashed transparent;
+    outline-offset: 6px;
+    transition: outline-color .15s ease, background-color .15s ease;
+}
+.troca-editavel [contenteditable="true"]:hover {
+    outline-color: rgba(37, 99, 235, 0.4);
+    background-color: rgba(37, 99, 235, 0.04);
+}
+.troca-editavel [contenteditable="true"]:focus {
+    outline: 2px solid #2563eb;
+    background-color: rgba(37, 99, 235, 0.08);
+}
+.troca-editavel [contenteditable="true"]:empty::before {
+    content: attr(data-placeholder);
+    color: var(--i-muted);
+    opacity: .7;
+    pointer-events: none;
+}
+
+/* Em edição o card não "levanta" no hover e deixa o contorno transbordar
+   (o card normal tem overflow:hidden, que cortaria o outline-offset). */
+.troca-editavel .info-card.troca-card {
+    overflow: visible;
+}
+.troca-editavel .info-card.troca-card:hover {
+    transform: none;
+}
+
+/* Botão remover card (canto superior direito) */
+.troca-card .troca-del-card {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--i-line);
+    border-radius: 50%;
+    background: var(--i-surface);
+    color: var(--i-muted);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
+}
+.troca-card:hover .troca-del-card,
+.troca-card:focus-within .troca-del-card {
+    opacity: 1;
+}
+.troca-card .troca-del-card:hover {
+    background: var(--cor-erro, #c0392b);
+    border-color: var(--cor-erro, #c0392b);
+    color: #fff;
+}
+
+/* Linhas editáveis: texto + botão remover lado a lado (mantém o bullet ::before) */
+.troca-editavel .info-card ul li.troca-item {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+}
+.troca-item .troca-item-text {
+    flex: 1;
+    min-width: 0;
+}
+.troca-item .troca-del-item {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    margin-top: 1px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--i-muted);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .2s ease, background .2s ease, color .2s ease;
+}
+.troca-item:hover .troca-del-item,
+.troca-item:focus-within .troca-del-item {
+    opacity: 1;
+}
+.troca-item .troca-del-item:hover {
+    background: color-mix(in srgb, var(--cor-erro, #c0392b) 14%, transparent);
+    color: var(--cor-erro, #c0392b);
+}
+
+/* Botão "adicionar linha" */
+.troca-card .troca-add-item {
+    margin-top: 1rem;
+    padding: .4rem .9rem;
+    border: 1px dashed var(--i-line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--i-muted);
+    font-size: .8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .2s ease, color .2s ease, background .2s ease;
+}
+.troca-card .troca-add-item:hover {
+    border-color: var(--i-accent);
+    color: var(--i-accent);
+    background: color-mix(in srgb, var(--cor-accent) 7%, transparent);
+}
+
+/* Tile "adicionar card" — ocupa uma célula da grelha */
+.troca-add-card-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+    min-height: 180px;
+    border: 2px dashed var(--i-line);
+    border-radius: var(--i-radius);
+    background: transparent;
+    color: var(--i-muted);
+    font-size: .85rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: border-color .25s ease, color .25s ease, background .25s ease;
+}
+.troca-add-card-tile:hover {
+    border-color: var(--i-accent);
+    color: var(--i-accent);
+    background: color-mix(in srgb, var(--cor-accent) 5%, transparent);
+}
+.troca-add-card-plus {
+    font-size: 2rem;
+    font-weight: 300;
+    line-height: 1;
+}
+
+/* Botão de ícone do card (abre o seletor) */
+.troca-icon-btn {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    line-height: 0;
+    border-radius: 12px;
+    cursor: pointer;
+}
+.troca-icon-btn:hover svg {
+    background: var(--i-accent);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+/* Popover de seleção de ícones. As variáveis --i-* são declaradas em .pagina-info;
+   como a popover é renderizada FORA do <main>, re-herdamos aqui os tokens do tema
+   (senão var(--i-ink) etc. não resolvem e a popover fica transparente). */
+.troca-icon-popover {
+    --i-surface: var(--tema-superficie);
+    --i-ink: var(--tema-ink);
+    --i-ink-soft: var(--tema-ink-suave);
+    --i-muted: var(--tema-muted);
+    --i-line: var(--tema-linha);
+    --i-accent: var(--cor-accent);
+    --i-accent-soft: var(--cor-accent-soft);
+    position: absolute;
+    z-index: 9100;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: max-content;
+    max-width: 232px;
+    padding: 8px;
+    border: 1px solid var(--i-line);
+    border-radius: 14px;
+    background: var(--i-surface);
+    box-shadow: 0 18px 50px -16px rgba(28, 28, 28, .4);
+}
+.troca-icon-popover[hidden] { display: none; }
+.troca-icon-option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: var(--tema-tinte, transparent);
+    color: var(--i-ink-soft);
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.troca-icon-option svg {
+    width: 20px;
+    height: 20px;
+}
+.troca-icon-option:hover {
+    background: color-mix(in srgb, var(--cor-accent) 12%, transparent);
+    border-color: var(--i-accent-soft);
+    color: var(--i-accent);
+}

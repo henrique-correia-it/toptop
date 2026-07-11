@@ -1,0 +1,61 @@
+/* public/css/components/_context-menu.css */
+
+.ctx-menu {
+    position: fixed;
+    display: none;
+    z-index: 3000;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    border: 1px solid #edf2f7;
+    min-width: 180px;
+    padding: 6px;
+    animation: ctx-pop .15s ease-out;
+}
+
+@keyframes ctx-pop {
+    0% { transform: scale(0.95); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    color: #4a5568;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none !important;
+}
+
+.ctx-item:hover {
+    background: #f7fafc;
+    color: #111;
+}
+
+.ctx-item.danger, .ctx-item-danger {
+    color: #ef4444;
+}
+
+.ctx-item.danger:hover, .ctx-item-danger:hover {
+    background: #fff5f5;
+    color: #dc2626;
+}
+
+.ctx-sep {
+    height: 1px;
+    background: #edf2f7;
+    margin: 6px 0;
+}
+
+.ctx-item svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+}

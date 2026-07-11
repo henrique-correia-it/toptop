@@ -1,0 +1,59 @@
+:root {
+    --primary: #1e293b;
+    --success: #10b981;
+    --danger:  #f43f5e;
+}
+
+
+.user-cell { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.user-avatar {
+    width: 38px; height: 38px; border-radius: 12px; background: #f1f5f9;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary); font-weight: 800; font-size: .9rem;
+}
+
+.device-info { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.device-info .browser { font-weight: 600; color: #1e293b; }
+.device-info .os      { font-size: .75rem; color: #94a3b8; }
+
+.ip-pill {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: .8rem; color: #64748b; background: #f8fafc;
+    padding: 4px 10px; border-radius: 6px; border: 1px solid #e2e8f0;
+}
+
+.time-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; white-space: nowrap; }
+.time-cell .date { font-weight: 600; color: #1e293b; font-size: 0.85rem; }
+.time-cell .rel  { font-size: .7rem; color: #94a3b8; }
+
+.motivo {
+    font-size: .75rem; color: var(--danger); font-weight: 600;
+    margin-top: 4px; display: block;
+}
+
+/* Pagination */
+.logs-paginacao {
+    display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 32px;
+}
+.logs-paginacao a, .logs-paginacao span {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 40px; height: 40px; border-radius: 12px; font-size: .9rem; font-weight: 700;
+    text-decoration: none; color: #64748b; border: 1px solid #e2e8f0; background: #fff;
+    transition: all 0.2s ease;
+}
+.logs-paginacao a:hover {
+    border-color: var(--primary); color: var(--primary); transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.logs-paginacao span.atual {
+    background: var(--primary); color: #fff; border-color: var(--primary);
+    box-shadow: 0 8px 20px -6px rgba(30, 41, 59, 0.4);
+}
+
+
+@media (max-width: 768px) {
+    .user-avatar { width: 32px; height: 32px; font-size: 0.8rem; }
+    .ip-pill { font-size: 0.75rem; padding: 2px 8px; }
+}
+
+/* sel-mode coberto pela regra genérica em _admin-ui.css */

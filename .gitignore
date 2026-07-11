@@ -1,0 +1,48 @@
+# Credenciais e configuracao local
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+error_log
+
+# Editores e ficheiros temporarios
+.vscode/
+.idea/
+scratch/
+tmp/
+temp/
+cache/
+
+# Backups e bases de dados
+backups/
+backup/
+*.sql
+*.sql.gz
+*.dump
+*.bak
+*.sqlite
+*.sqlite3
+
+# Chaves e certificados privados
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Fotografias e imagens raster
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.avif
+*.gif
+
+# Codigo antigo
+old/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

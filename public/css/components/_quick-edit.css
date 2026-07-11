@@ -1,0 +1,117 @@
+/* public/css/components/_quick-edit.css */
+
+.qe-modal {
+    position: fixed; inset: 0; z-index: 4000; background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center;
+    padding: 20px; transition: opacity .3s ease;
+}
+
+/* Guia de tamanhos abre por cima do modal do produto (z-index 10000) */
+#modalGuiaTamanhos { z-index: 10005; }
+
+#modalGuiaTamanhos .qe-card {
+    position: relative;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+#modalGuiaTamanhos .qe-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 2.5rem;
+    font-weight: 300;
+    color: #111;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: color 0.2s ease;
+    background: none;
+}
+#modalGuiaTamanhos .qe-close:hover { color: #555; background: none; }
+
+#guia-conteudo {
+    overflow-x: auto;
+}
+
+#guia-conteudo table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+#guia-conteudo th {
+    padding: 12px 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #888;
+    border-bottom: 2px solid #e5e7eb;
+    text-align: center;
+    background: #fff;
+    white-space: nowrap;
+}
+
+#guia-conteudo td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
+    text-align: center;
+}
+
+#guia-conteudo tr:last-child td { border-bottom: none; }
+#guia-conteudo tbody tr:hover td { background: #f9fafb; }
+.qe-modal.ativo { display: flex !important; }
+
+@keyframes qe-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.qe-card {
+    position: relative;
+    background: #fff; border-radius: 20px; width: 100%; max-width: 500px;
+    padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+    animation: qe-slide .3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-sizing: border-box !important;
+}
+
+@keyframes qe-slide { from { transform: translateY(20px); } to { transform: translateY(0); } }
+
+.qe-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.qe-hd h3 { font-size: 1.25rem; font-weight: 800; color: #111; margin: 0; }
+
+.qe-close { background: none; border: none; cursor: pointer; color: #a0aec0; transition: color 0.2s; }
+.qe-close:hover { color: #111; }
+
+.qe-body { display: grid; gap: 16px; }
+
+.qe-f { display: flex; flex-direction: column; gap: 6px; }
+.qe-f label { font-size: 0.75rem; font-weight: 700; color: #718096; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.qe-in { 
+    padding: 12px 14px; border: 2px solid #edf2f7; border-radius: 10px;
+    font-size: 0.95rem; transition: all 0.2s; background: #f8fafc; 
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+}
+.qe-in:focus { outline: none; border-color: #000; background: #fff; }
+
+.qe-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.qe-footer { display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end; }
+.qe-btns { display: flex; gap: 12px; margin-top: 24px; }
+
+.qe-btn { 
+    flex: 1; padding: 14px; border-radius: 12px; font-size: 0.95rem;
+    font-weight: 700; cursor: pointer; transition: all 0.2s; border: none;
+}
+
+.qe-btn-save { background: #111; color: #fff; }
+.qe-btn-save:hover { background: #333; transform: translateY(-2px); }
+.qe-btn-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.qe-btn-cancel { background: #f1f5f9; color: #475569; }
+.qe-btn-cancel:hover { background: #e2e8f0; }

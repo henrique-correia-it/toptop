@@ -1,0 +1,101 @@
+/* Cabeçalho Unificado das Páginas de Admin */
+.admin-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap; 
+    gap: 15px 20px;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--cor-borda-subtil);
+    width: 100%;
+}
+
+/* Grupo: Seta + Título */
+.header-title-container,
+.admin-page-header > div:first-child:not([class]) {
+    display: flex !important;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+    min-width: 200px;
+}
+
+/* Grupo: Botões de Ação */
+.header-actions-container,
+.admin-page-header > div:last-child:not(:first-child) {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.admin-page-header .btn-back-arrow {
+    margin-bottom: 0 !important;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cor-accent, #B08968);
+}
+
+.admin-page-header .btn-back-arrow:hover {
+    background: var(--cor-accent, #B08968);
+    border-color: var(--cor-accent, #B08968);
+    color: #fff;
+    transform: translateX(-4px);
+}
+
+.admin-page-header h2 {
+    margin: 0 !important;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--cor-texto);
+    line-height: 1.2;
+}
+
+@media (max-width: 992px) {
+    .admin-page-header {
+        gap: 12px 15px;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+    }
+    .admin-page-header h2 {
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .admin-page-header {
+        margin-bottom: 20px;
+    }
+    .admin-page-header h2 {
+        font-size: 1.2rem;
+    }
+    .admin-page-header .btn-back-arrow svg {
+        width: 20px;
+        height: 20px;
+    }
+    .header-actions-container,
+    .admin-page-header > div:last-child:not(:first-child) {
+        width: 100%;
+        margin-left: 0;
+    }
+    .header-actions-container button,
+    .header-actions-container .btn-primary {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+/* Content Containers */
+.admin-container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 15px;
+}
+
+.admin-container.large {
+    max-width: 1200px;
+}

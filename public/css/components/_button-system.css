@@ -1,0 +1,310 @@
+/* Sistema DRY para botoes textuais.
+   O desenho base replica o botao "Editar Perfil" do admin. */
+
+.button,
+.add-btn,
+.voltar-btn,
+.edit-btn,
+.delete-btn,
+.action-btn-pill,
+.button-primary,
+.button-secondary,
+.btn-admin-primary,
+.btn-admin-secondary,
+.btn-admin-danger,
+.btn-primary,
+.btn-primary-plus,
+.btn-add-row,
+.btn-add-admin,
+.btn-filtrar,
+.btn-limpar,
+.btn-adicionar-rapido,
+.btn-boutique,
+.btn-reset,
+.button-hero,
+.btn-ver-mais,
+.btn-aplicar-mobile,
+.link-limpar,
+.btn-voltar-compra,
+.btn-continue-shopping,
+.tracking-box a,
+.ck-btn,
+.ck-back,
+.sc-btn-primary,
+.sc-btn-secondary,
+.filtro-btn,
+.whatsapp-btn,
+.gc-btn-guardar,
+.gal-btn-scan,
+.gal-btn-del-all.show,
+.btn-add-full,
+#btn-add-grupo-standard,
+.btn-action-premium,
+.editor-btn-compact,
+.qe-btn,
+.focal-btn-cancel,
+.focal-btn-save,
+.btn-edit-framing,
+.btn-sel-mode,
+.btn-sel-all,
+.bulk-bar-cancel,
+.form-pesquisa-encomenda button,
+input[type="submit"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--button-gap);
+    padding: var(--button-padding) !important;
+    border: 1px solid var(--button-border) !important;
+    border-radius: var(--button-radius) !important;
+    background: var(--button-bg) !important;
+    color: var(--button-color) !important;
+    box-shadow: var(--button-shadow) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: var(--button-font-size) !important;
+    font-weight: var(--button-font-weight) !important;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    cursor: pointer;
+    transition: var(--button-transition) !important;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.button:hover,
+.add-btn:hover,
+.voltar-btn:hover,
+.edit-btn:hover,
+.button-primary:hover,
+.button-secondary:hover,
+.btn-admin-primary:hover,
+.btn-admin-secondary:hover,
+.btn-primary:hover,
+.btn-primary-plus:hover,
+.btn-add-row:hover,
+.btn-add-admin:hover,
+.btn-filtrar:hover,
+.btn-limpar:hover,
+.btn-adicionar-rapido:hover,
+.btn-boutique:hover,
+.btn-reset:hover,
+.button-hero:hover,
+.btn-ver-mais:hover,
+.btn-aplicar-mobile:hover,
+.link-limpar:hover,
+.btn-voltar-compra:hover,
+.btn-continue-shopping:hover,
+.tracking-box a:hover,
+.ck-btn:hover:not(:disabled),
+.ck-back:hover,
+.sc-btn-primary:hover,
+.sc-btn-secondary:hover,
+.filtro-btn:hover,
+.whatsapp-btn:hover,
+.gc-btn-guardar:hover,
+.gal-btn-scan:hover:not(:disabled),
+.gal-btn-del-all.show:hover,
+.delete-btn:hover,
+.btn-admin-danger:hover,
+.action-btn-pill.btn-danger:hover,
+.btn-add-full:hover,
+#btn-add-grupo-standard:hover,
+.btn-action-premium:hover,
+.editor-btn-compact:hover,
+.qe-btn:hover,
+.focal-btn-cancel:hover,
+.focal-btn-save:hover,
+.btn-edit-framing:hover,
+.btn-sel-mode:hover,
+.btn-sel-all:hover,
+.bulk-bar-cancel:hover,
+.form-pesquisa-encomenda button:hover,
+input[type="submit"]:hover {
+    background: var(--button-hover-bg) !important;
+    border-color: var(--button-hover-border) !important;
+    color: var(--button-hover-color) !important;
+    box-shadow: var(--button-hover-shadow) !important;
+    transform: translateY(-1px) !important;
+}
+
+.btn-adicionar-rapido:hover {
+    transform: translateX(-50%) translateY(-1px) !important;
+}
+
+.button:active,
+.add-btn:active,
+.voltar-btn:active,
+.edit-btn:active,
+.delete-btn:active,
+.action-btn-pill:active,
+.button-primary:active,
+.button-secondary:active,
+.btn-admin-primary:active,
+.btn-admin-secondary:active,
+.btn-admin-danger:active,
+.ck-btn:active,
+.sc-btn-primary:active,
+.sc-btn-secondary:active,
+.qe-btn:active {
+    transform: translateY(0);
+}
+
+.button svg,
+.add-btn svg,
+.voltar-btn svg,
+.edit-btn svg,
+.delete-btn svg,
+.action-btn-pill svg,
+.button-primary svg,
+.button-secondary svg,
+.btn-admin-primary svg,
+.btn-admin-secondary svg,
+.btn-admin-danger svg,
+.btn-primary svg,
+.btn-primary-plus svg,
+.btn-add-admin svg,
+.btn-action-premium svg,
+.editor-btn-compact svg {
+    width: 16px;
+    height: 16px;
+    color: var(--button-icon-color);
+    flex-shrink: 0;
+}
+
+.button:hover svg,
+.add-btn:hover svg,
+.voltar-btn:hover svg,
+.edit-btn:hover svg,
+.delete-btn:hover svg,
+.action-btn-pill:hover svg,
+.button-primary:hover svg,
+.button-secondary:hover svg,
+.btn-admin-primary:hover svg,
+.btn-admin-secondary:hover svg,
+.btn-admin-danger:hover svg,
+.btn-primary:hover svg,
+.btn-primary-plus:hover svg,
+.btn-add-admin:hover svg,
+.btn-action-premium:hover svg,
+.editor-btn-compact:hover svg {
+    color: var(--button-hover-icon-color);
+}
+
+.btn-with-plus-text::before {
+    content: "+";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05em;
+    font-weight: 700;
+    line-height: 1;
+    transition: transform 0.3s;
+}
+
+.btn-with-plus svg {
+    transition: transform 0.3s;
+}
+
+.btn-with-plus:hover::before,
+.btn-with-plus:hover svg {
+    transform: rotate(90deg);
+}
+
+.delete-btn,
+.btn-admin-danger,
+.gal-btn-del-all.show,
+.action-btn-pill.btn-danger {
+    --button-border: #fee2e2;
+    --button-color: #ef4444;
+    --button-icon-color: #ef4444;
+    --button-hover-bg: #fef2f2;
+    --button-hover-border: #fecaca;
+    --button-hover-color: #dc2626;
+    --button-hover-icon-color: #dc2626;
+}
+
+.btn-sel-mode.active,
+.filtro-btn.ativo,
+.action-btn-pill.btn-edit-active {
+    --button-bg: #eef2ff;
+    --button-border: #818cf8;
+    --button-color: #4338ca;
+    --button-icon-color: #4f46e5;
+    --button-hover-bg: #eef2ff;
+    --button-hover-border: #818cf8;
+    --button-hover-color: #4338ca;
+    --button-hover-icon-color: #4f46e5;
+}
+
+.button:disabled,
+.add-btn:disabled,
+.voltar-btn:disabled,
+.edit-btn:disabled,
+.delete-btn:disabled,
+.button-primary:disabled,
+.button-secondary:disabled,
+.btn-admin-primary:disabled,
+.btn-admin-secondary:disabled,
+.btn-admin-danger:disabled,
+.ck-btn:disabled,
+.gal-btn-scan:disabled,
+.qe-btn:disabled,
+button[disabled].action-btn-pill,
+input[type="submit"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: var(--button-shadow);
+}
+
+.ck-btn,
+.sc-btns .sc-btn-primary,
+.sc-btns .sc-btn-secondary,
+.btn-aplicar-mobile {
+    width: 100%;
+}
+
+.filtro-acoes .link-limpar {
+    width: 100%;
+}
+
+.btn-boutique {
+    min-width: 200px;
+}
+
+@media (max-width: 600px) {
+    .btn-boutique {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .botao-filtros-mobile {
+        gap: var(--button-gap);
+        padding: var(--button-padding) !important;
+        border: 1px solid var(--button-border) !important;
+        border-radius: var(--button-radius) !important;
+        background: var(--button-bg) !important;
+        color: var(--button-color) !important;
+        box-shadow: var(--button-shadow) !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: var(--button-font-size) !important;
+        font-weight: var(--button-font-weight) !important;
+        text-decoration: none !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        transition: var(--button-transition) !important;
+    }
+
+    .botao-filtros-mobile:hover {
+        background: var(--button-hover-bg) !important;
+        border-color: var(--button-hover-border) !important;
+        color: var(--button-hover-color) !important;
+        box-shadow: var(--button-hover-shadow) !important;
+        transform: translateY(-1px) !important;
+    }
+}

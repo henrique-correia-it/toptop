@@ -1,0 +1,89 @@
+/* public/css/components/_pagination.css */
+.pagination-container {
+    margin: 80px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.pagination-list {
+    list-style: none;
+    display: flex;
+    gap: 4px;
+    padding: 0;
+    margin: 0;
+    align-items: center;
+}
+
+.pagination-item .page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 8px;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    background: transparent;
+    color: #94a3b8; /* Soft slate */
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+}
+
+.pagination-item .page-link:hover {
+    color: #1e293b;
+    background-color: #f1f5f9;
+}
+
+.pagination-item.active .page-link {
+    background-color: #111;
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.pagination-item.active .page-link:hover {
+    background-color: #000;
+}
+
+.pagination-item.prev .page-link,
+.pagination-item.next .page-link {
+    color: #334155;
+}
+
+.pagination-item.disabled {
+    opacity: 0.2;
+    pointer-events: none;
+}
+
+/* Setas SVG */
+.pagination-item svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+    transition: transform 0.2s ease;
+}
+
+.pagination-item.prev:hover svg {
+    transform: translateX(-2px);
+}
+
+.pagination-item.next:hover svg {
+    transform: translateX(2px);
+}
+
+/* Responsividade */
+@media (max-width: 640px) {
+    .pagination-container {
+        margin: 50px auto;
+    }
+    .pagination-item .page-link {
+        min-width: 36px;
+        height: 36px;
+        font-size: 0.8rem;
+    }
+}

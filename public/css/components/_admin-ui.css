@@ -1,0 +1,186 @@
+/* ── ADMIN UI COMPONENTS (SHARED) ── */
+
+/* ── Sistema unificado de badges / pills ── */
+.badge,
+.badge-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 50px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+/* Variantes de cor genéricas */
+.badge-verde    { background: #f0fdf4; color: #15803d; border-color: #dcfce7; }
+.badge-vermelho { background: #fef2f2; color: #b91c1c; border-color: #fee2e2; }
+.badge-azul     { background: #eff6ff; color: #1d4ed8; border-color: #dbeafe; }
+.badge-amarelo  { background: #fff7ed; color: #c2410c; border-color: #ffedd5; }
+.badge-roxo     { background: #faf5ff; color: #7e22ce; border-color: #f3e8ff; }
+.badge-teal     { background: #f0fdfa; color: #0f766e; border-color: #ccfbf1; }
+.badge-cinzento { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
+.badge-dourado  { background: #fefce8; color: #a16207; border-color: #fef08a; }
+
+/* Visibilidade (toggle em admin_produtos — classes mantidas para compat. JS) */
+.badge.visivel, .badge-status.visivel { background: #f0fdf4; color: #15803d; border-color: #dcfce7; }
+.badge.oculto,  .badge-status.oculto  { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
+
+/* Badge interativo (toggle de visibilidade) */
+.badge.interativo, .badge-status.interativo {
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+.badge.interativo:hover, .badge-status.interativo:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+}
+.badge.interativo.loading, .badge-status.interativo.loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+
+/* Barras de Seleção e Ações em Massa (Bulk) */
+.sel-mode-bar {
+    max-width: 1200px;
+    margin: 0 auto 14px;
+    display: none;
+    align-items: center;
+    gap: 12px;
+    background: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: .85rem;
+    color: #1e40af;
+    font-weight: 500;
+}
+.sel-mode-bar.visible { display: flex; }
+
+.btn-sel-all {
+    background: #fff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1;
+}
+
+.btn-sel-all:hover {
+    background: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    transform: translateY(-1px);
+}
+
+.btn-sel-all:active {
+    transform: translateY(0);
+}
+
+.bulk-bar {
+    position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%);
+    background: #000; color: #fff;
+    border-radius: 18px;
+    padding: 12px 24px;
+    display: flex; align-items: center; gap: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    transition: bottom .3s cubic-bezier(.34,1.56,.64,1);
+    z-index: 500;
+    white-space: nowrap;
+    min-width: 320px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.bulk-bar.visible { bottom: 30px; }
+.bulk-bar-spacer { flex: 1; }
+
+/* ── Checkbox de seleção (partilhado) ── */
+.log-check-circle {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: all 0.2s; vertical-align: middle;
+}
+.log-check-circle svg { width: 12px; height: 12px; color: #fff; opacity: 0; }
+
+/* ── Sel-mode genérico para todas as tabelas com .table-wrapper ── */
+.table-wrapper .col-sel                  { display: none; width: 40px; }
+.table-wrapper.sel-mode .col-sel         { display: table-cell !important; }
+.table-wrapper.sel-mode tbody tr[data-id]{ cursor: pointer; }
+.table-wrapper.sel-mode tbody tr[data-id]:hover td { background: #f0f7ff; }
+.table-wrapper.sel-mode tbody tr.selecionado td    { background: #dbeafe; }
+.table-wrapper.sel-mode .acoes-tabela    { pointer-events: none; opacity: .25; }
+.table-wrapper.sel-mode tr.selecionado .log-check-circle     { background: #3b82f6; border-color: #3b82f6; }
+.table-wrapper.sel-mode tr.selecionado .log-check-circle svg { opacity: 1; }
+
+/* ── Input de pesquisa partilhado (toolbar de todas as páginas admin) ── */
+.search-input-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+.search-input-wrap .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    pointer-events: none;
+    display: flex;
+}
+.search-input-toolbar {
+    height: 44px;
+    padding: 0 18px 0 40px;
+    border-radius: 99px;
+    border: 1px solid var(--cor-borda-subtil);
+    background: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--cor-texto);
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    min-width: 240px;
+}
+.search-input-toolbar:focus {
+    outline: none;
+    border-color: #111;
+    box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.06);
+}
+.search-input-toolbar::placeholder { color: #94a3b8; }
+/* remove o X nativo do type=search em webkit */
+.search-input-toolbar::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+/* Checkboxes Customizados em Tabelas */
+.prod-foto-wrap { position: relative; display: inline-block; }
+.prod-check-badge {
+    display: none;
+    position: absolute; top: -5px; left: -5px;
+    width: 20px; height: 20px;
+    background: #e2e8f0; border-radius: 50%;
+    border: 2px solid #fff;
+    align-items: center; justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.prod-check-badge svg { width: 11px; height: 11px; color: #fff; opacity: 0; }
+.sel-mode .prod-check-badge { display: flex; }
+.sel-mode tr.selecionado .prod-check-badge { background: #3b82f6; }
+.sel-mode tr.selecionado .prod-check-badge svg { opacity: 1; }
+
+/* Bloqueio de scroll ao abrir modal */
+.scroll-lock { overflow: hidden !important; }

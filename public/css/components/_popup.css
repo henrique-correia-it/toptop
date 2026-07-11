@@ -1,0 +1,58 @@
+/* Estilos para o pop-up de notificação. */
+.popup {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 320px;
+    background-color: var(--cor-fundo);
+    border-radius: var(--border-radius-medio);
+    box-shadow: var(--sombra-forte); /* MODIFICADO */
+    display: flex;
+    overflow: hidden;
+    transform: translateX(calc(100% + 20px));
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    z-index: 20001;
+}
+.popup.ativo {
+    transform: translateX(0);
+}
+.popup-barra {
+    width: 8px;
+    background-color: var(--cor-cinza-medio);
+}
+.popup.sucesso .popup-barra {
+    background-color: #28a745;
+}
+.popup.erro .popup-barra {
+    background-color: #c0392b;
+}
+.popup-conteudo {
+    padding: 15px;
+    flex-grow: 1;
+}
+#popupTitulo {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 5px;
+}
+#popupTexto {
+    font-size: 0.9rem;
+    color: var(--cor-cinza-medio);
+}
+.popup-fechar {
+    background: none;
+    border: none;
+    color: var(--cor-cinza-medio);
+    font-size: 1.5rem;
+    padding: 0 15px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+.popup-fechar:hover {
+    background: none;
+    color: var(--cor-texto);
+}
+
+@media (max-width: 480px) {
+    .popup { width: calc(100% - 40px); }
+}

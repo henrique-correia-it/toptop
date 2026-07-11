@@ -1,0 +1,246 @@
+/* public/css/pages/_gestor-emails.css */
+
+/* ── Fundo da página (Branco conforme pedido) ── */
+.admin-main-content {
+    background-color: #ffffff;
+}
+
+/* ── Cabeçalho e Introdução ── */
+.gestor-emails-intro {
+    width: 100%;
+    margin-bottom: 0;
+    padding-left: 64px; /* Alinha o texto com o início do título (após a seta) */
+}
+
+.gestor-emails-intro p {
+    color: #475569;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ── Grelha principal ── */
+.gestor-emails-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 40px;
+    align-items: flex-start;
+    width: 100%;
+}
+
+/* ── Títulos de Secção ── */
+.template-grupo-titulo, .placeholder-global-titulo {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #1e293b; /* Título mais escuro para destaque */
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 24px;
+}
+
+.template-grupo-titulo::after, .placeholder-global-titulo::after {
+    content: '';
+    flex-grow: 1;
+    height: 1px;
+    background: #e2e8f0;
+}
+
+.coluna-templates > .template-grupo-titulo {
+    margin-top: 50px;
+}
+
+.coluna-templates > .template-grupo-titulo:first-child {
+    margin-top: 0;
+}
+
+/* ── Coluna lateral de placeholders ── */
+.coluna-placeholders .form-card {
+    position: sticky;
+    top: 100px;
+    border: 1px solid #94a3b8; /* Contorno mais escuro para destaque */
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+}
+
+.coluna-placeholders .form-card-body {
+    padding: 20px;
+}
+
+.coluna-placeholders ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.coluna-placeholders li code {
+    display: block;
+    background-color: #f8fafc;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border: 1px solid #cbd5e1;
+    cursor: copy;
+    transition: all 0.2s ease;
+    color: #1e293b;
+}
+
+.coluna-placeholders li code:hover {
+    background-color: #f1f5f9;
+    border-color: #1e293b;
+    color: #000000;
+    transform: translateX(4px);
+}
+
+.placeholder-seccao-titulo {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin: 24px 0 10px 0;
+}
+
+/* ── Acordeão de Templates ── */
+.template-accordion-item {
+    border: 1px solid #94a3b8; /* Contorno mais escuro para destaque no fundo branco */
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    background-color: #fff;
+}
+
+.template-accordion-item:hover {
+    border-color: #1e293b;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.06);
+}
+
+.template-accordion-item.ativo {
+    border-color: #000000;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.template-accordion-header {
+    padding: 20px 24px;
+    cursor: pointer;
+    background-color: #fff;
+    user-select: none;
+}
+
+.template-accordion-header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.template-accordion-header-title h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #000000;
+    font-weight: 700;
+}
+
+.template-accordion-toggle-icon {
+    color: #64748b;
+    transition: transform 0.3s ease;
+}
+
+.template-accordion-item.ativo .template-accordion-toggle-icon {
+    transform: rotate(90deg);
+    color: #000;
+}
+
+.template-meta-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    margin-top: 10px;
+    padding-left: 28px;
+    font-size: 0.8rem;
+    color: #475569;
+}
+
+.template-meta-strip span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    font-weight: 500;
+}
+
+.template-accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    opacity: 0;
+    background-color: #ffffff;
+    border-top: 1px solid transparent;
+}
+
+.template-accordion-item.ativo .template-accordion-content {
+    opacity: 1;
+    border-top-color: #e2e8f0;
+}
+
+.template-accordion-inner {
+    padding: 24px;
+}
+
+.template-descricao-inline {
+    font-size: 0.88rem;
+    color: #1e293b;
+    background: #f8fafc;
+    border-left: 4px solid #1e293b;
+    padding: 14px 18px;
+    margin: 0 0 24px 0;
+    border-radius: 0 8px 8px 0;
+    text-align: left;
+}
+
+/* ── Formulário ── */
+.form-template-email label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 8px;
+    display: block;
+    text-transform: uppercase;
+}
+
+.form-template-email input[type="text"],
+.form-template-email textarea {
+    border: 1px solid #94a3b8;
+    background: #fff;
+    font-weight: 400;
+}
+
+.form-template-email input[type="text"]:focus,
+.form-template-email textarea:focus {
+    border-color: #000;
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+/* ── Responsividade ── */
+@media (max-width: 992px) {
+    .gestor-emails-intro {
+        padding-left: 0;
+    }
+    .gestor-emails-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+

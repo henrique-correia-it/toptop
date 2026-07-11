@@ -1,0 +1,81 @@
+/* public/css/base/_utilities.css */
+
+/* --- GLOBAL HIDDEN SCROLLBARS --- */
+/* Hide scrollbar for Chrome, Safari, Edge and Opera */
+::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for Firefox */
+* {
+    scrollbar-width: none;
+}
+
+/* Hide scrollbar for IE and older Edge */
+* {
+    -ms-overflow-style: none;
+}
+
+/* Scroll Lock Utility */
+.scroll-lock {
+    overflow: hidden !important;
+}
+
+/* --- IMAGE ZOOM --- */
+.zoom-container {
+    overflow: hidden;
+    touch-action: none; 
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+}
+
+.zoom-container img {
+    display: block;
+    max-width: none; 
+    user-select: none;
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
+    transition: transform 120ms ease-out; 
+    will-change: transform;
+    transform-origin: center center;
+}
+
+/* --- TIPPY.JS THEME --- */
+.tippy-box[data-theme~='toptop-professional'] {
+    background-color: #1C1C1C;
+    color: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.5;
+    border-radius: 6px;
+    padding: 10px 14px;
+    max-width: 300px;
+    text-align: center;
+}
+
+.tippy-box[data-theme~='toptop-professional'] > .tippy-arrow {
+    color: #1C1C1C;
+}
+
+.tippy-box[data-theme~='toptop-professional'] .tippy-content {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+/* --- ENTRY ANIMATIONS --- */
+.animate-entry {
+    animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    will-change: transform, opacity;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

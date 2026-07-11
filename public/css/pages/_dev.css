@@ -1,0 +1,159 @@
+/* ── Painel Dev Overrides ── */
+
+.dev-badge {
+    background: #000;
+    color: #10b981;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-left: 15px;
+    vertical-align: middle;
+    border: 1px solid #10b981;
+}
+
+
+/* Estilo para simular o terminal no ícone de atividade */
+.activity-icon-wrapper.dev-terminal {
+    background: #000 !important;
+    color: #10b981 !important;
+}
+
+/* ── Cores do Card Stripe ── */
+.stat-card.stripe-live .stat-card-icon {
+    background: #ecfdf5 !important;
+    color: #10b981 !important;
+}
+
+.stat-card.stripe-test .stat-card-icon {
+    background: #fffbeb !important;
+    color: #f59e0b !important;
+}
+
+/* ── Cores do Card Header Dinâmico ── */
+.stat-card.header-hide-on .stat-card-icon {
+    background: #ecfdf5 !important;
+    color: #10b981 !important;
+}
+
+.stat-card.header-hide-off .stat-card-icon {
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+}
+
+
+
+
+
+/* ── Ajuste de Largura dos Cards ── */
+@media (min-width: 993px) {
+    .dev-dashboard .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .dev-dashboard .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dev-dashboard .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .dev-dashboard .header-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .dev-dashboard .header-actions .action-btn-pill,
+    .dev-dashboard .header-actions .simulate-wrap,
+    .dev-dashboard .header-actions .simulate-wrap button {
+        width: 100% !important;
+        margin: 0 !important;
+        font-size: 0.78rem !important;
+        padding: 10px 12px !important;
+        white-space: nowrap;
+    }
+
+    .dev-dashboard .header-actions .btn-backup {
+        grid-column: span 2;
+    }
+    
+    .dev-dashboard .header-actions .simulate-wrap {
+        grid-column: span 2;
+    }
+}
+
+/* ── Dropdown de Simulação de Encomenda ── */
+.simulate-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+    min-width: 260px;
+    z-index: 500;
+    overflow: hidden;
+    padding: 6px;
+}
+
+.simulate-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.simulate-dropdown-item:hover {
+    background: #f8fafc;
+}
+
+.simulate-dropdown-item .sim-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.simulate-dropdown-item div {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.simulate-dropdown-item strong {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.simulate-dropdown-item span {
+    font-size: 0.73rem;
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+/* ── Fim das Ações Rápidas ── */
+
+.btn-customer {
+    background: #eff6ff !important;
+    border-color: #bfdbfe !important;
+    color: #1d4ed8 !important;
+}
+
+.btn-customer:hover {
+    background: #dbeafe !important;
+    border-color: #93c5fd !important;
+}
