@@ -49,9 +49,9 @@ $portes_por_pais = $portes_js ?? [];
                         <strong id="portes-gratis-estado"><?php echo $portes_gratis_ativo ? 'Ativo' : 'Desativado'; ?></strong>
                         <small>Aplicar esta oferta na loja</small>
                     </span>
-                    <span class="free-shipping-switch">
+                    <span class="switch-premium">
                         <input type="checkbox" id="portes-gratis-ativo" <?php echo $portes_gratis_ativo ? 'checked' : ''; ?>>
-                        <span class="free-shipping-slider" aria-hidden="true"></span>
+                        <span class="slider" aria-hidden="true"></span>
                     </span>
                 </label>
                 <label class="free-shipping-value" for="portes-gratis-minimo">
