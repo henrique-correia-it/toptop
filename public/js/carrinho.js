@@ -34,7 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.dispatchEvent(new CustomEvent("app:close-main-nav"));
     window.dispatchEvent(new CustomEvent("app:close-search"));
-    window.dispatchEvent(new CustomEvent("app:close-account-login"));
     renderSideCart();
     if (sideCart) sideCart.classList.add("ativo");
     if (sideCartOverlay) sideCartOverlay.classList.add("ativo");

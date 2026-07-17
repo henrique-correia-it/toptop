@@ -23,27 +23,3 @@ if (!function_exists('admin_has_role')) {
         return is_admin_logged_in() && in_array(admin_role(), $roles, true);
     }
 }
-
-if (!function_exists('require_admin')) {
-    function require_admin(string $redirect = '/entrar'): void
-    {
-        if (is_admin_logged_in()) {
-            return;
-        }
-
-        header('Location: ' . $redirect);
-        exit;
-    }
-}
-
-if (!function_exists('require_admin_roles')) {
-    function require_admin_roles(array $roles, string $redirect = '/admin'): void
-    {
-        if (admin_has_role($roles)) {
-            return;
-        }
-
-        header('Location: ' . $redirect);
-        exit;
-    }
-}

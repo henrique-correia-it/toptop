@@ -1,9 +1,8 @@
 /* ── COMPONENTE: SWITCH (TOGGLE) ── */
 /* Estilo unificado "Premium Black" para todos os interruptores do site */
 
-.switch-premium, 
-.toggle-visiveis, 
-.cfg-switch {
+.switch-premium,
+.toggle-visiveis {
     display: inline-flex;
     align-items: center;
     gap: 12px;
@@ -14,9 +13,8 @@
 }
 
 /* Esconder checkbox original */
-.switch-premium input, 
-.toggle-visiveis input, 
-.cfg-switch input {
+.switch-premium input,
+.toggle-visiveis input {
     display: none;
     width: 0;
     height: 0;
@@ -24,9 +22,8 @@
 }
 
 /* ── TRACK (O fundo do interruptor) ── */
-.switch-premium .slider, 
-.toggle-visiveis .toggle-track, 
-.cfg-switch .cfg-switch-slider {
+.switch-premium .slider,
+.toggle-visiveis .toggle-track {
     position: relative;
     display: block;
     width: 42px;
@@ -38,9 +35,8 @@
 }
 
 /* ── THUMB (A bolinha branca) ── */
-.switch-premium .slider::before, 
-.toggle-visiveis .toggle-thumb, 
-.cfg-switch .cfg-switch-slider::before {
+.switch-premium .slider::before,
+.toggle-visiveis .toggle-thumb {
     content: "";
     position: absolute;
     height: 18px;
@@ -55,27 +51,18 @@
 
 /* ── ESTADO: CHECKED (PRETO) ── */
 .switch-premium input:checked + .slider,
-.toggle-visiveis input:checked ~ .toggle-track,
-.cfg-switch input:checked + .cfg-switch-slider {
+.toggle-visiveis input:checked ~ .toggle-track {
     background-color: #000;
 }
 
 /* ── MOVIMENTO DO THUMB ── */
 .switch-premium input:checked + .slider::before,
-.toggle-visiveis input:checked ~ .toggle-track .toggle-thumb,
-.cfg-switch input:checked + .cfg-switch-slider::before {
+.toggle-visiveis input:checked ~ .toggle-track .toggle-thumb {
     transform: translateX(18px);
-}
-
-/* Ajuste específico para o cfg-switch (que era ligeiramente maior) */
-.cfg-switch .cfg-switch-slider {
-    width: 42px; /* Uniformizado */
-    height: 24px;
 }
 
 /* Hover effect */
 .switch-premium:hover .slider,
-.toggle-visiveis:hover .toggle-track,
-.cfg-switch:hover .cfg-switch-slider {
+.toggle-visiveis:hover .toggle-track {
     filter: brightness(0.95);
 }

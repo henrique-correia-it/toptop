@@ -936,12 +936,6 @@ document.getElementById('header-edit-logo')?.addEventListener('change', function
     <script src="/public/js/admin-ui.js?v=<?php echo $versao_global; ?>"></script>
 <?php endif; ?>
 
-<?php 
-$currentScript = basename($_SERVER['PHP_SELF']);
-if ($currentScript == 'entrar.php' || $currentScript == 'recuperar-conta.php' || $currentScript == 'redefinir-conta.php'): ?>
-    <script src="/public/js/login_animation.js?v=<?php echo $versao_global; ?>"></script>
-<?php endif; ?>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     window.ativarTooltipsProfissionais = function() {

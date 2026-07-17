@@ -30,7 +30,7 @@ $erros = [];
 $conn->begin_transaction();
 try {
     // 1. Obter todos os nomes de ficheiro de imagem para os produtos selecionados
-    $stmt_imgs = $conn->prepare("SELECT nome_ficheiro FROM produto_imagens WHERE produto_id IN ($placeholders)");
+    $stmt_imgs = $conn->prepare("SELECT DISTINCT nome_ficheiro FROM produto_imagens WHERE produto_id IN ($placeholders)");
     $stmt_imgs->bind_param($types, ...$ids_para_apagar);
     $stmt_imgs->execute();
     $result_imgs = $stmt_imgs->get_result();
@@ -42,6 +42,19 @@ try {
         }
     }
     $stmt_imgs->close();
+
+    // Guardar esta informação antes do DELETE. Assim, mesmo que alguma relação
+    // da base de dados use ON DELETE, as imagens históricas ficam protegidas.
+    $imagens_usadas_encomendas = [];
+    $stmt_check_orders = $conn->prepare("SELECT COUNT(*) AS total FROM encomenda_itens WHERE foto_snapshot = ?");
+    foreach ($imagens_para_apagar as $ficheiro) {
+        $stmt_check_orders->bind_param("s", $ficheiro);
+        $stmt_check_orders->execute();
+        if ((int)$stmt_check_orders->get_result()->fetch_assoc()['total'] > 0) {
+            $imagens_usadas_encomendas[$ficheiro] = true;
+        }
+    }
+    $stmt_check_orders->close();
 
     // 2. Apagar os registos dos produtos da base de dados
     $stmt_delete = $conn->prepare("DELETE FROM produtos WHERE id IN ($placeholders)");
@@ -55,23 +68,53 @@ try {
         throw new Exception("Nenhum dos produtos selecionados foi encontrado para apagar.");
     }
 
-    // 3. Confirmar e só depois apagar ficheiros do disco
+    // 3. Confirmar a eliminação antes de tratar dos ficheiros no disco
     $conn->commit();
-
-    foreach ($imagens_para_apagar as $ficheiro) {
-        $caminho = __DIR__ . '/../public/images/' . $ficheiro;
-        if (file_exists($caminho) && is_file($caminho)) {
-            @unlink($caminho);
-        }
-    }
-
-    $_SESSION['flash_message'] = ['tipo' => 'sucesso', 'texto' => $linhas_afetadas . ' produto(s) apagado(s) com sucesso!'];
 
 } catch (Exception $e) {
     $conn->rollback();
     error_log($e->getMessage()); 
     $_SESSION['flash_message'] = ['tipo' => 'erro', 'texto' => 'Ocorreu um erro ao apagar os produtos. Tente novamente.'];
+    header("Location: admin_produtos.php");
+    exit;
 }
+
+// 4. Apagar apenas imagens que já não sejam usadas em nenhum local.
+// Esta limpeza ocorre depois do commit: uma falha no disco nunca contradiz
+// uma eliminação que a base de dados já confirmou.
+try {
+    $stmt_check_products = $conn->prepare("SELECT COUNT(*) AS total FROM produtos WHERE foto_principal = ?");
+    $stmt_check_gallery = $conn->prepare("SELECT COUNT(*) AS total FROM produto_imagens WHERE nome_ficheiro = ?");
+
+    foreach ($imagens_para_apagar as $ficheiro) {
+        if (empty($ficheiro) || $ficheiro === 'default.jpg' || basename($ficheiro) !== $ficheiro) {
+            continue;
+        }
+
+        $stmt_check_products->bind_param("s", $ficheiro);
+        $stmt_check_products->execute();
+        $uso_produtos = (int)$stmt_check_products->get_result()->fetch_assoc()['total'];
+
+        $stmt_check_gallery->bind_param("s", $ficheiro);
+        $stmt_check_gallery->execute();
+        $uso_galeria = (int)$stmt_check_gallery->get_result()->fetch_assoc()['total'];
+
+        if (!isset($imagens_usadas_encomendas[$ficheiro]) && $uso_produtos === 0 && $uso_galeria === 0) {
+            $caminho = __DIR__ . '/../public/images/' . $ficheiro;
+            if (is_file($caminho) && !unlink($caminho)) {
+                log_app('Não foi possível remover a imagem: ' . $ficheiro, 'WARNING', 'apagar_massa.php');
+            }
+        }
+    }
+
+    $stmt_check_products->close();
+    $stmt_check_gallery->close();
+} catch (Throwable $e) {
+    // Na dúvida, conservar os ficheiros. O produto já foi removido com sucesso.
+    log_app($e->getMessage(), 'WARNING', 'apagar_massa.php limpeza de imagens');
+}
+
+$_SESSION['flash_message'] = ['tipo' => 'sucesso', 'texto' => $linhas_afetadas . ' produto(s) apagado(s) com sucesso!'];
 
 header("Location: admin_produtos.php");
 exit;

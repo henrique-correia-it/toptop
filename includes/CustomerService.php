@@ -74,14 +74,6 @@ if (!function_exists('customer_addresses')) {
     }
 }
 
-if (!function_exists('customer_default_address')) {
-    function customer_default_address(mysqli $conn, int $customerId): ?array
-    {
-        $addresses = customer_addresses($conn, $customerId);
-        return $addresses[0] ?? null;
-    }
-}
-
 if (!function_exists('customer_save_address')) {
     function customer_save_address(mysqli $conn, int $customerId, array $data, bool $principal = false): int
     {
@@ -202,51 +194,5 @@ if (!function_exists('customer_create_email_verification_token')) {
         $stmt->close();
 
         return $token;
-    }
-}
-
-if (!function_exists('customer_send_email')) {
-    function customer_send_email(string $toEmail, string $toName, string $subject, string $htmlBody, string $textBody = ''): void
-    {
-        require_once __DIR__ . '/../phpmailer/src/Exception.php';
-        require_once __DIR__ . '/../phpmailer/src/PHPMailer.php';
-        require_once __DIR__ . '/../phpmailer/src/SMTP.php';
-
-        $envPath = __DIR__ . '/../.env';
-        $env = file_exists($envPath) ? parse_ini_file($envPath) : [];
-
-        $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-        $mail->isSMTP();
-        $mail->Host = $env['MAIL_HOST'] ?? 'mail.toptop.pt';
-        $mail->SMTPAuth = true;
-        $mail->Username = $env['MAIL_USER'] ?? '';
-        $mail->Password = $env['MAIL_PASS'] ?? '';
-        $mail->Port = (int)($env['MAIL_PORT'] ?? 465);
-        $mail->CharSet = 'UTF-8';
-        $mail->Timeout = 20;
-
-        $enc = strtolower($env['MAIL_ENCRYPTION'] ?? 'ssl');
-        if ($enc === 'tls') {
-            $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-        } elseif ($enc === 'none') {
-            $mail->SMTPSecure = '';
-            $mail->SMTPAutoTLS = false;
-        } else {
-            $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
-        }
-
-        $from = $env['MAIL_FROM_ADDRESS'] ?? 'noreply@toptop.pt';
-        $fromName = $env['MAIL_FROM_NAME'] ?? 'TopTop';
-        $replyTo = $env['MAIL_REPLY_TO_ADDRESS'] ?? $from;
-        $replyToName = $env['MAIL_REPLY_TO_NAME'] ?? $fromName;
-
-        $mail->setFrom($from, $fromName);
-        $mail->addAddress($toEmail, $toName);
-        $mail->addReplyTo($replyTo, $replyToName);
-        $mail->isHTML(true);
-        $mail->Subject = $subject;
-        $mail->Body = $htmlBody;
-        $mail->AltBody = $textBody !== '' ? $textBody : strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $htmlBody));
-        $mail->send();
     }
 }

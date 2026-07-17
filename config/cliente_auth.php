@@ -18,20 +18,6 @@ if (!function_exists('cliente_id')) {
     }
 }
 
-if (!function_exists('cliente_nome')) {
-    function cliente_nome(): ?string
-    {
-        return $_SESSION['cliente_nome'] ?? null;
-    }
-}
-
-if (!function_exists('cliente_email')) {
-    function cliente_email(): ?string
-    {
-        return $_SESSION['cliente_email'] ?? null;
-    }
-}
-
 if (!function_exists('cliente_atual')) {
     function cliente_atual(mysqli $conn): ?array
     {

@@ -213,9 +213,6 @@ if ($resCategoriasHeader && $resCategoriasHeader->num_rows > 0) {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <?php endif; ?>
 
-    <?php if ($paginaAtual == 'entrar.php' || $paginaAtual == 'recuperar-conta.php' || $paginaAtual == 'redefinir-conta.php'): ?>
-        <link rel="stylesheet" href="/public/css/pages/_login_animation.css?v=<?php echo $versao_global; ?>">
-    <?php endif; ?>
     <meta name="google-site-verification" content="Ojp_OX708v7vUvpub0aHPKnx1XKHF7sn86EpICZcMh4" />
 	<meta name="google-site-verification" content="Q3I4uZFr6bLSBI6UCuPvydE0sXvWaH_6st--lc0tT8I" />
     <link rel="canonical" href="https://www.toptop.pt<?php echo isset($canonical_url) ? htmlspecialchars($canonical_url, ENT_QUOTES, 'UTF-8') : htmlspecialchars(strtok($_SERVER['REQUEST_URI'], '?') . (parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY) ? '?' . parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY) : ''), ENT_QUOTES, 'UTF-8'); ?>" />
@@ -289,12 +286,8 @@ $_og_image = (isset($produto) && !empty($produto['foto_principal']))
 
         <div class="header-acoes">
             <div class="header-account-container">
-                <a href="<?php echo $clienteHeaderUrl; ?>" class="header-account-link <?php echo in_array($paginaAtual, ['entrar.php', 'registar.php', 'minha-conta.php', 'minha-conta-encomendas.php', 'minha-conta-encomenda.php', 'minha-conta-moradas.php', 'minha-conta-dados.php']) ? 'is-current' : ''; ?>" title="<?php echo htmlspecialchars($clienteHeaderLabel, ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars($clienteHeaderLabel, ENT_QUOTES, 'UTF-8'); ?>" aria-expanded="false" aria-controls="cliente-login-panel" data-mobile-login="<?php echo $isAnyLogado ? 'false' : 'true'; ?>">
+                <a href="<?php echo $clienteHeaderUrl; ?>" class="header-account-link <?php echo in_array($paginaAtual, ['entrar.php', 'registar.php', 'minha-conta.php', 'minha-conta-encomendas.php', 'minha-conta-encomenda.php', 'minha-conta-moradas.php', 'minha-conta-dados.php']) ? 'is-current' : ''; ?>" title="<?php echo htmlspecialchars($clienteHeaderLabel, ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars($clienteHeaderLabel, ENT_QUOTES, 'UTF-8'); ?>">
                     <svg class="account-icon-svg" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
-                    <span class="account-close-icon" aria-hidden="true">
-                        <span class="account-close-line"></span>
-                        <span class="account-close-line"></span>
-                    </span>
                     <span><?php echo htmlspecialchars($clienteHeaderLabel, ENT_QUOTES, 'UTF-8'); ?></span>
                 </a>
                 <?php if ($isAnyLogado): ?>
@@ -397,28 +390,6 @@ $_og_image = (isset($produto) && !empty($produto['foto_principal']))
     </div>
 </div>
 
-<?php if (!$clienteHeaderLogado): ?>
-<div id="cliente-login-overlay" class="cliente-login-overlay"></div>
-<aside id="cliente-login-panel" class="cliente-login-panel" aria-hidden="true">
-    <div class="cliente-login-panel-header">
-        <h4>Entrar <span>Conta ou admin</span></h4>
-    </div>
-    <form method="post" action="/entrar" class="cliente-login-panel-form">
-        <?php echo csrf_input(); ?>
-        <input type="hidden" name="next" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? '/minha-conta', ENT_QUOTES, 'UTF-8'); ?>">
-        <label for="cliente_panel_usuario">Utilizador ou Email</label>
-        <input type="text" id="cliente_panel_usuario" name="usuario" required autocomplete="username" placeholder="Username ou email">
-        <label for="cliente_panel_senha">Palavra-passe</label>
-        <input type="password" id="cliente_panel_senha" name="senha" required autocomplete="current-password" placeholder="A sua palavra-passe">
-        <button type="submit">Entrar</button>
-    </form>
-    <div class="cliente-login-panel-links">
-        <a href="/recuperar-conta">Recuperar palavra-passe</a>
-        <a href="/registar">Criar conta</a>
-    </div>
-</aside>
-<?php endif; ?>
-
 <div id="menu-overlay" class="menu-overlay"></div>
 <nav id="main-nav-mobile" class="main-nav-mobile">
     <div class="nav-mobile-header">
@@ -459,7 +430,7 @@ $_og_image = (isset($produto) && !empty($produto['foto_principal']))
                 </a>
             </li>
             <li>
-                <a href="<?php echo $clienteHeaderUrl; ?>" class="<?php if (in_array($paginaAtual, ['entrar.php', 'registar.php', 'minha-conta.php', 'minha-conta-encomendas.php', 'minha-conta-encomenda.php', 'minha-conta-moradas.php', 'minha-conta-dados.php'])) echo 'ativo'; ?>" <?php echo $clienteHeaderLogado ? '' : 'data-mobile-login-menu="true"'; ?>>
+                <a href="<?php echo $clienteHeaderUrl; ?>" class="<?php if (in_array($paginaAtual, ['entrar.php', 'registar.php', 'minha-conta.php', 'minha-conta-encomendas.php', 'minha-conta-encomenda.php', 'minha-conta-moradas.php', 'minha-conta-dados.php'])) echo 'ativo'; ?>">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
                     <span><?php echo htmlspecialchars($clienteHeaderLabel, ENT_QUOTES, 'UTF-8'); ?></span>
                 </a>

@@ -346,44 +346,6 @@
     transition: opacity 0.2s ease, transform 0.25s ease;
 }
 
-.account-close-icon {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transform: scale(0.8) rotate(-45deg);
-    transition: opacity 0.2s ease, transform 0.25s ease;
-    pointer-events: none;
-}
-
-.account-close-line {
-    position: absolute;
-    width: 24px;
-    height: 2px;
-    border-radius: 999px;
-    background-color: currentColor;
-}
-
-.account-close-line:nth-child(1) {
-    transform: rotate(45deg);
-}
-
-.account-close-line:nth-child(2) {
-    transform: rotate(-45deg);
-}
-
-.header-account-link.ativo .account-icon-svg {
-    opacity: 0;
-    transform: scale(0.72) rotate(18deg);
-}
-
-.header-account-link.ativo .account-close-icon {
-    opacity: 1;
-    transform: scale(1) rotate(0deg);
-}
-
 .icon-carrinho {
     color: var(--cor-texto);
     text-decoration: none;

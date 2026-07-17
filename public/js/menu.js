@@ -8,9 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const categoriasDesktopToggle = document.querySelector('.nav-categorias-toggle');
     const categoriasMobileItem = document.querySelector('.nav-mobile-categorias');
     const categoriasMobileToggle = document.querySelector('.nav-mobile-category-toggle');
-    const accountBtn = document.querySelector('.header-account-link[data-mobile-login="true"]');
-    const clienteLoginPanel = document.getElementById('cliente-login-panel');
-    const clienteLoginOverlay = document.getElementById('cliente-login-overlay');
 
     if (categoriasDesktopItem && categoriasDesktopToggle) {
         let fecharCategoriasTimer;
@@ -64,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const abrirMenu = () => {
             window.dispatchEvent(new CustomEvent('app:close-side-cart'));
             window.dispatchEvent(new CustomEvent('app:close-search'));
-            window.dispatchEvent(new CustomEvent('app:close-account-login'));
             menuNav.classList.add('ativo');
             menuOverlay.classList.add('ativo');
             hamburgerBtn.classList.add('ativo');
@@ -112,56 +108,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (accountBtn && clienteLoginPanel && clienteLoginOverlay) {
-        const isMobile = () => window.innerWidth <= 768;
-
-        const abrirClienteLogin = () => {
-            window.dispatchEvent(new CustomEvent('app:close-side-cart'));
-            window.dispatchEvent(new CustomEvent('app:close-search'));
-            window.dispatchEvent(new CustomEvent('app:close-main-nav'));
-            clienteLoginPanel.classList.add('ativo');
-            clienteLoginPanel.setAttribute('aria-hidden', 'false');
-            clienteLoginOverlay.classList.add('ativo');
-            accountBtn.classList.add('ativo');
-            accountBtn.setAttribute('aria-expanded', 'true');
-            accountBtn.setAttribute('aria-label', 'Fechar login');
-            document.body.classList.add('app-panel-open');
-            document.body.style.overflow = 'hidden';
-            const firstInput = clienteLoginPanel.querySelector('input[name="usuario"]');
-            if (firstInput) setTimeout(() => firstInput.focus(), 220);
-        };
-
-        const fecharClienteLogin = () => {
-            clienteLoginPanel.classList.remove('ativo');
-            clienteLoginPanel.setAttribute('aria-hidden', 'true');
-            clienteLoginOverlay.classList.remove('ativo');
-            accountBtn.classList.remove('ativo');
-            accountBtn.setAttribute('aria-expanded', 'false');
-            accountBtn.setAttribute('aria-label', 'Abrir login');
-            document.body.classList.remove('app-panel-open');
-            document.body.style.overflow = '';
-        };
-
-        accountBtn.addEventListener('click', (event) => {
-            // Agora o botão segue sempre o link nativo (href), tanto em mobile como PC,
-            // conforme pedido pelo utilizador. O painel lateral de login foi desativado.
-            return; 
-        });
-
-        document.querySelectorAll('[data-mobile-login-menu="true"]').forEach((link) => {
-            link.addEventListener('click', (event) => {
-                // Segue o link nativo
-                return;
-            });
-        });
-
-        window.addEventListener('app:close-account-login', fecharClienteLogin);
-        clienteLoginOverlay.addEventListener('click', fecharClienteLogin);
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape') fecharClienteLogin();
-        });
-        window.addEventListener('resize', () => {
-            if (!isMobile()) fecharClienteLogin();
-        });
-    }
 });

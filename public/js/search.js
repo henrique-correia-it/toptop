@@ -120,7 +120,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const openSearch = () => {
       window.dispatchEvent(new CustomEvent("app:close-main-nav"));
       window.dispatchEvent(new CustomEvent("app:close-side-cart"));
-      window.dispatchEvent(new CustomEvent("app:close-account-login"));
       renderHistory();
       setAssistVisible(true);
       searchOverlay.classList.add("ativo");
