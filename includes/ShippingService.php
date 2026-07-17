@@ -3,6 +3,17 @@
 
 const DEFAULT_FREE_SHIPPING_THRESHOLD_PT_MAINLAND = 50.0;
 
+if (!function_exists('is_free_shipping_enabled')) {
+    function is_free_shipping_enabled(mysqli $conn): bool
+    {
+        $rawValue = function_exists('getLojaConfig')
+            ? getLojaConfig('portes_gratis_ativo', '1')
+            : '1';
+
+        return filter_var($rawValue, FILTER_VALIDATE_BOOLEAN);
+    }
+}
+
 if (!function_exists('normalize_country_code')) {
     function normalize_country_code(?string $countryCode, string $fallback = 'PT'): string
     {
@@ -147,7 +158,7 @@ if (!function_exists('calculate_shipping')) {
         float $orderSubtotal = 0.0,
         ?string $postalCode = null
     ): float {
-        if (qualifies_for_free_shipping(
+        if (is_free_shipping_enabled($conn) && qualifies_for_free_shipping(
             $orderSubtotal,
             $countryCode,
             $postalCode,

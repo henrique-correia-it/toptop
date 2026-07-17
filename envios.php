@@ -74,6 +74,7 @@ function formatPrice($price, $iso) {
         <p>Consulta as nossas tarifas de envio por país e peso. Entregas rápidas e seguras em toda a Europa.</p>
     </div>
 
+    <?php if ($portes_gratis_ativo): ?>
     <div class="portes-free-shipping">
         <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 6 9 17l-5-5"></path>
@@ -83,6 +84,8 @@ function formatPrice($price, $iso) {
             <span>A partir de <?php echo number_format($portes_gratis_minimo, 2, ',', '.'); ?> € em produtos.</span>
         </p>
     </div>
+
+    <?php endif; ?>
 
     <div class="portes-container">
         <div class="portes-header">

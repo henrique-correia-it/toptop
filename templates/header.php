@@ -47,6 +47,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/header_functions.php';
 require_once __DIR__ . '/../includes/ShippingService.php';
 $portes_js = get_shipping_rates($conn);
+$portes_gratis_ativo = is_free_shipping_enabled($conn);
 $portes_gratis_minimo = get_free_shipping_threshold($conn);
 $isAdminHeader = isset($_SESSION['admin_logado']) && $_SESSION['admin_logado'] === true && in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor']) && isset($_SESSION['global_edit_mode']) && $_SESSION['global_edit_mode'] === true;
 // Header dinâmico (esconder no scroll) — configurável no painel dev. Desativado em modo de edição.
@@ -178,6 +179,7 @@ if ($resCategoriasHeader && $resCategoriasHeader->num_rows > 0) {
     <script>
         window.LOJA_CONFIG_PORTES = <?php echo json_encode($portes_js); ?>;
         window.LOJA_CONFIG_PORTES_GRATIS = <?php echo json_encode([
+            'ativo' => $portes_gratis_ativo,
             'pais' => 'PT',
             'valor_minimo' => $portes_gratis_minimo,
             'cp_min' => 1000,

@@ -202,11 +202,16 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
 
     <!-- TRUST BADGES -->
     <section class="trust-badges" data-reveal>
-        <a href="/envios.php" class="trust-badge trust-badge--shipping" aria-label="Consultar condições dos portes grátis">
+        <a href="/envios.php" class="trust-badge trust-badge--shipping" aria-label="<?php echo $portes_gratis_ativo ? 'Consultar condições dos portes grátis' : 'Consultar prazos e tarifas de envio'; ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
             <div class="trust-badge-info">
-                <h4>Portes grátis</h4>
-                <p>Portugal Continental · desde <?php echo htmlspecialchars($portesGratisHome, ENT_QUOTES, 'UTF-8'); ?> €</p>
+                <?php if ($portes_gratis_ativo): ?>
+                    <h4>Portes grátis</h4>
+                    <p>Portugal Continental · desde <?php echo htmlspecialchars($portesGratisHome, ENT_QUOTES, 'UTF-8'); ?> €</p>
+                <?php else: ?>
+                    <h4>Entregas em Portugal e Europa</h4>
+                    <p>Consulta os prazos e tarifas de envio</p>
+                <?php endif; ?>
             </div>
         </a>
         <div class="trust-badge">

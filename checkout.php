@@ -200,7 +200,8 @@ function isPortugalContinental(iso, codigoPostal) {
 
 function temPortesGratis(valor, iso, codigoPostal) {
     const minimo = Number(PORTES_GRATIS_CONFIG.valor_minimo || 0);
-    return minimo > 0
+    return PORTES_GRATIS_CONFIG.ativo === true
+        && minimo > 0
         && valor >= minimo
         && isPortugalContinental(iso, codigoPostal);
 }

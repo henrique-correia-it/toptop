@@ -14,6 +14,8 @@ if (!csrf_from_post()) {
 
 $portes = json_decode($_POST['portes_por_pais'] ?? '[]', true);
 $limite_raw = str_replace(',', '.', trim((string)($_POST['portes_gratis_minimo'] ?? '')));
+$portes_gratis_ativo_raw = (string)($_POST['portes_gratis_ativo'] ?? '');
+$portes_gratis_ativo = $portes_gratis_ativo_raw === '1';
 
 if (!is_array($portes)) {
     json_error('Configuração de portes inválida.', 400);
@@ -24,6 +26,10 @@ if (!is_numeric($limite_raw) || (float)$limite_raw <= 0) {
 }
 
 $limite_portes_gratis = round((float)$limite_raw, 2);
+
+if (!in_array($portes_gratis_ativo_raw, ['0', '1'], true)) {
+    json_error('O estado dos portes grátis é inválido.', 400);
+}
 
 $conn->begin_transaction();
 try {
@@ -48,6 +54,10 @@ try {
 
     if (!setLojaConfig('portes_gratis_minimo_pt_continental', number_format($limite_portes_gratis, 2, '.', ''))) {
         throw new RuntimeException('Não foi possível guardar o valor dos portes grátis.');
+    }
+
+    if (!setLojaConfig('portes_gratis_ativo', $portes_gratis_ativo ? '1' : '0')) {
+        throw new RuntimeException('Não foi possível guardar o estado dos portes grátis.');
     }
 
     $conn->commit();

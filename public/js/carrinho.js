@@ -61,6 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const temPortesGratisEstimados = (subtotal) => {
     const regra = window.LOJA_CONFIG_PORTES_GRATIS || {};
+    if (regra.ativo !== true) return false;
     const dadosEntrega = getDadosEntregaEstimados();
     const pais = String(dadosEntrega.pais_regiao || "").toUpperCase();
     const match = String(dadosEntrega.codigo_postal || "").trim().match(/^(\d{4})-\d{3}$/);
@@ -75,8 +76,9 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const atingiuLimitePortesGratis = (subtotal) => {
-    const minimo = Number((window.LOJA_CONFIG_PORTES_GRATIS || {}).valor_minimo || 0);
-    return minimo > 0 && subtotal >= minimo;
+    const regra = window.LOJA_CONFIG_PORTES_GRATIS || {};
+    const minimo = Number(regra.valor_minimo || 0);
+    return regra.ativo === true && minimo > 0 && subtotal >= minimo;
   };
 
   const getPortesEstimados = (pesoTotal, subtotal) => {

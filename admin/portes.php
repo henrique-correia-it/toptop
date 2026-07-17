@@ -43,20 +43,32 @@ $portes_por_pais = $portes_js ?? [];
                 <span class="free-shipping-region">Portugal Continental</span>
                 <h3 id="free-shipping-title">Portes grátis por valor da encomenda</h3>
             </div>
-            <label class="free-shipping-value" for="portes-gratis-minimo">
-                <span>Valor mínimo</span>
-                <span class="money-input">
-                    <span aria-hidden="true">€</span>
-                    <input
-                        type="number"
-                        id="portes-gratis-minimo"
-                        min="0.01"
-                        step="0.01"
-                        inputmode="decimal"
-                        value="<?php echo htmlspecialchars(number_format($portes_gratis_minimo, 2, '.', ''), ENT_QUOTES, 'UTF-8'); ?>"
-                    >
-                </span>
-            </label>
+            <div class="free-shipping-controls">
+                <label class="free-shipping-toggle" for="portes-gratis-ativo">
+                    <span class="free-shipping-toggle-copy">
+                        <strong id="portes-gratis-estado"><?php echo $portes_gratis_ativo ? 'Ativo' : 'Desativado'; ?></strong>
+                        <small>Aplicar esta oferta na loja</small>
+                    </span>
+                    <span class="free-shipping-switch">
+                        <input type="checkbox" id="portes-gratis-ativo" <?php echo $portes_gratis_ativo ? 'checked' : ''; ?>>
+                        <span class="free-shipping-slider" aria-hidden="true"></span>
+                    </span>
+                </label>
+                <label class="free-shipping-value" for="portes-gratis-minimo">
+                    <span>Valor mínimo</span>
+                    <span class="money-input">
+                        <span aria-hidden="true">€</span>
+                        <input
+                            type="number"
+                            id="portes-gratis-minimo"
+                            min="0.01"
+                            step="0.01"
+                            inputmode="decimal"
+                            value="<?php echo htmlspecialchars(number_format($portes_gratis_minimo, 2, '.', ''), ENT_QUOTES, 'UTF-8'); ?>"
+                        >
+                    </span>
+                </label>
+            </div>
         </section>
 
         <div id="configuracoes-shipping">
@@ -123,6 +135,7 @@ const TODOS_PAISES = [
 
 let dadosPortes = <?php echo json_encode($portes_por_pais); ?>;
 let limitePortesGratis = <?php echo json_encode($portes_gratis_minimo); ?>;
+let portesGratisAtivo = <?php echo $portes_gratis_ativo ? 'true' : 'false'; ?>;
 let autoSaveTimer = null;
 
 function renderizarPaises() {
@@ -204,6 +217,7 @@ function salvarConfiguracoes(imediato = false) {
         const formData = new FormData();
         formData.append('portes_por_pais', JSON.stringify(dadosPortes));
         formData.append('portes_gratis_minimo', limitePortesGratis.toFixed(2));
+        formData.append('portes_gratis_ativo', portesGratisAtivo ? '1' : '0');
         formData.append('csrf_token', '<?php echo $_SESSION['csrf_token']; ?>');
 
         fetch('ajax_salvar_portes.php', {
@@ -354,6 +368,23 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btn-adicionar-pais').addEventListener('click', abrirModalPais);
 
     const inputPortesGratis = document.getElementById('portes-gratis-minimo');
+    const inputPortesGratisAtivo = document.getElementById('portes-gratis-ativo');
+    const estadoPortesGratis = document.getElementById('portes-gratis-estado');
+    const configPortesGratis = document.querySelector('.free-shipping-config');
+
+    const atualizarEstadoPortesGratis = () => {
+        inputPortesGratis.disabled = !portesGratisAtivo;
+        estadoPortesGratis.textContent = portesGratisAtivo ? 'Ativo' : 'Desativado';
+        configPortesGratis.classList.toggle('is-disabled', !portesGratisAtivo);
+    };
+
+    inputPortesGratisAtivo.addEventListener('change', function() {
+        portesGratisAtivo = this.checked;
+        atualizarEstadoPortesGratis();
+        salvarConfiguracoes(true);
+    });
+
+    atualizarEstadoPortesGratis();
     inputPortesGratis.addEventListener('input', function() {
         const valor = Number.parseFloat(this.value);
         const valido = Number.isFinite(valor) && valor > 0;
