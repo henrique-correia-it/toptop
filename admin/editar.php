@@ -242,8 +242,13 @@ if (!$produto) { header("Location: admin.php"); exit; }
 $stmt_prod->close();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && !empty($popupMensagem)) {
-    foreach($_POST as $key => $value) {
-        $produto[$key] = $value;
+    // Repõe apenas os campos editáveis do formulário; os restantes (foto_principal,
+    // id, atributos, ...) mantêm sempre o valor da base de dados.
+    $campos_repopulaveis = ['nome', 'referencia', 'ativo', 'preco', 'preco_promocional', 'categoria', 'descricao', 'peso_gramas', 'guia_tamanho_id'];
+    foreach ($campos_repopulaveis as $key) {
+        if (isset($_POST[$key]) && is_scalar($_POST[$key])) {
+            $produto[$key] = $_POST[$key];
+        }
     }
 }
 
@@ -251,10 +256,16 @@ $grupos_result = $conn->query("SELECT * FROM atributos_grupos ORDER BY nome ASC"
 $grupos_disponiveis = $grupos_result->fetch_all(MYSQLI_ASSOC);
 
 $todas_as_imagens = [];
-$imagens_db = $conn->query("SELECT id, nome_ficheiro FROM produto_imagens WHERE produto_id = $id ORDER BY FIELD(nome_ficheiro, '{$produto['foto_principal']}') DESC, id ASC");
+$foto_principal_atual = (string)($produto['foto_principal'] ?? '');
+$stmt_imgs = $conn->prepare("SELECT id, nome_ficheiro FROM produto_imagens WHERE produto_id = ? ORDER BY FIELD(nome_ficheiro, ?) DESC, id ASC");
+$stmt_imgs->bind_param("is", $id, $foto_principal_atual);
+$stmt_imgs->execute();
+$imagens_db = $stmt_imgs->get_result();
 while($img = $imagens_db->fetch_assoc()) {
-    $todas_as_imagens[] = [ 'id' => $img['id'], 'url' => '/public/images/' . $img['nome_ficheiro'] ];
+    // O id segue como string para o JS, tal como a query nao-preparada devolvia.
+    $todas_as_imagens[] = [ 'id' => (string)$img['id'], 'url' => '/public/images/' . $img['nome_ficheiro'] ];
 }
+$stmt_imgs->close();
 $imagens_iniciais_json = json_encode($todas_as_imagens);
 
 $stmt_variacoes = $conn->prepare("SELECT id, atributos, quantidade, referencia FROM produto_variacoes WHERE produto_id = ?");
