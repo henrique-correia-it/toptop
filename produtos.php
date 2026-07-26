@@ -3,7 +3,11 @@ include __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/url_helpers.php';
 require_once __DIR__ . '/config/formatters.php';
 
-$is_ajax_request = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+$requested_with = strtolower(trim((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')));
+$fetch_destination = strtolower(trim((string) ($_SERVER['HTTP_SEC_FETCH_DEST'] ?? '')));
+$is_ajax_request = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET'
+    && $requested_with === 'xmlhttprequest'
+    && $fetch_destination !== 'document';
 
 // --- LÓGICA PARA BUSCAR OS FILTROS (só no carregamento inicial) ---
 if (!$is_ajax_request) {
@@ -397,7 +401,13 @@ $html_produtos = ob_get_clean();
 
 if ($is_ajax_request) {
     $html_paginacao = gerarPaginacaoAjax($pagina_atual, $total_paginas);
-    header('Content-Type: application/json');
+    // Esta resposta parcial nunca pode ser reutilizada como documento numa
+    // navegação normal (por exemplo, ao usar "voltar" no browser).
+    header('Content-Type: application/json; charset=UTF-8');
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0, private');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+    header('Vary: X-Requested-With, Sec-Fetch-Dest');
     echo json_encode(['html_produtos' => $html_produtos, 'html_paginacao' => $html_paginacao]);
     exit;
 }
@@ -652,6 +662,9 @@ include 'templates/header.php';
         const promoToggles = document.querySelectorAll('.promocao-toggle-sync');
         const botaoFiltrosMobile = document.querySelector('.botao-filtros-mobile');
 
+        let pedidoProdutosController = null;
+        let queryRenderizada = window.location.search;
+
         function atualizarProdutos(pagina = 1) {
             const formData = new FormData(formFiltros);
 
@@ -660,30 +673,73 @@ include 'templates/header.php';
             const usarOrdenarMobile = ordenarMobileSelect && window.matchMedia('(max-width: 768px)').matches;
             const ordenarValue = usarOrdenarMobile ? ordenarMobileSelect.value : (ordenarDesktopSelect ? ordenarDesktopSelect.value : 'categoria');
             formData.set('ordenar', ordenarValue);
-            formData.append('pagina', pagina);
+            formData.set('pagina', pagina);
 
-            const params = new URLSearchParams(formData);
-            history.pushState(null, '', '?' + params.toString().replace(/%5B/g, '[').replace(/%5D/g, ']'));
+            const paramsPublicos = new URLSearchParams(formData);
+            const queryPublica = paramsPublicos.toString().replace(/%5B/g, '[').replace(/%5D/g, ']');
+            const urlPublico = window.location.pathname + (queryPublica ? '?' + queryPublica : '');
+
+            // O pedido parcial usa um URL diferente do que fica no histórico.
+            // Assim, nem o browser nem um proxy podem confundir JSON com a página HTML.
+            const paramsPedido = new URLSearchParams(paramsPublicos);
+            paramsPedido.set('_fragment', 'produtos');
+            const urlPedido = window.location.pathname + '?' + paramsPedido.toString();
+
+            if (pedidoProdutosController) pedidoProdutosController.abort();
+            const controller = new AbortController();
+            pedidoProdutosController = controller;
 
             produtosGridContainer.style.opacity = '0.5';
             paginacaoContainer.style.opacity = '0.5';
 
-            fetch('<?php echo $_SERVER["PHP_SELF"]; ?>?' + params.toString(), {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            fetch(urlPedido, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                cache: 'no-store',
+                credentials: 'same-origin',
+                signal: controller.signal
             })
-                .then(response => response.json())
+                .then(response => {
+                    const contentType = response.headers.get('content-type') || '';
+                    if (!response.ok) {
+                        throw new Error(`Pedido de produtos falhou (${response.status}).`);
+                    }
+                    if (!contentType.toLowerCase().includes('application/json')) {
+                        throw new Error('O servidor devolveu um formato inesperado.');
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    if (pedidoProdutosController !== controller) return;
+                    if (!data || typeof data.html_produtos !== 'string' || typeof data.html_paginacao !== 'string') {
+                        throw new Error('A resposta dos produtos está incompleta.');
+                    }
+
                     produtosGridContainer.innerHTML = data.html_produtos;
                     paginacaoContainer.innerHTML = data.html_paginacao;
-                    produtosGridContainer.style.opacity = '1';
-                    paginacaoContainer.style.opacity = '1';
+
+                    if (urlPublico !== window.location.pathname + window.location.search) {
+                        history.pushState({ produtosFiltros: true }, '', urlPublico);
+                    }
+                    queryRenderizada = window.location.search;
+
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                     if (typeof window.ativarTooltipsProfissionais === 'function') {
                         window.ativarTooltipsProfissionais();
                     }
                 })
                 .catch(error => {
+                    if (error.name === 'AbortError') return;
                     console.error('Erro ao atualizar os produtos:', error);
+                    // A renderização completa do servidor é o fallback mais seguro:
+                    // mantém os filtros pedidos sem deixar a página num estado parcial.
+                    window.location.assign(urlPublico);
+                })
+                .finally(() => {
+                    if (pedidoProdutosController !== controller) return;
+                    pedidoProdutosController = null;
                     produtosGridContainer.style.opacity = '1';
                     paginacaoContainer.style.opacity = '1';
                 });
@@ -731,6 +787,15 @@ include 'templates/header.php';
                     event.preventDefault();
                     const pagina = link.dataset.pagina;
                     atualizarProdutos(pagina);
+                }
+            });
+
+            window.addEventListener('popstate', function () {
+                // As alterações de hash pertencem ao modal de produto. Quando a
+                // query muda, uma renderização completa garante que formulário,
+                // produtos e paginação regressam todos ao mesmo estado.
+                if (window.location.search !== queryRenderizada) {
+                    window.location.reload();
                 }
             });
         }
