@@ -1,179 +1,113 @@
-# TopTop — Loja Online
+# TopTop — E-commerce Platform
 
-Aplicacao web de comercio eletronico desenvolvida em PHP para gestao de
-produtos, variacoes, stock, clientes, encomendas, pagamentos e conteudos da
-loja.
+**Online store built from scratch in PHP and MySQL, live in production at [toptop.pt](https://toptop.pt): product variations, Stripe payments, transactional stock reservation and a full admin back office.**
 
-O repositorio contem o codigo-fonte da aplicacao. Credenciais, configuracao de
-producao, logs, backups e imagens comerciais nao estao incluidos.
+![PHP](https://img.shields.io/badge/PHP_8-777BB4?logo=php&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)
+![Stripe](https://img.shields.io/badge/Stripe-635BFF?logo=stripe&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
+![Status: live](https://img.shields.io/badge/status-live_in_production-2EA44F)
 
-## Funcionalidades
+> **Freelance project** by **Henrique Correia** (2026). Designed, built, deployed and maintained for a real store.
+> 🌐 **Live:** <https://toptop.pt>
+> No framework and no Composer dependencies, about 23,000 lines of PHP.
 
-- Catalogo de produtos, categorias, atributos e variacoes;
-- Pesquisa, carrinho e checkout;
-- Contas de cliente, moradas e historico de encomendas;
-- Consulta de encomendas por identificador seguro;
-- Pagamentos Stripe e processamento de webhooks;
-- Envio de emails transacionais com PHPMailer;
-- Gestao de stock e reservas de checkout;
-- Calculo e administracao de portes de envio;
-- Painel administrativo com diferentes niveis de acesso;
-- Gestao de produtos, clientes, encomendas e conteudos da loja;
-- Edicao de elementos visuais e textos da interface;
-- Registo interno de erros e eventos relevantes.
+## Highlights
 
-## Tecnologias
+- **Payments without the SDK:**
+  - Stripe Payment Element and PaymentIntents through a small cURL client;
+  - **webhook signature checked by hand**: HMAC-SHA256 with a 5-minute timestamp tolerance;
+  - refunds from the back office;
+  - switchable test and live modes, each with its own keys.
+- **Stock you can trust:**
+  - stock is reserved when checkout starts;
+  - order items and stock changes are written in **database transactions**;
+  - abandoned checkouts release their reservation after 30 minutes;
+  - prices and stock are checked again on the server before payment.
+- **Security:**
+  - **CSRF tokens** on forms and AJAX actions;
+  - hardened session cookies (HttpOnly, Secure, SameSite);
+  - `password_hash` for passwords and prepared statements throughout;
+  - customers look up orders with a secure token;
+  - scripts cannot run inside upload folders.
+- **Back office with access levels:** separate admin and developer roles for products, variations, customers, orders, shipping and content.
+- **Content managed in the browser:**
+  - header, footer, home page and interface text are edited in place;
+  - developer tools for logs, database backups, storage usage and an image gallery.
+- **Service layer:** cart, order, customer and shipping logic lives in reusable services (`includes/*Service.php`) instead of being spread across pages.
 
-- PHP 8 ou superior;
-- MySQL/MariaDB;
-- Apache com `mod_rewrite` e suporte para `.htaccess`;
-- HTML, CSS e JavaScript sem framework obrigatorio;
-- Stripe API;
-- PHPMailer 6.10.0.
+## Features
 
-## Requisitos PHP
+**Storefront**
+- Catalogue with categories, attributes and variations (for example size and colour), search, related products and size guides.
+- Cart, checkout with Stripe, order confirmation and order tracking.
+- Customer accounts with email verification and password recovery.
+- Saved addresses and order history.
+- Shipping cost calculation, with a free-shipping threshold you can configure.
+- Contact form, returns page, sitemap and `robots.txt`.
 
-A instalacao deve disponibilizar, pelo menos, as seguintes extensoes:
+**Back office**
+- Products and variations: create, edit, duplicate, quick-edit, order and change visibility in bulk.
+- Orders: status, details, refunds, bulk actions and cancelling reservations.
+- Customers and admin accounts: activate, deactivate and delete in bulk.
+- Shipping rules, store settings and transactional emails (PHPMailer over SMTP).
 
-- `mysqli`;
-- `curl`;
-- `fileinfo`;
-- `json`;
-- `mbstring`;
-- `openssl`;
-- `session`.
-
-O servidor de producao deve usar HTTPS.
-
-## Configuracao
-
-1. Crie uma copia do ficheiro de exemplo:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   Em PowerShell:
-
-   ```powershell
-   Copy-Item .env.example .env
-   ```
-
-2. Preencha o novo `.env` com valores proprios:
-
-   ```env
-   DB_HOST=
-   DB_USER=
-   DB_PASS=
-   DB_NAME=
-
-   STRIPE_LIVE_PUBLIC_KEY=
-   STRIPE_LIVE_SECRET_KEY=
-   STRIPE_LIVE_WEBHOOK_SECRET=
-   STRIPE_TEST_PUBLIC_KEY=
-   STRIPE_TEST_SECRET_KEY=
-   STRIPE_TEST_WEBHOOK_SECRET=
-
-   MAIL_HOST=
-   MAIL_PORT=
-   MAIL_USER=
-   MAIL_PASS=
-   MAIL_FROM_ADDRESS=
-   MAIL_FROM_NAME=
-   MAIL_REPLY_TO_ADDRESS=
-   MAIL_REPLY_TO_NAME=
-
-   APP_URL=https://exemplo.pt
-   ```
-
-3. Configure a base de dados com a estrutura exigida pela aplicacao.
-
-4. Aponte a raiz publica do servidor para o projeto e confirme que as regras
-   do `.htaccess` sao permitidas pelo Apache.
-
-5. Garanta permissoes de escrita apenas nas pastas e ficheiros que realmente
-   necessitam delas, como os diretorios de imagens e logs.
-
-## Imagens e elementos visuais
-
-As fotografias, logotipos e restantes imagens comerciais nao fazem parte do
-repositorio publico. As extensoes de imagem raster estao excluidas pelo
-`.gitignore`.
-
-Depois de instalar o projeto, os ficheiros autorizados devem ser colocados nas
-pastas correspondentes, por exemplo:
+## Architecture
 
 ```text
-public/images/
-public/assets/
-public/assets/header/
-public/assets/img_categorias/
+Browser (HTML, CSS, vanilla JS, AJAX)
+        │
+Apache + .htaccess (blocks direct access to config and hidden files, upload protection)
+        │
+PHP 8 pages and AJAX endpoints
+ ├── config/      session, CSRF, auth and roles, Stripe client, logger, URL helpers
+ ├── includes/    CartService · OrderService · CustomerService · ShippingService
+ ├── templates/   header, footer, customer sidebar
+ ├── admin/       back office (role-based)
+ └── dev/         developer tools (logs, backups, live content editing)
+        │                                   │
+MySQL / MariaDB (prepared statements,   Stripe API (PaymentIntents, refunds)
+transactions, stock reservations)       ◄── signed webhook (stripe_webhook.php)
+        │
+PHPMailer (SMTP) for transactional email
 ```
 
-O ficheiro `public/images/.htaccess` deve ser preservado, pois impede a
-execucao de scripts dentro da pasta de imagens.
+## Tech stack
 
-## Stripe
+| Area | Technology |
+|---|---|
+| Backend | PHP 8 (no framework), MySQL/MariaDB (mysqli) |
+| Payments | Stripe Payment Element, PaymentIntents, webhooks, refunds (REST over cURL) |
+| Frontend | HTML, CSS, vanilla JavaScript, AJAX |
+| Email | PHPMailer 6.10 over SMTP |
+| Hosting | Apache with `mod_rewrite`, cPanel, HTTPS |
 
-A integracao suporta ambientes de teste e producao. Cada ambiente deve usar
-as suas proprias chaves e o seu proprio segredo de webhook.
+## Running locally
 
-O endpoint de webhook deve ser configurado no painel Stripe para os eventos
-utilizados pela aplicacao. Nunca reutilize segredos de exemplo nem publique
-chaves secretas no codigo-fonte.
+Requires PHP 8+ (`mysqli`, `curl`, `fileinfo`, `json`, `mbstring`, `openssl`, `session`), MySQL/MariaDB and Apache with `mod_rewrite`.
 
-## Email
+1. Copy `.env.example` to `.env` and fill in:
+   - the database settings;
+   - the Stripe test and live keys and webhook secrets;
+   - the SMTP settings;
+   - `APP_URL`.
 
-O envio de email usa SMTP atraves do PHPMailer. As credenciais e os enderecos
-do remetente devem ser configurados exclusivamente no `.env`.
+   `.env` is ignored by Git.
+2. Create the database schema the application needs.
+3. Point the web root at the project and allow `.htaccess` overrides.
+4. In the Stripe dashboard, add a webhook pointing to `/stripe_webhook.php` for the `payment_intent.*` events.
+5. Give write permission only to the image and log folders.
 
-O PHPMailer incluido neste repositorio mantem a sua licenca LGPL-2.1. Consulte
-`THIRD_PARTY_NOTICES.md` e `phpmailer/LICENSE`.
+Product photos, logos and other store images belong to the store and are **not** included. Raster images are excluded by `.gitignore`.
 
-## Seguranca
+## Security notes
 
-- Nunca adicione o ficheiro `.env` ao Git;
-- Nao publique dumps SQL, backups, logs ou chaves privadas;
-- Use apenas HTTPS em producao;
-- Mantenha PHP, PHPMailer e o servidor atualizados;
-- Restrinja o acesso aos paineis administrativos;
-- Use palavras-passe unicas e fortes para administradores;
-- Proteja e teste o endpoint Stripe antes de aceitar pagamentos reais;
-- Reveja `git status` e `git ls-files` antes de cada publicacao.
+- Real `.env` files, logs, database dumps, backups, keys and certificates are never committed.
+- `public/images/.htaccess` stops scripts from running in the uploads folder.
+- Production runs only over HTTPS.
 
-Para confirmar que o `.env` esta ignorado:
+## Third-party components and license
 
-```bash
-git check-ignore -v .env
-```
+PHPMailer 6.10.0 is included under its own LGPL-2.1 license (see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)).
 
-## Conteudo excluido do repositorio
-
-O `.gitignore` impede a publicacao de:
-
-- Ficheiros `.env` reais;
-- Logs e ficheiros de erro;
-- Backups e dumps de bases de dados;
-- Chaves e certificados privados;
-- Fotografias e imagens raster;
-- Configuracao de editores;
-- Ficheiros temporarios;
-- Codigo antigo fora da aplicacao atual.
-
-## Componentes de terceiros
-
-Este projeto inclui PHPMailer 6.10.0. Os componentes de terceiros continuam
-sujeitos as suas licencas originais, independentemente da licenca aplicada ao
-restante projeto.
-
-Consulte [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) para mais informacao.
-
-## Licenca
-
-Copyright (c) 2026 Henrique Correia. Todos os direitos reservados.
-
-O codigo e disponibilizado publicamente apenas para consulta. Nao e concedida
-autorizacao para copiar, modificar, distribuir, sublicenciar, vender ou
-utilizar o projeto sem autorizacao previa e expressa por escrito.
-
-Consulte [LICENSE](LICENSE) para os termos completos.
+Copyright © 2026 Henrique Correia. **All rights reserved.** The code is public for reference only; see [LICENSE](LICENSE).
