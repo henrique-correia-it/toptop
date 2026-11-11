@@ -8,7 +8,7 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
 ![Status: live](https://img.shields.io/badge/status-live_in_production-2EA44F)
 
-> **Freelance project** by **Henrique Correia** (2026). Designed, built, deployed and maintained for a real store.
+> **Personal project** by **Henrique Correia** (2025 - present), built for a friend's store. Designed, built, deployed and hosted by me.
 > 🌐 **Live:** <https://toptop.pt>
 > No framework and no Composer dependencies, about 23,000 lines of PHP.
 
