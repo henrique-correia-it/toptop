@@ -34,9 +34,10 @@ ErrorDocument 404 /404.php
 
 # Bloqueia acesso direto a ficheiros PHP de configuração e includes sensíveis
 <IfModule mod_rewrite.c>
-    RewriteRule ^config/.*\.php$ - [F,L]
-    RewriteRule ^admin/includes/.*\.php$ - [F,L]
-    RewriteRule ^admin/config/.*$ - [F,L]
+    RewriteRule ^config/ - [F,L]
+    RewriteRule ^includes/ - [F,L]
+    RewriteRule ^admin/includes/ - [F,L]
+    RewriteRule ^admin/config/ - [F,L]
     RewriteRule ^logs/ - [F,L]
 </IfModule>
 

@@ -5,8 +5,13 @@ ob_start();
 header('Content-Type: application/json');
 $response = ['sucesso' => false, 'mensagem' => 'Ocorreu um erro inesperado.'];
 
+$in_transaction = false;
+$email_pos_commit = null;
+
 try {
     require_once __DIR__ . '/../config/session.php';
+    require_once __DIR__ . '/../config/auth.php';
+    require_once __DIR__ . '/../config/csrf.php';
     include '../config/database.php';
     include 'includes/email_handler.php';
 
@@ -15,11 +20,11 @@ try {
     }
 
     $dados = json_decode(file_get_contents('php://input'), true);
-    if (json_last_error() !== JSON_ERROR_NONE) {
+    if (json_last_error() !== JSON_ERROR_NONE || !is_array($dados)) {
         throw new Exception('Dados mal formados.');
     }
 
-    if (!isset($_SESSION['admin_logado']) || !isset($dados['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $dados['csrf_token'])) {
+    if (!is_admin_logged_in() || !csrf_from_array($dados)) {
         throw new Exception('Erro de segurança. Tente novamente.');
     }
 
@@ -31,8 +36,9 @@ try {
     }
 
     $conn->begin_transaction();
+    $in_transaction = true;
 
-    $stmt_enc = $conn->prepare("SELECT * FROM encomendas WHERE id = ?");
+    $stmt_enc = $conn->prepare("SELECT * FROM encomendas WHERE id = ? FOR UPDATE");
     $stmt_enc->bind_param("i", $encomenda_id);
     $stmt_enc->execute();
     $encomenda_db = $stmt_enc->get_result()->fetch_assoc();
@@ -42,7 +48,7 @@ try {
         throw new Exception("Encomenda não encontrada.");
     }
 
-    $estados_validos = ['pendente', 'pago', 'em processamento', 'pronta para levantamento', 'enviada', 'concluida', 'cancelada', 'incompleta', 'a aguardar pagamento', 'pagamento na entrega'];
+    $estados_validos = ['pendente', 'pago', 'em processamento', 'pronta para levantamento', 'enviada', 'concluida', 'cancelada', 'a aguardar pagamento', 'pagamento na entrega'];
 
     switch ($acao) {
         case 'cancelar_incompleta':
@@ -152,13 +158,7 @@ try {
                     $dados_email['corpo_editado'] = true;
                 }
 
-                try {
-                    enviarEmailEncomenda($tipo_email, $dados_email);
-                    $response['mensagem'] .= ' Email de notificação enviado.';
-                } catch (Exception $e) {
-                    log_email($e->getMessage(), 'ajax_gerir_encomenda.php');
-                    throw new Exception('O estado foi atualizado, mas o envio do email falhou.');
-                }
+                $email_pos_commit = ['tipo' => $tipo_email, 'dados' => $dados_email];
             }
             break;
 
@@ -199,12 +199,25 @@ try {
     }
 
     $conn->commit();
+    $in_transaction = false;
 
-} catch (Exception $e) {
-    if ($conn->in_transaction) $conn->rollback();
+    if ($email_pos_commit !== null) {
+        try {
+            enviarEmailEncomenda($email_pos_commit['tipo'], $email_pos_commit['dados']);
+            $response['mensagem'] .= ' Email de notificação enviado.';
+        } catch (\Throwable $e) {
+            log_email($e->getMessage(), 'ajax_gerir_encomenda.php');
+            $response['mensagem'] .= ' (Aviso: o envio do email falhou.)';
+        }
+    }
+
+} catch (\Throwable $e) {
+    if ($in_transaction && isset($conn)) {
+        $conn->rollback();
+    }
     log_app($e->getMessage(), 'ERROR', 'ajax_gerir_encomenda.php enc#' . ($encomenda_id ?? 0));
     $response['sucesso'] = false;
-    $response['mensagem'] = $e->getMessage();
+    $response['mensagem'] = ($e instanceof Exception && !($e instanceof mysqli_sql_exception)) ? $e->getMessage() : 'Ocorreu um erro interno ao processar a ação.';
     http_response_code(400);
 }
 

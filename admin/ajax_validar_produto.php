@@ -1,40 +1,52 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/csrf.php';
 include '../config/database.php';
 // Inclui a nova função de validação centralizada
 include 'includes/validacao_produto.php';
+
+header('Content-Type: application/json');
 
 // Resposta padrão
 $response = ['valido' => true, 'campo' => '', 'mensagem' => ''];
 
 // Segurança
-if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true) {
-    header('Content-Type: application/json');
+if (!is_admin_logged_in()) {
+    http_response_code(403);
     echo json_encode(['valido' => false, 'campo' => 'geral', 'mensagem' => 'Sessão inválida.']);
     exit;
 }
 
-$nome = trim($_POST['nome'] ?? '');
-$referencia = trim($_POST['referencia'] ?? '');
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['valido' => false, 'campo' => 'geral', 'mensagem' => 'Método não permitido.']);
+    exit;
+}
+
+if (!csrf_from_post()) {
+    http_response_code(403);
+    echo json_encode(['valido' => false, 'campo' => 'geral', 'mensagem' => 'Erro de segurança (CSRF). Recarregue a página.']);
+    exit;
+}
+
+$nome = trim((string)($_POST['nome'] ?? ''));
+$referencia = trim((string)($_POST['referencia'] ?? ''));
 $id_a_ignorar = (int)($_POST['id'] ?? 0);
 
 try {
-    // CORREÇÃO: Utiliza a nova função centralizada para validar
     $resultado_validacao = validarProduto($conn, $nome, $referencia, $id_a_ignorar);
-    
-    // Se a validação falhar, define a resposta com a mensagem e o campo corretos
+
     if (!$resultado_validacao['valido']) {
         $response['valido'] = false;
         $response['campo'] = $resultado_validacao['campo'];
         $response['mensagem'] = $resultado_validacao['mensagem'];
-        throw new Exception(); // Lança uma exceção para saltar para o 'catch'
     }
-
-} catch (Exception $e) {
-    // O 'catch' agora serve apenas para parar a execução se a validação falhar.
+} catch (\Throwable $e) {
+    log_app('Erro na validação de produto: ' . $e->getMessage(), 'ERROR', 'ajax_validar_produto.php');
+    http_response_code(500);
+    $response = ['valido' => false, 'campo' => 'geral', 'mensagem' => 'Erro interno ao validar o produto. Tente novamente.'];
 }
 
-// Devolve a resposta
-header('Content-Type: application/json');
 echo json_encode($response);
 exit;

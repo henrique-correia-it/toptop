@@ -7,14 +7,19 @@ require_once __DIR__ . '/config/cliente_auth.php';
 require_cliente();
 
 $cliente = cliente_atual($conn);
+if (!$cliente) {
+    header('Location: /entrar');
+    exit;
+}
 $erro = '';
 $sucesso = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_from_post()) {
-        $erro = 'Erro de seguranca. Recarregue a pagina.';
+        $erro = 'Erro de segurança. Recarregue a página.';
     } else {
         $acao = $_POST['acao'] ?? 'criar';
+        $inTx = false;
         try {
             if ($acao === 'criar') {
                 $rua = trim($_POST['rua'] ?? '');
@@ -26,21 +31,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmtCheck->bind_param('isss', $cliente['id'], $rua, $cp, $loc);
                 $stmtCheck->execute();
                 if ($stmtCheck->get_result()->fetch_assoc()) {
-                    throw new Exception('Esta morada já está guardada.');
+                    $stmtCheck->close();
+                    throw new InvalidArgumentException('Esta morada já está guardada.');
                 }
                 $stmtCheck->close();
 
                 $conn->begin_transaction();
+                $inTx = true;
                 $principal = !empty($_POST['principal']) || count(customer_addresses($conn, (int)$cliente['id'])) === 0;
                 customer_save_address($conn, (int)$cliente['id'], $_POST, $principal);
                 $conn->commit();
-                
+                $inTx = false;
+
                 $_SESSION['sucesso_morada'] = 'Morada guardada com sucesso.';
                 header('Location: /minha-conta/moradas');
                 exit;
             } elseif ($acao === 'principal') {
                 $moradaId = (int)($_POST['morada_id'] ?? 0);
+                $stmtOwn = $conn->prepare("SELECT id FROM cliente_moradas WHERE id = ? AND cliente_id = ? LIMIT 1");
+                $stmtOwn->bind_param('ii', $moradaId, $cliente['id']);
+                $stmtOwn->execute();
+                $existe = (bool)$stmtOwn->get_result()->fetch_assoc();
+                $stmtOwn->close();
+                if (!$existe) {
+                    throw new InvalidArgumentException('Morada não encontrada.');
+                }
+
                 $conn->begin_transaction();
+                $inTx = true;
                 $stmt = $conn->prepare("UPDATE cliente_moradas SET principal = 0 WHERE cliente_id = ?");
                 $stmt->bind_param('i', $cliente['id']);
                 $stmt->execute();
@@ -50,26 +68,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute();
                 $stmt->close();
                 $conn->commit();
-                
+                $inTx = false;
+
                 $_SESSION['sucesso_morada'] = 'Morada principal atualizada.';
                 header('Location: /minha-conta/moradas');
                 exit;
             } elseif ($acao === 'editar') {
                 $moradaId = (int)($_POST['morada_id'] ?? 0);
-                if (!$moradaId) throw new Exception('Morada inválida.');
+                if (!$moradaId) throw new InvalidArgumentException('Morada inválida.');
                 $rua  = trim($_POST['rua'] ?? '');
                 $cp   = trim($_POST['codigo_postal'] ?? '');
                 $loc  = trim($_POST['localidade'] ?? '');
-                if ($rua === '' || $cp === '' || $loc === '') throw new Exception('Preencha a rua, código postal e localidade.');
+                if ($rua === '' || $cp === '' || $loc === '') throw new InvalidArgumentException('Preencha a rua, código postal e localidade.');
                 $prov      = trim($_POST['provincia'] ?? '');
                 $pais      = strtoupper(trim($_POST['pais_regiao'] ?? 'PT'));
+                if (!preg_match('/^[A-Z]{2}$/', $pais)) $pais = 'PT';
                 $principal = !empty($_POST['principal']) ? 1 : 0;
 
+                $stmtOwn = $conn->prepare("SELECT id FROM cliente_moradas WHERE id = ? AND cliente_id = ? LIMIT 1");
+                $stmtOwn->bind_param('ii', $moradaId, $cliente['id']);
+                $stmtOwn->execute();
+                $existe = (bool)$stmtOwn->get_result()->fetch_assoc();
+                $stmtOwn->close();
+                if (!$existe) throw new InvalidArgumentException('Morada não encontrada.');
+
                 $conn->begin_transaction();
+                $inTx = true;
                 $stmt = $conn->prepare("UPDATE cliente_moradas SET rua=?, codigo_postal=?, localidade=?, provincia=?, pais_regiao=?, principal=? WHERE id=? AND cliente_id=?");
                 $stmt->bind_param('sssssiii', $rua, $cp, $loc, $prov, $pais, $principal, $moradaId, $cliente['id']);
                 $stmt->execute();
-                if ($stmt->affected_rows === 0) throw new Exception('Morada não encontrada.');
                 $stmt->close();
                 if ($principal) {
                     $stmt2 = $conn->prepare("UPDATE cliente_moradas SET principal=0 WHERE cliente_id=? AND id!=?");
@@ -78,6 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt2->close();
                 }
                 $conn->commit();
+                $inTx = false;
 
                 $_SESSION['sucesso_morada'] = 'Morada atualizada com sucesso.';
                 header('Location: /minha-conta/moradas');
@@ -93,10 +121,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: /minha-conta/moradas');
                 exit;
             }
-        } catch (Throwable $e) {
-            try { if ($conn->in_transaction) $conn->rollback(); } catch (Throwable $rollbackError) {}
-            log_app($e->getMessage(), 'ERROR', 'minha-conta-moradas.php');
+        } catch (InvalidArgumentException $e) {
+            if ($inTx) { try { $conn->rollback(); } catch (Throwable $rollbackError) {} }
             $erro = $e->getMessage();
+        } catch (Throwable $e) {
+            if ($inTx) { try { $conn->rollback(); } catch (Throwable $rollbackError) {} }
+            log_app($e->getMessage(), 'ERROR', 'minha-conta-moradas.php');
+            $erro = 'Não foi possível guardar a morada. Tente novamente.';
         }
     }
 }

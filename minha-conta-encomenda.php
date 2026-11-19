@@ -7,6 +7,10 @@ require_once __DIR__ . '/config/formatters.php';
 require_cliente();
 
 $cliente = cliente_atual($conn);
+if (!$cliente) {
+    header('Location: /entrar');
+    exit;
+}
 $orderId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$orderId) {
     header('Location: /minha-conta/encomendas');

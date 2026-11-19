@@ -1,14 +1,18 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/csrf.php';
 include '../config/database.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') { exit('Acesso inválido.'); }
-if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true || !in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor'])) {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); exit('Acesso inválido.'); }
+if (!admin_has_role(['superadmin', 'desenvolvedor'])) {
+    http_response_code(403);
     exit('Não autorizado.');
 }
-if (!hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'] ?? '')) { exit('CSRF inválido.'); }
+if (!csrf_from_post()) { http_response_code(403); exit('CSRF inválido.'); }
 
-$ids = array_values(array_unique(array_filter(array_map('intval', $_POST['ids'] ?? []), fn($id) => $id > 0)));
+$raw_ids = is_array($_POST['ids'] ?? null) ? $_POST['ids'] : [];
+$ids = array_values(array_unique(array_filter(array_map('intval', $raw_ids), fn($id) => $id > 0)));
 
 if (empty($ids)) {
     $_SESSION['flash_message'] = ['tipo' => 'erro', 'texto' => 'Nenhum administrador selecionado.'];
@@ -27,8 +31,10 @@ $stmt->close();
 $totalSA = (int)$conn->query("SELECT COUNT(*) FROM administradores WHERE role = 'superadmin'")->fetch_row()[0];
 $totalDev = (int)$conn->query("SELECT COUNT(*) FROM administradores WHERE role = 'desenvolvedor'")->fetch_row()[0];
 
+$meu_id = (int)($_SESSION['admin_id'] ?? 0);
 $ids_a_apagar = [];
 foreach ($admins as $admin) {
+    if ((int)$admin['id'] === $meu_id) continue;
     if ($admin['role'] === 'desenvolvedor' && $minha_role !== 'desenvolvedor') continue;
     if ($admin['role'] === 'superadmin' && $totalSA <= 1) continue;
     if ($admin['role'] === 'desenvolvedor' && $totalDev <= 1) continue;

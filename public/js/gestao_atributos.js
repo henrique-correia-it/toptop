@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     addCustomBtn?.addEventListener('click', () => criarBlocoPersonalizado('', ''));
 
     form.addEventListener('click', (e) => {
-        const removeBtn = e.target.closest('.btn-del-single');
+        const removeBtn = e.target.closest('.btn-del-single, .btn-remover-atributo');
         if (removeBtn) {
             const bloco = removeBtn.closest('.atributo-bloco');
             if (bloco?.dataset.nomeAtributo) {

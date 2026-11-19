@@ -674,8 +674,8 @@ document.getElementById('btn-continuar').addEventListener('click', async () => {
         });
 
         document.getElementById('review-content').innerHTML = `
-            <div class="ck-review-row"><div class="ck-review-label">Contacto</div><div class="ck-review-data">${d.email}</div></div>
-            <div class="ck-review-row"><div class="ck-review-label">Entrega</div><div class="ck-review-data">${moradaFinal.replace(/\n/g, ', ')}</div></div>
+            <div class="ck-review-row"><div class="ck-review-label">Contacto</div><div class="ck-review-data">${escapeHTML(d.email)}</div></div>
+            <div class="ck-review-row"><div class="ck-review-label">Entrega</div><div class="ck-review-data">${escapeHTML(moradaFinal).replace(/\n/g, ', ')}</div></div>
         `;
         document.getElementById('passo-1').style.display = 'none';
         document.getElementById('passo-2').style.display = 'block';

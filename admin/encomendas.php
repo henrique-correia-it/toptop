@@ -71,7 +71,7 @@ $types_paginacao .= "ii";
 $params_paginacao[] = $resultados_por_pagina;
 $params_paginacao[] = $offset;
 
-$stmt = $conn->prepare("SELECT id, cliente_nome, data_encomenda, total, portes_envio, estado, metodo_entrega " . $sql_base . $where_clause . " ORDER BY data_encomenda DESC LIMIT ? OFFSET ?");
+$stmt = $conn->prepare("SELECT id, cliente_nome, data_encomenda, total, portes_envio, estado, metodo_entrega, metodo_pagamento " . $sql_base . $where_clause . " ORDER BY data_encomenda DESC LIMIT ? OFFSET ?");
 $stmt->bind_param($types_paginacao, ...$params_paginacao);
 $stmt->execute();
 $encomendas = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);

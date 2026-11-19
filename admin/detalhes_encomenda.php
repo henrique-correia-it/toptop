@@ -371,7 +371,7 @@ include '../templates/header.php';
                             </div>
                             <div class="mensagem-body">
                                 <strong>Assunto:</strong> <?php echo htmlspecialchars($msg['assunto']); ?><br>
-                                <?php echo $msg['mensagem']; ?>
+                                <?php echo sanitize_email_history_html($msg['mensagem'] ?? ''); ?>
                             </div>
                         </div>
                         <?php endforeach; ?>

@@ -51,11 +51,11 @@ $resultados_por_pagina = 12;
 $pagina_atual = filter_input(INPUT_GET, 'pagina', FILTER_VALIDATE_INT, ['options' => ['default' => 1, 'min_range' => 1]]);
 $offset = ($pagina_atual - 1) * $resultados_por_pagina;
 
-$termo_pesquisa = trim($_GET['q'] ?? '');
-$promocao_selecionada = $_GET['promocao'] ?? '';
-$categorias_selecionadas = $_GET['categorias'] ?? [];
-$atributos_selecionados = $_GET['atributos'] ?? [];
-$ordenar_selecionado = $_GET['ordenar'] ?? '';
+$termo_pesquisa = trim((string)($_GET['q'] ?? ''));
+$promocao_selecionada = is_string($_GET['promocao'] ?? '') ? $_GET['promocao'] : '';
+$categorias_selecionadas = is_array($_GET['categorias'] ?? null) ? array_values(array_filter($_GET['categorias'], 'is_string')) : [];
+$atributos_selecionados = is_array($_GET['atributos'] ?? null) ? $_GET['atributos'] : [];
+$ordenar_selecionado = is_string($_GET['ordenar'] ?? '') ? $_GET['ordenar'] : '';
 
 // CONSTRUÇÃO DA QUERY OTIMIZADA
 $sql_base = "FROM produtos p";
@@ -86,17 +86,22 @@ if (!empty($categorias_selecionadas)) {
 
 if (!empty($atributos_selecionados)) {
     foreach ($atributos_selecionados as $grupo => $valores) {
-        if (!empty($valores)) {
+        if (!is_string($grupo) || $grupo === '' || !is_array($valores)) {
+            continue;
+        }
+        $grupo_seguro = str_replace(['\\', '"'], '', $grupo);
+        if ($grupo_seguro === '') {
+            continue;
+        }
+        $valores_limpos = array_values(array_filter($valores, fn($v) => is_string($v) && $v !== ''));
+        if (!empty($valores_limpos)) {
             $group_conditions = [];
-            foreach ($valores as $valor) {
-                // JSON_CONTAINS procura se o *valor* existe dentro do array JSON do grupo
+            foreach ($valores_limpos as $valor) {
                 $group_conditions[] = "JSON_CONTAINS(p.atributos, JSON_QUOTE(?), ?)";
                 $params[] = $valor;
-                // O caminho JSON para o grupo, por exemplo '$.Cor'
-                $params[] = '$.' . '"' . $grupo . '"';
+                $params[] = '$.' . '"' . $grupo_seguro . '"';
                 $types .= 'ss';
             }
-            // Dentro de um grupo, a lógica é OU (ex: Cor = Azul OU Cor = Vermelho)
             $condicoes[] = "(" . implode(' OR ', $group_conditions) . ")";
         }
     }
@@ -152,7 +157,7 @@ if ($total_resultados > 0) {
     // Adicionámos uma subconsulta para ir buscar o ID da variação base para produtos simples
     $query_final = "SELECT DISTINCT p.*,
         (SELECT SUM(pv.quantidade) FROM produto_variacoes pv WHERE pv.produto_id = p.id) as stock_total,
-        (SELECT pv.id FROM produto_variacoes pv WHERE pv.produto_id = p.id AND pv.atributos = '{}') as base_variacao_id "
+        (SELECT pv.id FROM produto_variacoes pv WHERE pv.produto_id = p.id AND pv.atributos = '{}' LIMIT 1) as base_variacao_id "
         . $sql_base . $where_clause . $order_by_clause . " LIMIT ? OFFSET ?";
 
     $params_paginacao = $params;
@@ -347,7 +352,7 @@ ob_start(); // Inicia um novo buffer para o HTML dos produtos
                 $stock_para_js = (int) ($row['stock_total'] ?? 0);
                 $esgotado = ($stock_para_js <= 0);
                 $tag_principal = $esgotado ? 'div' : 'a';
-                $link_atributo = !$esgotado ? 'href="' . $link_produto . '"' : '';
+                $link_atributo = !$esgotado ? 'href="' . htmlspecialchars($link_produto, ENT_QUOTES, 'UTF-8') . '"' : '';
                 ?>
                 <<?php echo $tag_principal; ?>             <?php echo $link_atributo; ?> class="produto
                     <?php echo $esgotado ? 'esgotado' : ''; ?>"
@@ -632,6 +637,65 @@ include 'templates/header.php';
         <div class="produtos-relacionados-container modal-related-footer"></div>
     </div>
 </div>
+
+<?php
+$abrir_produto_id = isset($_GET['abrir_produto']) ? (int) $_GET['abrir_produto'] : 0;
+if ($abrir_produto_id > 0 && !in_array($abrir_produto_id, array_map('intval', $product_ids ?? []), true)) {
+    $stmt_preload = $conn->prepare(
+        "SELECT p.*,
+                (SELECT SUM(pv.quantidade) FROM produto_variacoes pv WHERE pv.produto_id = p.id) AS stock_total,
+                (SELECT pv.id FROM produto_variacoes pv WHERE pv.produto_id = p.id AND pv.atributos = '{}' LIMIT 1) AS base_variacao_id
+         FROM produtos p
+         WHERE p.id = ? AND p.ativo = 1
+         LIMIT 1"
+    );
+    if ($stmt_preload) {
+        $stmt_preload->bind_param('i', $abrir_produto_id);
+        $stmt_preload->execute();
+        $preload_row = $stmt_preload->get_result()->fetch_assoc();
+        $stmt_preload->close();
+
+        if ($preload_row) {
+            $preload_imgs = [];
+            $stmt_pimg = $conn->prepare("SELECT nome_ficheiro FROM produto_imagens WHERE produto_id = ? ORDER BY FIELD(nome_ficheiro, ?) DESC, id ASC");
+            if ($stmt_pimg) {
+                $stmt_pimg->bind_param('is', $preload_row['id'], $preload_row['foto_principal']);
+                $stmt_pimg->execute();
+                $res_pimg = $stmt_pimg->get_result();
+                while ($ir = $res_pimg->fetch_assoc()) {
+                    $preload_imgs[] = $ir['nome_ficheiro'];
+                }
+                $stmt_pimg->close();
+            }
+            if (empty($preload_imgs) && !empty($preload_row['foto_principal'])) {
+                $preload_imgs[] = $preload_row['foto_principal'];
+            }
+            $preload_foto = $preload_imgs[0] ?? 'default.jpg';
+            $preload_slug = criar_slug($preload_row['nome'] . '-' . $preload_row['id']);
+            ?>
+            <div id="produto-modal-preload" class="produto" style="display:none;"
+                data-id="<?php echo (int) $preload_row['id']; ?>"
+                data-slug="<?php echo htmlspecialchars($preload_slug, ENT_QUOTES, 'UTF-8'); ?>"
+                data-categoria="<?php echo htmlspecialchars($preload_row['categoria'], ENT_QUOTES, 'UTF-8'); ?>"
+                data-referencia="<?php echo htmlspecialchars($preload_row['referencia'], ENT_QUOTES, 'UTF-8'); ?>"
+                data-nome="<?php echo htmlspecialchars($preload_row['nome'], ENT_QUOTES, 'UTF-8'); ?>"
+                data-preco="<?php echo $preload_row['preco']; ?>"
+                data-descricao="<?php echo htmlspecialchars($preload_row['descricao'], ENT_QUOTES, 'UTF-8'); ?>"
+                data-fotos='<?php echo htmlspecialchars(json_encode($preload_imgs), ENT_QUOTES, 'UTF-8'); ?>'
+                data-preco-promocional="<?php echo $preload_row['preco_promocional']; ?>"
+                data-atributos='<?php echo htmlspecialchars($preload_row['atributos'] ?? '{}', ENT_QUOTES, 'UTF-8'); ?>'
+                data-quantidade="<?php echo (int) ($preload_row['stock_total'] ?? 0); ?>"
+                data-base-variacao-id="<?php echo $preload_row['base_variacao_id'] ?? ''; ?>"
+                data-guia-tamanho-id="<?php echo $preload_row['guia_tamanho_id'] ?? ''; ?>"
+                data-peso="<?php echo $preload_row['peso_gramas'] ?? 0; ?>"
+                data-filtros-ativos="false">
+                <img src="/public/images/<?php echo htmlspecialchars($preload_foto, ENT_QUOTES, 'UTF-8'); ?>" class="imagem-principal" alt="">
+            </div>
+            <?php
+        }
+    }
+}
+?>
 
 <script
     src="/public/js/modalProduto.js?v=<?php echo filemtime(__DIR__ . '/public/js/modalProduto.js'); ?>"></script>
@@ -1044,17 +1108,31 @@ include 'templates/header.php';
             }
         }
 
-        const produtoIdParaAbrir = sessionStorage.getItem('abrirModalProdutoId');
-        if (produtoIdParaAbrir && !deveAbrirPaginaProduto()) {
-            const produtoCard = document.querySelector(`.produto[data-id='${produtoIdParaAbrir}']`);
+        const urlParamsAbrir = new URLSearchParams(window.location.search);
+        const rawAbrirId = urlParamsAbrir.get('abrir_produto') || sessionStorage.getItem('abrirModalProdutoId') || '';
+        const produtoIdParaAbrir = /^\d+$/.test(rawAbrirId) ? rawAbrirId : '';
+        if (produtoIdParaAbrir) {
+            const produtoCard = document.querySelector(`.produto[data-id='${produtoIdParaAbrir}']`)
+                || document.getElementById('produto-modal-preload');
             if (produtoCard) {
-                setTimeout(() => {
-                    const imagemSrc = produtoCard.querySelector('.imagem-principal').src;
-                    window.abrirModalProduto(produtoCard, imagemSrc);
-                }, 150);
+                if (deveAbrirPaginaProduto()) {
+                    window.location.href = produtoCard.getAttribute('href') || `/produto/${produtoCard.dataset.slug}`;
+                } else {
+                    setTimeout(() => {
+                        const imgEl = produtoCard.querySelector('.imagem-principal');
+                        const imagemSrc = imgEl ? imgEl.src : null;
+                        window.abrirModalProduto(produtoCard, imagemSrc);
+                    }, 150);
+                }
+            }
+            sessionStorage.removeItem('abrirModalProdutoId');
+            if (urlParamsAbrir.has('abrir_produto')) {
+                urlParamsAbrir.delete('abrir_produto');
+                const cleanQuery = urlParamsAbrir.toString();
+                const cleanUrl = window.location.pathname + (cleanQuery ? '?' + cleanQuery : '');
+                window.history.replaceState({}, '', cleanUrl);
             }
         }
-        if (produtoIdParaAbrir) sessionStorage.removeItem('abrirModalProdutoId');
     });
 </script>
 <?php

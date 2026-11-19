@@ -19,21 +19,36 @@ if ($produto_id > 0) {
     $stmt->close();
 }
 
-// --- PASSO B: Definir o Título para o SEO ---
+// --- PASSO B: Definir Título, Meta Description, Canonical e Open Graph de Produto ---
 if ($produto) {
+    $slug_produto = criar_slug($produto['nome'] . '-' . $produto['id']);
+    $canonical_url = '/produto/' . $slug_produto;
+    $preco_seo = ($produto['preco_promocional'] > 0) ? (float)$produto['preco_promocional'] : (float)$produto['preco'];
+    $preco_seo_fmt = number_format($preco_seo, 2, '.', '');
+    $stock_para_js = (int)($produto['stock_total'] ?? 0);
+
     $titulo_pagina = $produto['nome'];
-    $descricao_pagina = strip_tags($produto['descricao']);
+    $desc_limpa = trim(preg_replace('/\s+/', ' ', strip_tags((string)($produto['descricao'] ?? ''))));
+    if ($desc_limpa !== '') {
+        $descricao_pagina = $desc_limpa;
+    } else {
+        $descricao_pagina = 'Compra ' . $produto['nome'] . ' na TopTop por €' . number_format($preco_seo, 2, ',', '.') . '. Envio rápido para Portugal e Europa.';
+    }
+
+    $head_extra  = '    <meta property="product:price:amount" content="' . $preco_seo_fmt . '">' . "\n";
+    $head_extra .= '    <meta property="product:price:currency" content="EUR">' . "\n";
+    $head_extra .= '    <meta property="product:availability" content="' . ($stock_para_js > 0 ? 'in stock' : 'out of stock') . '">' . "\n";
+    $head_extra .= '    <meta property="product:brand" content="TopTop">' . "\n";
 } else {
+    http_response_code(404);
+    $noindex = true;
     $titulo_pagina = "Produto não encontrado";
 }
 
 // --- PASSO C: Só AGORA incluímos o header ---
 include __DIR__ . '/templates/header.php';
 
-// O código continua normalmente a partir daqui (verificação de 404)...
-
 if (!$produto) {
-    http_response_code(404);
     echo "<main class='pagina-produto-detalhe' style='text-align:center;'><p style='font-size: 1.2rem;'>Ups! O produto que procura não foi encontrado.</p></main>";
     include __DIR__ . '/templates/footer.php';
     exit;
@@ -76,15 +91,15 @@ $filtros_url_json = htmlspecialchars(json_encode($filtros_url), ENT_QUOTES, 'UTF
         <div class="modal-galeria">
             <div class="zoom-container">
                 <div class="image-loading-spinner"></div>
-                <img id="modalImagemPrincipal" src="" alt="Imagem principal do produto">
+                <img id="modalImagemPrincipal" src="/public/images/<?php echo rawurlencode($imagens[0] ?? ($produto['foto_principal'] ?? 'default.jpg')); ?>" alt="<?php echo htmlspecialchars($produto['nome'], ENT_QUOTES, 'UTF-8'); ?>" fetchpriority="high">
             </div>
             <div id="modalThumbnails" class="modal-thumbnails">
                 </div>
         </div>
 
         <div class="modal-info">
-            <h1 id="modalNome"></h1>
-            <p id="modalPreco"></p>
+            <h1 id="modalNome"><?php echo htmlspecialchars($produto['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+            <p id="modalPreco">€<?php echo number_format($preco_seo, 2, ',', '.'); ?></p>
             <div class="produto-meta-info">
                 <span id="meta-referencia" class="meta-item" style="display: none;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
@@ -100,7 +115,7 @@ $filtros_url_json = htmlspecialchars(json_encode($filtros_url), ENT_QUOTES, 'UTF
                 <div class="acordeao-item">
                     <button class="acordeao-header">Descrição</button>
                     <div class="acordeao-conteudo">
-                        <p id="modalDescricao"></p>
+                        <p id="modalDescricao"><?php echo nl2br(htmlspecialchars((string)($produto['descricao'] ?? ''), ENT_QUOTES, 'UTF-8')); ?></p>
                     </div>
                 </div>
             </div>
@@ -123,25 +138,74 @@ $filtros_url_json = htmlspecialchars(json_encode($filtros_url), ENT_QUOTES, 'UTF
     </div>
 
     <div id="produtosRelacionadosContainer" class="produtos-relacionados-container"></div>
-    <script type="application/ld+json">
-{
-  "@context": "https://schema.org/",
-  "@type": "Product",
-  "name": "<?php echo htmlspecialchars($produto['nome']); ?>",
-  "image": [
-    "<?php echo $base_url; ?>/public/assets/img_produtos/<?php echo $produto['foto_principal']; ?>"
-   ],
-  "description": "<?php echo htmlspecialchars(strip_tags($produto['descricao'])); ?>",
-  "sku": "<?php echo htmlspecialchars($produto['referencia']); ?>",
-  "offers": {
-    "@type": "Offer",
-    "url": "<?php echo "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']; ?>",
-    "priceCurrency": "EUR",
-    "price": "<?php echo $produto['preco_promocional'] > 0 ? $produto['preco_promocional'] : $produto['preco']; ?>",
-    "availability": "<?php echo ($produto['stock_total'] > 0) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'; ?>"
-  }
+<?php
+$imagens_ld = array_values(array_map(
+    fn($img) => $base_url . '/public/images/' . rawurlencode($img),
+    !empty($imagens) ? $imagens : (array)($produto['foto_principal'] ?? [])
+));
+$url_canonica_abs = $base_url . '/produto/' . $slug_produto;
+
+$product_ld = [
+    '@type' => 'Product',
+    'name' => $produto['nome'],
+    'image' => $imagens_ld,
+    'description' => $descricao_pagina,
+    'sku' => (string)($produto['referencia'] ?? ''),
+    'brand' => [
+        '@type' => 'Brand',
+        'name' => 'TopTop',
+    ],
+    'offers' => [
+        '@type' => 'Offer',
+        'url' => $url_canonica_abs,
+        'priceCurrency' => 'EUR',
+        'price' => $preco_seo_fmt,
+        'itemCondition' => 'https://schema.org/NewCondition',
+        'availability' => ($stock_para_js > 0) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        'seller' => [
+            '@type' => 'Organization',
+            'name' => 'TopTop',
+        ],
+    ],
+];
+if (!empty($produto['categoria'])) {
+    $product_ld['category'] = $produto['categoria'];
 }
-</script>
+
+$breadcrumb_items = [
+    ['@type' => 'ListItem', 'position' => 1, 'name' => 'Início', 'item' => $base_url . '/'],
+    ['@type' => 'ListItem', 'position' => 2, 'name' => 'Produtos', 'item' => $base_url . '/produtos'],
+];
+$pos = 3;
+if (!empty($produto['categoria'])) {
+    $breadcrumb_items[] = [
+        '@type' => 'ListItem',
+        'position' => $pos++,
+        'name' => $produto['categoria'],
+        'item' => $base_url . '/produtos?categorias%5B%5D=' . rawurlencode($produto['categoria']),
+    ];
+}
+$breadcrumb_items[] = [
+    '@type' => 'ListItem',
+    'position' => $pos,
+    'name' => $produto['nome'],
+    'item' => $url_canonica_abs,
+];
+
+$schema_graph = [
+    '@context' => 'https://schema.org',
+    '@graph' => [
+        $product_ld,
+        [
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => $breadcrumb_items,
+        ],
+    ],
+];
+?>
+    <script type="application/ld+json">
+<?php echo json_encode($schema_graph, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>
+    </script>
 </main>
 
 <script src="/public/js/modalProduto.js?v=<?php echo filemtime(__DIR__ . '/public/js/modalProduto.js'); ?>"></script>

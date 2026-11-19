@@ -3,6 +3,7 @@
 
 include __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/http.php';
+require_once __DIR__ . '/config/url_helpers.php';
 
 // Remove tags HTML do termo de pesquisa (o prepared statement protege contra SQLi)
 $termo_pesquisa = trim(strip_tags($_GET['q'] ?? ''));
@@ -24,6 +25,8 @@ if (strlen($termo_pesquisa) >= 2) {
     $result = $stmt->get_result();
 
     while ($row = $result->fetch_assoc()) {
+        $row['slug'] = criar_slug($row['nome'] . '-' . $row['id']);
+        $row['url'] = '/produto/' . $row['slug'];
         $resultados[] = $row;
     }
     $stmt->close();

@@ -15,11 +15,16 @@ require_once __DIR__ . '/includes/CartService.php';
 require_once __DIR__ . '/includes/OrderService.php';
 require_once __DIR__ . '/includes/ShippingService.php';
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    ob_end_clean();
+    json_error('Método não permitido.', 405);
+}
+
 $dados = json_input();
 
 // Validação CSRF: token enviado pelo frontend no corpo JSON
 if (
-    !$dados
+    !is_array($dados)
     || !csrf_from_array($dados)
 ) {
     ob_end_clean();
@@ -29,6 +34,9 @@ if (
 // Validação dos dados recebidos
 if (
     empty($dados['carrinho'])
+    || !is_array($dados['carrinho'])
+    || empty($dados['cliente'])
+    || !is_array($dados['cliente'])
     || empty($dados['cliente']['nome'])
     || empty($dados['cliente']['email'])
     || empty($dados['cliente']['telefone'])
@@ -41,6 +49,21 @@ if (
 $carrinho_cliente = $dados['carrinho'];
 $dados_cliente    = $dados['cliente'];
 $metodo_entrega   = $dados['metodo_entrega'] ?? 'envio';
+if (!in_array($metodo_entrega, ['envio', 'recolha'], true)) {
+    ob_end_clean();
+    json_error('Método de entrega inválido.', 400);
+}
+if ($metodo_entrega === 'envio') {
+    if (
+        trim((string)($dados_cliente['rua'] ?? '')) === ''
+        || trim((string)($dados_cliente['codigo_postal'] ?? '')) === ''
+        || trim((string)($dados_cliente['localidade'] ?? '')) === ''
+    ) {
+        ob_end_clean();
+        json_error('Preencha todos os campos obrigatórios da morada de envio.', 400);
+    }
+}
+$dados_cliente['cliente_nif'] = trim((string)($dados_cliente['cliente_nif'] ?? ''));
 $cliente_conta = is_cliente_logged_in() ? cliente_atual($conn) : null;
 $cliente_id = $cliente_conta ? (int)$cliente_conta['id'] : null;
 $origem_encomenda = $cliente_conta ? 'cliente' : 'guest';
@@ -73,6 +96,7 @@ if (empty($stripe_keys['secret'])) {
 $token     = bin2hex(random_bytes(32));
 $data_agora = date('Y-m-d H:i:s');
 
+$payment_intent_id = null;
 $conn->begin_transaction();
 try {
     // ── 1. Validação e cálculo server-side do carrinho ─────────────────────
@@ -80,7 +104,7 @@ try {
     $total_encomenda = $cart_validation['total'];
     $total_peso = $cart_validation['weight'];
     $carrinho_verificado = $cart_validation['items'];
-    
+
     $pais_cliente = $dados_cliente['pais_regiao'] ?? 'PT';
     $portes_valor = ($metodo_entrega === 'recolha')
         ? 0
@@ -98,20 +122,24 @@ try {
 
     $morada_completa = format_address($dados_cliente);
 
-    $pi_response = stripeRequest('POST', 'payment_intents', [
-        'amount'                          => $amount_cents,
-        'currency'                        => 'eur',
-        'payment_method_types'            => ['card', 'mb_way', 'klarna'],
-        'metadata[cliente_email]'         => $dados_cliente['email'],
-        'metadata[cliente_nome]'          => $dados_cliente['nome'],
-        'description'                     => 'Encomenda TopTop.pt',
-        'shipping[name]'                  => $dados_cliente['nome'],
-        'shipping[address][line1]'        => $dados_cliente['rua'],
-        'shipping[address][city]'         => $dados_cliente['localidade'],
-        'shipping[address][postal_code]'  => $dados_cliente['codigo_postal'],
-        'shipping[address][country]'      => $dados_cliente['pais_regiao'],
-        'shipping[address][state]'        => $dados_cliente['provincia'] ?? '',
-    ], $stripe_keys['secret']);
+    $pi_payload = [
+        'amount'                  => $amount_cents,
+        'currency'                => 'eur',
+        'payment_method_types'    => ['card', 'mb_way', 'klarna'],
+        'metadata[cliente_email]' => $dados_cliente['email'],
+        'metadata[cliente_nome]'  => $dados_cliente['nome'],
+        'description'             => 'Encomenda TopTop.pt',
+    ];
+    if ($metodo_entrega === 'envio') {
+        $pi_payload['shipping[name]']                 = $dados_cliente['nome'];
+        $pi_payload['shipping[address][line1]']       = (string)($dados_cliente['rua'] ?? '');
+        $pi_payload['shipping[address][city]']        = (string)($dados_cliente['localidade'] ?? '');
+        $pi_payload['shipping[address][postal_code]'] = (string)($dados_cliente['codigo_postal'] ?? '');
+        $pi_payload['shipping[address][country]']     = (string)($dados_cliente['pais_regiao'] ?? 'PT');
+        $pi_payload['shipping[address][state]']       = (string)($dados_cliente['provincia'] ?? '');
+    }
+
+    $pi_response = stripeRequest('POST', 'payment_intents', $pi_payload, $stripe_keys['secret']);
 
     if (!empty($pi_response['error']) || empty($pi_response['client_secret'])) {
         $err_msg = $pi_response['error']['message'] ?? 'Erro desconhecido ao contactar o Stripe.';
@@ -121,7 +149,7 @@ try {
     $payment_intent_id = $pi_response['id'];
     $client_secret     = $pi_response['client_secret'];
 
-    // ── 3. Insere a encomenda na DB (estado: "a aguardar pagamento") ────────
+    // ── 3. Insere a encomenda na DB (estado: "incompleta") ──────────────────
     $stmt_enc = $conn->prepare(
         "INSERT INTO encomendas
             (cliente_id, origem, cliente_nome, cliente_email, cliente_telefone, cliente_morada, cliente_nif,
@@ -153,18 +181,15 @@ try {
     $encomenda_id = $conn->insert_id;
     $stmt_enc->close();
 
-    // Atualiza o PaymentIntent com o ID da encomenda (para o webhook)
-    stripeRequest('POST', "payment_intents/{$payment_intent_id}", [
-        'metadata[encomenda_id]' => $encomenda_id,
-    ], $stripe_keys['secret']);
-
     // ── 4. Insere itens e abate stock ─────────────────────────────────────
     insert_order_items_and_decrement_stock($conn, $encomenda_id, $carrinho_verificado);
 
-
     $conn->commit();
 
-    // Email imediato de encomenda pendente (processamento) removido a pedido.
+    // Atualiza o PaymentIntent com o ID da encomenda fora da transação (sem reter locks)
+    stripeRequest('POST', "payment_intents/{$payment_intent_id}", [
+        'metadata[encomenda_id]' => $encomenda_id,
+    ], $stripe_keys['secret']);
 
     ob_end_clean();
     json_success([
@@ -176,6 +201,10 @@ try {
 
 } catch (\Throwable $e) {
     $conn->rollback();
+    // Cancela o PaymentIntent órfão no Stripe caso a BD tenha falhado após a sua criação
+    if (!empty($payment_intent_id)) {
+        stripeRequest('POST', "payment_intents/{$payment_intent_id}/cancel", [], $stripe_keys['secret']);
+    }
     log_app($e->getMessage(), 'ERROR', 'ajax_create_payment_intent.php');
     ob_end_clean();
     json_error('Nao foi possivel iniciar o pagamento. Tente novamente.', 400);

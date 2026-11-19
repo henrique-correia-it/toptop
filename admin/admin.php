@@ -300,15 +300,15 @@ renderContextMenu([
 <?php renderQuickEditModal('qe-modal', 'Personalizar Card'); ?>
 
 <template id="tpl-card-modal">
-    <input type="hidden" id="qe-key">
+    <input type="hidden" id="qe-key" name="key">
     <div class="qe-body">
         <div class="qe-f">
             <label>Título do Card</label>
-            <input type="text" id="qe-title" class="qe-in" required>
+            <input type="text" id="qe-title" name="title" class="qe-in" required>
         </div>
         <div class="qe-f" id="qe-desc-group">
             <label>Descrição / Legenda</label>
-            <textarea id="qe-desc" class="qe-in" rows="3"></textarea>
+            <textarea id="qe-desc" name="description" class="qe-in" rows="3"></textarea>
         </div>
     </div>
 </template>
@@ -391,8 +391,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (descEl) descEl.textContent = data.description;
                     document.getElementById('qe-modal').style.display = 'none';
                     mostrarPopup('Interface atualizada!', 'sucesso');
+                } else {
+                    mostrarPopup(data.mensagem || 'Erro ao atualizar interface.', 'erro');
                 }
-            }).finally(() => { btnSave.disabled = false; btnSave.textContent = 'Guardar'; });
+            })
+            .catch(() => mostrarPopup('Erro de comunicação ao guardar.', 'erro'))
+            .finally(() => { btnSave.disabled = false; btnSave.textContent = 'Guardar'; });
     }
 
     // Toggle Global Edit Mode

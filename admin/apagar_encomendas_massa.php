@@ -82,10 +82,7 @@ try {
         $usedGallery = (int)$stmtCheckGallery->get_result()->fetch_assoc()['total'];
 
         if ($usedOrders === 0 && $usedProducts === 0 && $usedGallery === 0) {
-            $path = '../public/images/' . $photo;
-            if (file_exists($path) && is_file($path)) {
-                unlink($path);
-            }
+            $photosToDelete[] = basename($photo);
         }
     }
 
@@ -97,21 +94,32 @@ try {
     $stmtCheckGallery->close();
 
     $conn->commit();
+
+    $imagesDir = realpath(__DIR__ . '/../public/images');
+    if ($imagesDir && !empty($photosToDelete)) {
+        foreach (array_unique($photosToDelete) as $safePhoto) {
+            $path = realpath($imagesDir . DIRECTORY_SEPARATOR . $safePhoto);
+            if ($path && str_starts_with($path, $imagesDir . DIRECTORY_SEPARATOR) && is_file($path)) {
+                @unlink($path);
+            }
+        }
+    }
+
     $_SESSION['flash_message'] = [
         'tipo' => 'sucesso',
         'texto' => $deleted . ' encomenda(s) apagada(s) permanentemente com sucesso!'
     ];
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     $conn->rollback();
     error_log($e->getMessage());
     $_SESSION['flash_message'] = ['tipo' => 'erro', 'texto' => 'Ocorreu um erro ao apagar as encomendas selecionadas.'];
 }
 
 $returnTo = $_POST['return_to'] ?? 'encomendas.php';
-if (strpos($returnTo, '/admin/encomendas.php') === 0) {
+if (is_string($returnTo) && strpos($returnTo, '/admin/encomendas.php') === 0) {
     $returnTo = substr($returnTo, strlen('/admin/'));
 }
-if (!preg_match('/^encomendas\.php(\?.*)?$/', $returnTo)) {
+if (!is_string($returnTo) || !preg_match('/^encomendas\.php(\?[^\r\n]*)?\z/', $returnTo)) {
     $returnTo = 'encomendas.php';
 }
 

@@ -99,7 +99,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const novasCombinacoes = combinacoes[0] && Object.keys(combinacoes[0]).length > 0 ? combinacoes : [];
 
         estado.variacoesParaExibir = novasCombinacoes.map(combinacao => {
-            const variacaoExistente = estado.variacoesGuardadas.find(v => v.atributos && atributosSaoIguais(v.atributos, combinacao));
+            const variacaoExistente =
+                estado.variacoesParaExibir.find(v => v.atributos && atributosSaoIguais(v.atributos, combinacao))
+                || estado.variacoesGuardadas.find(v => v.atributos && atributosSaoIguais(v.atributos, combinacao));
             return {
                 atributos: combinacao,
                 quantidade: variacaoExistente?.quantidade ?? '',

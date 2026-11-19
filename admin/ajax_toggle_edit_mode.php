@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/csrf.php';
 
 header('Content-Type: application/json');
 
@@ -18,7 +19,7 @@ if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true || !
 
 $input = json_decode(file_get_contents('php://input'), true);
 
-if (!isset($input['csrf_token']) || !hash_equals($_SESSION['csrf_token'] ?? '', (string) $input['csrf_token'])) {
+if (!is_array($input) || !csrf_from_array($input)) {
     http_response_code(403);
     echo json_encode(['sucesso' => false, 'erro' => 'Sessão inválida.']);
     exit;

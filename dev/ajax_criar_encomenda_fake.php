@@ -1,6 +1,7 @@
 <?php
 // admin/ajax_criar_encomenda_fake.php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/csrf.php';
 include '../config/database.php';
 
 header('Content-Type: application/json');
@@ -16,7 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $dados = json_decode(file_get_contents('php://input'), true);
-if (!hash_equals($_SESSION['csrf_token'] ?? '', $dados['csrf_token'] ?? '')) {
+if (!is_array($dados) || !csrf_from_array($dados)) {
+    http_response_code(403);
     echo json_encode(['sucesso' => false, 'mensagem' => 'CSRF inválido.']);
     exit;
 }
@@ -28,8 +30,10 @@ if (!in_array($estado, $estados_permitidos, true)) {
     exit;
 }
 
+$inTransaction = false;
 try {
     $conn->begin_transaction();
+    $inTransaction = true;
 
     // 1. Selecionar uma variação aleatória de um produto ativo
     $sql_prod = "SELECT p.id as produto_id, p.nome, p.preco, p.preco_promocional, p.foto_principal, pv.id as variacao_id, pv.preco as preco_variacao, pv.atributos
@@ -70,7 +74,7 @@ try {
     $entrega = "envio";
     $pagamento = "MB WAY (Dev)";
     
-    $stmt_enc->bind_param("ssssssdssss", $nome, $email, $tel, $morada, $entrega, $pagamento, $total, $portes, $token, $estado, $data_agora);
+    $stmt_enc->bind_param("ssssssddsss", $nome, $email, $tel, $morada, $entrega, $pagamento, $total, $portes, $token, $estado, $data_agora);
     $stmt_enc->execute();
     $encomenda_id = $conn->insert_id;
     $stmt_enc->close();
@@ -80,19 +84,21 @@ try {
         "INSERT INTO encomenda_itens (encomenda_id, produto_id, variacao_id, nome_produto, foto_snapshot, selecoes_atributos, quantidade, preco_unitario)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
     );
-    
+
     $foto = $prod['foto_principal'] ?: 'default.jpg';
     $atributos = $prod['atributos'] ?: '{}';
-    
+
     $stmt_item->bind_param("iiisssid", $encomenda_id, $prod['produto_id'], $prod['variacao_id'], $prod['nome'], $foto, $atributos, $quantidade, $preco_unitario);
     $stmt_item->execute();
     $stmt_item->close();
 
     $conn->commit();
+    $inTransaction = false;
     echo json_encode(['sucesso' => true, 'mensagem' => 'Encomenda fake #' . $encomenda_id . ' criada com sucesso!', 'id' => $encomenda_id]);
 
-} catch (Exception $e) {
-    if ($conn && $conn->in_transaction) $conn->rollback();
+} catch (\Throwable $e) {
+    if ($inTransaction && isset($conn)) $conn->rollback();
     log_app($e->getMessage(), 'ERROR', 'ajax_criar_encomenda_fake.php');
-    echo json_encode(['sucesso' => false, 'mensagem' => $e->getMessage()]);
+    http_response_code(500);
+    echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao criar encomenda de teste.']);
 }

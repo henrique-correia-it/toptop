@@ -52,3 +52,15 @@ if (!function_exists('format_time_ago')) {
         return 'Há ' . $dias . ' dias atrás';
     }
 }
+
+if (!function_exists('sanitize_email_history_html')) {
+    function sanitize_email_history_html(?string $html): string
+    {
+        $clean = strip_tags((string)$html, '<p><br><strong><b><em><i><u><ul><ol><li><a><span><div>');
+        // Remove atributos de evento (on*) e style inline
+        $clean = preg_replace('/\s+(?:on[a-z]+|style)\s*=\s*(?:"[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $clean) ?? $clean;
+        // Neutraliza protocolos perigosos em href
+        $clean = preg_replace('/\bhref\s*=\s*(["\']?)\s*(?:javascript|vbscript|data):[^"\'>\s]*\1/i', 'href="#"', $clean) ?? $clean;
+        return $clean;
+    }
+}

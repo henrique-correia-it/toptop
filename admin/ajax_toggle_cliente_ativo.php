@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/csrf.php';
 require_once __DIR__ . '/../config/database.php';
 
 header('Content-Type: application/json');
@@ -12,7 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $dados = json_decode(file_get_contents('php://input'), true);
-if (!hash_equals($_SESSION['csrf_token'] ?? '', $dados['csrf_token'] ?? '')) {
+if (!is_array($dados) || !csrf_from_array($dados)) {
+    http_response_code(403);
     echo json_encode(['sucesso' => false, 'mensagem' => 'CSRF inválido']); exit;
 }
 

@@ -1,5 +1,5 @@
 <?php
-header("Content-type: text/css; charset: UTF-8");
+header("Content-Type: text/css; charset=UTF-8");
 header("Cache-Control: public, max-age=31536000, immutable");
 
 // Versão mantida por compatibilidade (cache-busting feito via ?v= no <link> do header).
@@ -107,29 +107,4 @@ foreach ($partials as $rel) {
 .msg-item {
     border-color: var(--cor-borda-cartao);
     color: var(--cor-texto);
-}
-
-/* CSS GERAL E UTILITÁRIOS EXTRA */
-
-/* TEMA TOOLTIP */
-.tippy-box[data-theme~='toptop-professional'] {
-    background-color: #1C1C1C;
-    color: #FFFFFF;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 500;
-    line-height: 1.5;
-    border-radius: 6px;
-    padding: 10px 14px;
-    max-width: 300px;
-    text-align: center;
-}
-
-.tippy-box[data-theme~='toptop-professional'] > .tippy-arrow {
-    color: #1C1C1C;
-}
-
-.tippy-box[data-theme~='toptop-professional'] .tippy-content {
-    white-space: normal;
-    word-wrap: break-word;
 }

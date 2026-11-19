@@ -3,12 +3,13 @@
 // Reembolsa um pagamento Stripe e cancela a encomenda num único passo.
 
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/stripe.php';
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true) {
+if (!admin_has_role(['superadmin', 'desenvolvedor'])) {
     http_response_code(403);
     echo json_encode(['sucesso' => false, 'mensagem' => 'Acesso negado.']);
     exit;
@@ -61,20 +62,21 @@ if (empty($stripe_keys['secret'])) {
     exit;
 }
 
-// Solicitar reembolso ao Stripe
+// Solicitar reembolso ao Stripe com Idempotency-Key
 $refund = stripeRequest('POST', 'refunds', [
     'payment_intent' => $pi_id,
-], $stripe_keys['secret']);
+], $stripe_keys['secret'], [
+    'Idempotency-Key: refund_order_' . $encomenda_id,
+]);
 
 $http_code = $refund['_http_code'] ?? 0;
 
-// Aceita 200 (reembolso criado) e também quando já foi reembolsado anteriormente
-$reembolso_ok = ($http_code === 200 && ($refund['status'] ?? '') === 'succeeded')
-             || ($http_code === 200 && isset($refund['id']));
+// Aceita apenas 200 com status succeeded/pending
+$reembolso_ok = ($http_code === 200 && in_array($refund['status'] ?? '', ['succeeded', 'pending'], true));
 
 if (!$reembolso_ok) {
     $stripe_error = $refund['error']['message'] ?? 'Erro desconhecido na API Stripe.';
-    // Se já foi completamente reembolsado, não é um erro real — avança
+    // Se já foi completamente reembolsado, não é um erro real — avança para sincronizar BD
     if (($refund['error']['code'] ?? '') === 'charge_already_refunded') {
         $reembolso_ok = true;
     } else {
@@ -84,50 +86,57 @@ if (!$reembolso_ok) {
     }
 }
 
-// Cancelar encomenda + repor stock numa transação
+// Cancelar encomenda + repor stock numa transação (apenas se esta transação alterar o estado)
+$foi_cancelada = false;
 $conn->begin_transaction();
 try {
-    $stmt_can = $conn->prepare("UPDATE encomendas SET estado = 'cancelada' WHERE id = ?");
+    $stmt_can = $conn->prepare("UPDATE encomendas SET estado = 'cancelada' WHERE id = ? AND estado IN ('pago', 'em processamento')");
     $stmt_can->bind_param("i", $encomenda_id);
     $stmt_can->execute();
+    $foi_cancelada = $stmt_can->affected_rows > 0;
     $stmt_can->close();
 
-    $stmt_itens = $conn->prepare("SELECT variacao_id, quantidade FROM encomenda_itens WHERE encomenda_id = ?");
-    $stmt_itens->bind_param("i", $encomenda_id);
-    $stmt_itens->execute();
-    $itens = $stmt_itens->get_result()->fetch_all(MYSQLI_ASSOC);
-    $stmt_itens->close();
+    if ($foi_cancelada) {
+        $stmt_itens = $conn->prepare("SELECT variacao_id, quantidade FROM encomenda_itens WHERE encomenda_id = ?");
+        $stmt_itens->bind_param("i", $encomenda_id);
+        $stmt_itens->execute();
+        $itens = $stmt_itens->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt_itens->close();
 
-    $stmt_stock = $conn->prepare("UPDATE produto_variacoes SET quantidade = quantidade + ? WHERE id = ?");
-    foreach ($itens as $it) {
-        $stmt_stock->bind_param("ii", $it['quantidade'], $it['variacao_id']);
-        $stmt_stock->execute();
+        $stmt_stock = $conn->prepare("UPDATE produto_variacoes SET quantidade = quantidade + ? WHERE id = ?");
+        foreach ($itens as $it) {
+            if (empty($it['variacao_id'])) continue;
+            $stmt_stock->bind_param("ii", $it['quantidade'], $it['variacao_id']);
+            $stmt_stock->execute();
+        }
+        $stmt_stock->close();
     }
-    $stmt_stock->close();
 
     $conn->commit();
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     $conn->rollback();
     error_log("Reembolso Stripe OK mas falha ao cancelar encomenda #{$encomenda_id}: " . $e->getMessage());
     echo json_encode(['sucesso' => false, 'mensagem' => 'Reembolso processado mas erro ao atualizar a encomenda. Contacte o suporte.']);
     exit;
 }
 
-// Enviar email ao cliente
-try {
-    require_once __DIR__ . '/includes/email_handler.php';
-    enviarEmailEncomenda('cancelada', [
-        'id'               => $encomenda['id'],
-        'token'            => $encomenda['token'],
-        'cliente_nome'     => $encomenda['cliente_nome'],
-        'cliente_email'    => $encomenda['cliente_email'],
-        'total'            => (float)$encomenda['total'],
-        'portes_envio'     => (float)$encomenda['portes_envio'],
-        'metodo_entrega'   => $encomenda['metodo_entrega'],
-        'metodo_pagamento' => $encomenda['metodo_pagamento'],
-    ]);
-} catch (\Throwable $e) {
-    error_log("Reembolso OK mas falha no email para encomenda #{$encomenda_id}: " . $e->getMessage());
+// Enviar email ao cliente apenas se esta transação cancelou a encomenda
+if ($foi_cancelada) {
+    try {
+        require_once __DIR__ . '/includes/email_handler.php';
+        enviarEmailEncomenda('cancelada', [
+            'id'               => $encomenda['id'],
+            'token'            => $encomenda['token'],
+            'cliente_nome'     => $encomenda['cliente_nome'],
+            'cliente_email'    => $encomenda['cliente_email'],
+            'total'            => (float)$encomenda['total'],
+            'portes_envio'     => (float)$encomenda['portes_envio'],
+            'metodo_entrega'   => $encomenda['metodo_entrega'],
+            'metodo_pagamento' => $encomenda['metodo_pagamento'],
+        ]);
+    } catch (\Throwable $e) {
+        error_log("Reembolso OK mas falha no email para encomenda #{$encomenda_id}: " . $e->getMessage());
+    }
 }
 
 echo json_encode(['sucesso' => true, 'mensagem' => 'Reembolso processado e encomenda cancelada com sucesso.']);

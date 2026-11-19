@@ -1,6 +1,8 @@
-# Bloqueia execução de PHP e scripts nesta pasta de imagens.
-# Previne que ficheiros enviados por utilizadores sejam executados como código.
-<FilesMatch "\.(php|php\d|phtml|phar|cgi|pl|py|sh)$">
+Options -Indexes -ExecCGI
+
+# Bloqueia execução de PHP, scripts e HTML/SVG nesta pasta de imagens.
+# Previne que ficheiros enviados sejam executados como código ou XSS.
+<FilesMatch "(?i)\.(php\d?|phtml|phar|cgi|pl|py|sh|shtml|html?|svg)$">
     Require all denied
 </FilesMatch>
 

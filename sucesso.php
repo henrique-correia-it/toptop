@@ -4,9 +4,11 @@ require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/stripe.php';
 require_once __DIR__ . '/config/cliente_auth.php';
 $encomenda_id      = isset($_GET['id']) ? (int)$_GET['id'] : null;
-$token             = isset($_GET['token']) ? htmlspecialchars($_GET['token']) : null;
+$token             = isset($_GET['token']) ? trim((string)$_GET['token']) : null;
 $redirect_status   = $_GET['redirect_status'] ?? null;
-$payment_intent_id = $_GET['payment_intent'] ?? null;
+$raw_pi            = trim((string)($_GET['payment_intent'] ?? ''));
+$payment_intent_id = preg_match('/^pi_[A-Za-z0-9_]+$/', $raw_pi) ? $raw_pi : null;
+$encomenda         = null;
 
 // --- DEVELOPER PREVIEW MODE (SEGURANÇA REFORÇADA) ---
 if (isset($_GET['dev_preview'])) {
@@ -90,35 +92,34 @@ if ($encomenda_id && $token && $payment_intent_id) {
 if (!isset($_GET['dev_preview'])) {
     $estado = 'falhou'; // Default cauteloso
 
-    // 1. Reforço via API com polling (Especialmente para MBWay)
-    if ($payment_intent_id && !empty($stripe_keys['secret'])) {
-        $tentativas = 0;
-        while ($tentativas < 3) {
-            $pi_data = stripeRequest('GET', 'payment_intents/' . $payment_intent_id, [], $stripe_keys['secret']);
-            $pi_status = $pi_data['status'] ?? '';
-            
-            if ($pi_status === 'succeeded' || $pi_status === 'processing') {
-                $estado = 'sucesso';
-                if ($pi_status === 'succeeded') break; // Se já teve sucesso, não precisamos de esperar mais
-            } elseif (in_array($pi_status, ['canceled', 'requires_payment_method'])) {
-                $estado = 'falhou';
-                break;
-            }
-            
-            // Se requer ação, esperamos para dar tempo ao Webhook ou ao polling de ver o resultado
-            if ($pi_status === 'requires_action' || $pi_status === 'requires_confirmation') {
+    // 1. Reforço via API apenas se o PaymentIntent pertencer à encomenda validada por token
+    if ($payment_intent_id && $encomenda && ($encomenda['stripe_payment_intent_id'] ?? '') === $payment_intent_id && !empty($stripe_keys['secret'])) {
+        if (($pi_status ?? '') === 'succeeded' || ($pi_status ?? '') === 'processing') {
+            $estado = 'sucesso';
+        } elseif (in_array($pi_status ?? '', ['canceled', 'requires_payment_method'], true)) {
+            $estado = 'falhou';
+        } elseif (in_array($pi_status ?? '', ['requires_action', 'requires_confirmation'], true)) {
+            $tentativas = 0;
+            while ($tentativas < 2) {
+                usleep(1500000);
+                $pi_data = stripeRequest('GET', 'payment_intents/' . $payment_intent_id, [], $stripe_keys['secret']);
+                $pi_status = $pi_data['status'] ?? '';
+                if ($pi_status === 'succeeded' || $pi_status === 'processing') {
+                    $estado = 'sucesso';
+                    break;
+                } elseif (in_array($pi_status, ['canceled', 'requires_payment_method'], true)) {
+                    $estado = 'falhou';
+                    break;
+                }
                 $tentativas++;
-                usleep(2000000); // 2 segundos
-                continue;
             }
-            break;
         }
     }
 
     // 2. RE-CONSULTAR A BASE DE DADOS (Fundamental: o Webhook pode ter atualizado o estado enquanto esperávamos)
-    if ($encomenda_id) {
-        $stmt = $conn->prepare("SELECT estado FROM encomendas WHERE id = ?");
-        $stmt->bind_param("i", $encomenda_id);
+    if ($encomenda_id && $token) {
+        $stmt = $conn->prepare("SELECT estado FROM encomendas WHERE id = ? AND token = ? LIMIT 1");
+        $stmt->bind_param("is", $encomenda_id, $token);
         $stmt->execute();
         $res_f = $stmt->get_result()->fetch_assoc();
         $estado_db_final = $res_f['estado'] ?? '';

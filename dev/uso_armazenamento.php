@@ -2,9 +2,13 @@
 require_once __DIR__ . '/../config/session.php';
 require_once __DIR__ . '/../config/formatters.php';
 
-// 1. VERIFICA A SESSÃO PRIMEIRO
+// 1. VERIFICA A SESSÃO E PERMISSÕES PRIMEIRO
 if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true) {
     header("Location: /entrar");
+    exit;
+}
+if (($_SESSION['admin_role'] ?? '') !== 'desenvolvedor') {
+    header("Location: /admin");
     exit;
 }
 

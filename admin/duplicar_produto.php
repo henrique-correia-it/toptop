@@ -90,9 +90,12 @@ try {
     // 3. CRIAR O NOVO PRODUTO COM OS DADOS ÚNICOS
     $novo_ativo = 0; // Oculto por defeito
 
-    $stmt_insert_prod = $conn->prepare("INSERT INTO produtos (nome, referencia, ativo, preco, preco_promocional, categoria, descricao, atributos, foto_principal) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $guia_tamanho_id = !empty($produto_original['guia_tamanho_id']) ? (int)$produto_original['guia_tamanho_id'] : null;
+    $peso_gramas = (int)($produto_original['peso_gramas'] ?? 0);
+
+    $stmt_insert_prod = $conn->prepare("INSERT INTO produtos (nome, referencia, ativo, preco, preco_promocional, categoria, descricao, atributos, foto_principal, guia_tamanho_id, peso_gramas) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt_insert_prod->bind_param(
-        "ssiddssss",
+        "ssiddssssii",
         $novo_nome, // Nome único
         $nova_referencia, // Referência única
         $novo_ativo,
@@ -101,7 +104,9 @@ try {
         $produto_original['categoria'],
         $produto_original['descricao'],
         $produto_original['atributos'],
-        $nova_foto_principal_nome
+        $nova_foto_principal_nome,
+        $guia_tamanho_id,
+        $peso_gramas
     );
     $stmt_insert_prod->execute();
     $id_novo_produto = $conn->insert_id;

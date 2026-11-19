@@ -9,21 +9,30 @@ const abrirModal = (titulo, texto, callback) => {
     const btnConfirmar = document.getElementById('modalConfirmacaoBtnConfirmar');
     const btnCancelar = document.getElementById('modalConfirmacaoBtnCancelar');
 
+    if (!btnConfirmar || !btnCancelar) return;
+
     if (tituloEl) tituloEl.innerHTML = titulo || 'Tem a certeza?';
     if (textoEl) textoEl.innerHTML = texto || 'Esta ação não pode ser revertida.';
-    
+
     // Armazenar o callback num atributo do modal para acesso posterior
     modal.onConfirmCallback = callback;
+
+    const clickFora = (e) => {
+        if (e.target === modal) {
+            fecharModal();
+        }
+    };
 
     const fecharModal = () => {
         modal.classList.remove('ativo');
         modal.onConfirmCallback = null;
+        modal.removeEventListener('click', clickFora);
     };
 
     // Configurar botões (remover eventos antigos para evitar duplicados se a função for chamada múltiplas vezes)
     const novoBtnConfirmar = btnConfirmar.cloneNode(true);
     btnConfirmar.parentNode.replaceChild(novoBtnConfirmar, btnConfirmar);
-    
+
     const novoBtnCancelar = btnCancelar.cloneNode(true);
     btnCancelar.parentNode.replaceChild(novoBtnCancelar, btnCancelar);
 
@@ -35,14 +44,8 @@ const abrirModal = (titulo, texto, callback) => {
     });
 
     novoBtnCancelar.addEventListener('click', fecharModal);
-    
+
     // Fechar ao clicar fora
-    const clickFora = (e) => {
-        if (e.target === modal) {
-            fecharModal();
-            modal.removeEventListener('click', clickFora);
-        }
-    };
     modal.addEventListener('click', clickFora);
 
     modal.classList.add('ativo');
@@ -82,4 +85,4 @@ document.addEventListener('DOMContentLoaded', () => {
             );
         }
     });
-});
+});

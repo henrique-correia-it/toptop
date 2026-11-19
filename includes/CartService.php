@@ -42,54 +42,66 @@ if (!function_exists('validate_cart_items')) {
         $total = 0.0;
         $weight = 0;
         $items = [];
+        $qtdPorVariacao = [];
 
-        foreach ($cart as $item) {
-            $productId = (int)($item['id'] ?? 0);
-            $variationId = $item['variacao_id'] ?? null;
-            $quantity = (int)($item['quantidade'] ?? 0);
+        // Ordena por (produto_id, variacao_id) para adquirir locks FOR UPDATE em ordem consistente (anti-deadlock)
+        usort($cart, static function ($a, $b) {
+            $cmp = ((int)($a['id'] ?? 0)) <=> ((int)($b['id'] ?? 0));
+            return $cmp !== 0 ? $cmp : (((int)($a['variacao_id'] ?? 0)) <=> ((int)($b['variacao_id'] ?? 0)));
+        });
 
-            if ($productId <= 0 || $quantity <= 0) {
-                throw new Exception("Dados de um item do carrinho invalidos.");
+        try {
+            foreach ($cart as $item) {
+                $productId = (int)($item['id'] ?? 0);
+                $variationId = $item['variacao_id'] ?? null;
+                $quantity = (int)($item['quantidade'] ?? 0);
+
+                if ($productId <= 0 || $quantity <= 0) {
+                    throw new Exception("Dados de um item do carrinho invalidos.");
+                }
+
+                if (!empty($variationId) && (int)$variationId > 0) {
+                    $variationId = (int)$variationId;
+                    $stmtWithVariation->bind_param('ii', $productId, $variationId);
+                    $stmtWithVariation->execute();
+                    $product = $stmtWithVariation->get_result()->fetch_assoc();
+                } else {
+                    $stmtWithoutVariation->bind_param('i', $productId);
+                    $stmtWithoutVariation->execute();
+                    $product = $stmtWithoutVariation->get_result()->fetch_assoc();
+                }
+
+                if (!$product) {
+                    throw new Exception("O produto '" . ($item['nome'] ?? '') . "' ja nao esta disponivel.");
+                }
+
+                $varIdDb = (int)$product['variacao_id'];
+                $qtdPorVariacao[$varIdDb] = ($qtdPorVariacao[$varIdDb] ?? 0) + $quantity;
+
+                if ($qtdPorVariacao[$varIdDb] > (int)$product['stock']) {
+                    throw new Exception("Stock insuficiente para '" . $product['nome'] . "'. Disponivel: {$product['stock']}.");
+                }
+
+                $unitPrice = resolve_cart_unit_price($product);
+                $total += $unitPrice * $quantity;
+                $weight += (int)($product['peso_gramas'] ?? 0) * $quantity;
+
+                $snapshot = !empty($product['foto_principal']) ? $product['foto_principal'] : $defaultImage;
+
+                $items[] = [
+                    'produto_id' => $productId,
+                    'variacao_id_db' => $varIdDb,
+                    'nome_produto' => $product['nome'],
+                    'foto_snapshot' => $snapshot,
+                    'selecoes_atributos' => json_encode($item['selecoes'] ?? []),
+                    'quantidade' => $quantity,
+                    'preco_unitario' => $unitPrice,
+                ];
             }
-
-            if (!empty($variationId) && (int)$variationId > 0) {
-                $variationId = (int)$variationId;
-                $stmtWithVariation->bind_param('ii', $productId, $variationId);
-                $stmtWithVariation->execute();
-                $product = $stmtWithVariation->get_result()->fetch_assoc();
-            } else {
-                $stmtWithoutVariation->bind_param('i', $productId);
-                $stmtWithoutVariation->execute();
-                $product = $stmtWithoutVariation->get_result()->fetch_assoc();
-            }
-
-            if (!$product) {
-                throw new Exception("O produto '" . htmlspecialchars($item['nome'] ?? '') . "' ja nao esta disponivel.");
-            }
-
-            if ($quantity > (int)$product['stock']) {
-                throw new Exception("Stock insuficiente para '" . htmlspecialchars($product['nome']) . "'. Disponivel: {$product['stock']}.");
-            }
-
-            $unitPrice = resolve_cart_unit_price($product);
-            $total += $unitPrice * $quantity;
-            $weight += (int)($product['peso_gramas'] ?? 0) * $quantity;
-
-            $snapshot = !empty($product['foto_principal']) ? $product['foto_principal'] : $defaultImage;
-
-            $items[] = [
-                'produto_id' => $productId,
-                'variacao_id_db' => (int)$product['variacao_id'],
-                'nome_produto' => $product['nome'],
-                'foto_snapshot' => $snapshot,
-                'selecoes_atributos' => json_encode($item['selecoes'] ?? []),
-                'quantidade' => $quantity,
-                'preco_unitario' => $unitPrice,
-            ];
+        } finally {
+            $stmtWithVariation->close();
+            $stmtWithoutVariation->close();
         }
-
-        $stmtWithVariation->close();
-        $stmtWithoutVariation->close();
 
         return [
             'total' => $total,

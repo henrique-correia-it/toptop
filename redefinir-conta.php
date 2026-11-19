@@ -19,7 +19,7 @@ if ($token !== '') {
         "SELECT r.*, c.nome, c.email, 'cliente' as perfil
          FROM cliente_password_resets r
          JOIN clientes c ON c.id = r.cliente_id
-         WHERE r.token_hash = ? AND r.expira_em > NOW() AND r.usado_em IS NULL
+         WHERE r.token_hash = ? AND r.expira_em > NOW() AND r.usado_em IS NULL AND c.ativo = 1
          LIMIT 1"
     );
     $stmt->bind_param('s', $tokenHash);
@@ -74,30 +74,39 @@ if (!$reset) {
             $conn->begin_transaction();
             try {
                 if ($perfil_token === 'cliente') {
+                    $stmt = $conn->prepare("UPDATE cliente_password_resets SET usado_em = NOW() WHERE id = ? AND usado_em IS NULL");
+                    $stmt->bind_param('i', $reset['id']);
+                    $stmt->execute();
+                    $consumido = $stmt->affected_rows === 1;
+                    $stmt->close();
+                    if (!$consumido) {
+                        throw new RuntimeException('Token já utilizado.');
+                    }
+
                     $stmt = $conn->prepare("UPDATE clientes SET password_hash = ?, failed_login_attempts = 0, last_login_attempt = NULL, data_atualizacao = NOW() WHERE id = ?");
                     $stmt->bind_param('si', $hash, $reset['cliente_id']);
                     $stmt->execute();
                     $stmt->close();
-
-                    $stmt = $conn->prepare("UPDATE cliente_password_resets SET usado_em = NOW() WHERE id = ?");
-                    $stmt->bind_param('i', $reset['id']);
-                    $stmt->execute();
-                    $stmt->close();
                 } else {
                     // Admin
+                    $stmt_del = $conn->prepare("DELETE FROM password_resets WHERE email = ? AND expira > NOW()");
+                    $stmt_del->bind_param("s", $reset['email']);
+                    $stmt_del->execute();
+                    $consumido = $stmt_del->affected_rows > 0;
+                    $stmt_del->close();
+                    if (!$consumido) {
+                        throw new RuntimeException('Token já utilizado ou expirado.');
+                    }
+
                     $stmt_update = $conn->prepare("UPDATE administradores SET password_hash = ?, failed_login_attempts = 0, last_login_attempt = NULL WHERE email = ?");
                     $stmt_update->bind_param("ss", $hash, $reset['email']);
                     $stmt_update->execute();
                     $stmt_update->close();
-
-                    $stmt_del = $conn->prepare("DELETE FROM password_resets WHERE email = ?");
-                    $stmt_del->bind_param("s", $reset['email']);
-                    $stmt_del->execute();
-                    $stmt_del->close();
                 }
-                
+
                 $conn->commit();
-                $mensagem = 'Palavra-passe atualizada com sucesso. Ja podes entrar.';
+                session_regenerate_id(true);
+                $mensagem = 'Palavra-passe atualizada com sucesso. Já podes entrar.';
                 $tipo = 'sucesso';
                 $reset = null;
             } catch (Throwable $e) {

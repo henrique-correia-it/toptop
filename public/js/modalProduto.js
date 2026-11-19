@@ -527,23 +527,26 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       modalImagemPrincipal.style.opacity = "1";
       atualizarFundoModalPelaImagem();
-      // Remove o listener para não disparar em futuros loads
-      modalImagemPrincipal.removeEventListener("load", onImageLoad);
     };
-    modalImagemPrincipal.addEventListener("load", onImageLoad);
+    modalImagemPrincipal.addEventListener("load", onImageLoad, { once: true });
+    modalImagemPrincipal.addEventListener("error", onImageLoad, { once: true });
     // --- FIM DA CORREÇÃO ---
 
     const thumbParaAtivar = modalThumbnails.querySelector(
-      `[data-foto-nome="${nomeFicheiro}"]`,
+      `[data-foto-nome="${CSS.escape(nomeFicheiro)}"]`,
     );
+    const novoSrc = thumbParaAtivar
+      ? thumbParaAtivar.src
+      : `/public/images/${nomeFicheiro}`;
     if (thumbParaAtivar) {
       escopo
         .querySelectorAll(".modal-thumbnail")
         .forEach((t) => t.classList.remove("ativa"));
       thumbParaAtivar.classList.add("ativa");
-      modalImagemPrincipal.src = thumbParaAtivar.src;
-    } else {
-      modalImagemPrincipal.src = `/public/images/${nomeFicheiro}`;
+    }
+    modalImagemPrincipal.src = novoSrc;
+    if (modalImagemPrincipal.complete && modalImagemPrincipal.naturalWidth > 0) {
+      onImageLoad();
     }
   }
 

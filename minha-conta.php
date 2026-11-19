@@ -7,6 +7,10 @@ require_once __DIR__ . '/config/formatters.php';
 require_cliente();
 
 $cliente = cliente_atual($conn);
+if (!$cliente) {
+    header('Location: /entrar');
+    exit;
+}
 $orders = customer_orders($conn, (int)$cliente['id'], 5);
 $addresses = customer_addresses($conn, (int)$cliente['id']);
 $titulo_pagina = 'Minha Conta';

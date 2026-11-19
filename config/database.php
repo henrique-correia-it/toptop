@@ -57,5 +57,6 @@ if ($conn->connect_error) {
 }
 
 $conn->set_charset('utf8mb4');
+$conn->query("SET time_zone = '" . $conn->real_escape_string(date('P')) . "'");
 
 require_once __DIR__ . '/loja_config.php';

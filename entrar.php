@@ -78,7 +78,7 @@ $loginValor = '';
 $unlock_timestamp = 0;
 $mostrarEscolhaPerfil = false;
 $next = $_GET['next'] ?? ($_POST['next'] ?? '/minha-conta');
-if (!is_string($next) || !str_starts_with($next, '/') || str_starts_with($next, '//')) {
+if (!is_string($next) || !str_starts_with($next, '/') || str_starts_with($next, '//') || str_starts_with($next, '/\\') || preg_match('/[\r\n]/', $next)) {
     $next = '/minha-conta';
 }
 
@@ -190,7 +190,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 if ($admin && !$adminBloqueado && !$clienteValido) {
-                    $novas_tentativas = (int)$admin['failed_login_attempts'] + 1;
+                    $janela_expirada = !empty($admin['last_login_attempt']) && strtotime($admin['last_login_attempt']) <= time() - $lockout;
+                    $novas_tentativas = $janela_expirada ? 1 : ((int)$admin['failed_login_attempts'] + 1);
                     $agora = date('Y-m-d H:i:s');
                     $stmt = $conn->prepare("UPDATE administradores SET failed_login_attempts = ?, last_login_attempt = ? WHERE id = ?");
                     $stmt->bind_param("isi", $novas_tentativas, $agora, $admin['id']);
@@ -206,15 +207,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->close();
 
                     $tentativas_restantes = 5 - $novas_tentativas;
-                    if ($tentativas_restantes > 0) {
-                        $aviso = "Atenção: Restam-lhe $tentativas_restantes tentativas.";
-                    } else {
+                    if ($tentativas_restantes <= 0) {
                         $erro = 'Conta temporariamente bloqueada. Tente novamente em ' . floor($lockout / 60) . ' minutos.';
                     }
                 }
 
                 if ($customer && !$clienteBloqueado && !$adminValido) {
-                    $attempts = (int)$customer['failed_login_attempts'] + 1;
+                    $janela_expirada_c = !empty($customer['last_login_attempt']) && strtotime($customer['last_login_attempt']) <= time() - $lockout;
+                    $attempts = $janela_expirada_c ? 1 : ((int)$customer['failed_login_attempts'] + 1);
                     $now = date('Y-m-d H:i:s');
                     $stmt = $conn->prepare("UPDATE clientes SET failed_login_attempts = ?, last_login_attempt = ? WHERE id = ?");
                     $stmt->bind_param('isi', $attempts, $now, $customer['id']);

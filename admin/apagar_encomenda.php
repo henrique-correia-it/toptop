@@ -65,38 +65,50 @@ try {
         $stmt_check_galeria->execute();
         $uso_galeria = $stmt_check_galeria->get_result()->fetch_assoc()['total'];
 
-        // Só apaga se não for usada em NENHUM outro lugar
+        // Recolhe fotos órfãs para apagar apenas após commit bem-sucedido
         if ($uso_encomendas == 0 && $uso_produtos == 0 && $uso_galeria == 0) {
-            $caminho = '../public/images/' . $foto;
-            if (file_exists($caminho) && is_file($caminho)) {
-                unlink($caminho);
-            }
+            $fotos_a_apagar[] = basename($foto);
         }
     }
     $stmt_check_orders->close();
     $stmt_check_products->close();
     $stmt_check_galeria->close();
 
-    // 4. Apaga a encomenda principal
-    $stmt_delete_enc = $conn->prepare("DELETE FROM encomendas WHERE id = ?");
+    // 4. Apaga a encomenda principal (recusa reservas 'incompleta' ativas)
+    $stmt_delete_enc = $conn->prepare("DELETE FROM encomendas WHERE id = ? AND estado != 'incompleta'");
     $stmt_delete_enc->bind_param("i", $id);
     $stmt_delete_enc->execute();
 
     if ($stmt_delete_enc->affected_rows === 0) {
-        throw new Exception("A encomenda com ID " . $id . " não foi encontrada.");
+        throw new Exception("A encomenda com ID " . $id . " não foi encontrada ou é uma reserva ativa.");
     }
     $stmt_delete_enc->close();
 
     $conn->commit();
+
+    // 5. Apagar ficheiros órfãos no disco apenas depois de commit() com validação realpath
+    $images_dir = realpath(__DIR__ . '/../public/images');
+    if ($images_dir && !empty($fotos_a_apagar)) {
+        foreach (array_unique($fotos_a_apagar) as $foto_segura) {
+            $caminho = realpath($images_dir . DIRECTORY_SEPARATOR . $foto_segura);
+            if ($caminho && str_starts_with($caminho, $images_dir . DIRECTORY_SEPARATOR) && is_file($caminho)) {
+                @unlink($caminho);
+            }
+        }
+    }
+
     $_SESSION['flash_message'] = ['tipo' => 'sucesso', 'texto' => 'Encomenda #' . $id . ' apagada permanentemente com sucesso!'];
 
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     $conn->rollback();
     error_log($e->getMessage());
     $_SESSION['flash_message'] = ['tipo' => 'erro', 'texto' => 'Ocorreu um erro ao apagar a encomenda.'];
 }
 
 $return_to = $_POST['return_to'] ?? 'encomendas.php';
+if (!is_string($return_to) || !preg_match('/^(?:encomendas|admin)\.php(\?[^\r\n]*)?\z/', $return_to)) {
+    $return_to = 'encomendas.php';
+}
 header("Location: " . $return_to);
 exit;
 ?>

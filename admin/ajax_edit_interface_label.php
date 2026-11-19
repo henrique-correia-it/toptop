@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/interface_labels.php';
 require_once __DIR__ . '/../config/csrf.php';
@@ -13,7 +14,8 @@ if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true) {
 
 // Permitir apenas admins e superadmins
 $role = $_SESSION['admin_role'] ?? '';
-if (!in_array($role, ['admin', 'superadmin', 'desenvolvedor'])) {
+if (!admin_has_role(['superadmin', 'desenvolvedor'])) {
+    http_response_code(403);
     echo json_encode(['sucesso' => false, 'mensagem' => 'Não tem permissão para esta ação.']);
     exit;
 }

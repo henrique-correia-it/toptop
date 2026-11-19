@@ -1,4 +1,6 @@
 <?php
+// --- BLOCO 1: Início de Sessão e Configuração ---
+require_once __DIR__ . '/../config/session.php';
 require_once __DIR__ . '/../config/limpar_abandonadas.php';
 // --- CARREGAMENTO DE COMPONENTES ---
 if (strpos($_SERVER['REQUEST_URI'], '/admin/') !== false || strpos($_SERVER['REQUEST_URI'], '/dev/') !== false) {
@@ -7,8 +9,6 @@ if (strpos($_SERVER['REQUEST_URI'], '/admin/') !== false || strpos($_SERVER['REQ
     require_once __DIR__ . '/../admin/components/quick_edit_modal.php';
 }
 
-// --- BLOCO 1: Início de Sessão e Configuração ---
-require_once __DIR__ . '/../config/session.php';
 require_once __DIR__ . '/../config/cliente_auth.php';
 require_once __DIR__ . '/../config/csrf.php';
 
@@ -221,14 +221,16 @@ if ($resCategoriasHeader && $resCategoriasHeader->num_rows > 0) {
 <?php
 $_og_title = htmlspecialchars($meta_titulo, ENT_QUOTES, 'UTF-8');
 $_og_desc  = htmlspecialchars($meta_descricao, ENT_QUOTES, 'UTF-8');
-$_og_url   = 'https://www.toptop.pt' . htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8');
+$_og_path  = isset($canonical_url) ? $canonical_url : ($_SERVER['REQUEST_URI'] ?? '/');
+$_og_url   = 'https://www.toptop.pt' . htmlspecialchars($_og_path, ENT_QUOTES, 'UTF-8');
+$_og_type  = (isset($produto) && is_array($produto)) ? 'product' : 'website';
 $_og_image = (isset($produto) && !empty($produto['foto_principal']))
-    ? 'https://www.toptop.pt/public/assets/img_produtos/' . htmlspecialchars($produto['foto_principal'], ENT_QUOTES, 'UTF-8')
+    ? 'https://www.toptop.pt/public/images/' . rawurlencode($produto['foto_principal'])
     : 'https://www.toptop.pt' . htmlspecialchars($headerLogoSrc, ENT_QUOTES, 'UTF-8');
 ?>
     <meta property="og:site_name" content="TopTop">
     <meta property="og:locale" content="pt_PT">
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="<?php echo $_og_type; ?>">
     <meta property="og:url" content="<?php echo $_og_url; ?>">
     <meta property="og:title" content="<?php echo $_og_title; ?>">
     <meta property="og:description" content="<?php echo $_og_desc; ?>">

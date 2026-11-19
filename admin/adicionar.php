@@ -172,9 +172,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 $grupos_result = $conn->query("SELECT * FROM atributos_grupos ORDER BY nome ASC");
 $grupos_disponiveis = $grupos_result->fetch_all(MYSQLI_ASSOC);
-$produto = $_POST;
+$produto = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    foreach (['nome', 'referencia', 'ativo', 'preco', 'preco_promocional', 'categoria', 'descricao', 'peso_gramas', 'guia_tamanho_id'] as $_campo) {
+        if (isset($_POST[$_campo]) && !is_array($_POST[$_campo])) {
+            $produto[$_campo] = $_POST[$_campo];
+        }
+    }
+}
 $titulo_pagina = "Adicionar Novo Produto";
-$action_url = "adicionar.php?return_to=" . htmlspecialchars($_GET['return_to'] ?? 'admin');
+$action_url = "adicionar.php?return_to=" . urlencode($return_to);
 $texto_botao = "Adicionar Produto";
 
 include '../templates/header.php';

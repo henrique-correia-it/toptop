@@ -71,7 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $username = trim($_POST['username']);
     $email    = trim($_POST['email']);
-    $role     = $_POST['role'] ?? $admin['role'];
+    $role     = $is_superadmin ? ($_POST['role'] ?? $admin['role']) : $admin['role'];
     
     // Proteção NÍVEL 2: VERIFICAÇÃO NO BACK-END
     if (in_array($admin['role'], ['superadmin', 'desenvolvedor']) && $role !== $admin['role']) {
@@ -96,8 +96,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($stmt_check->get_result()->num_rows > 0) { $erros_validacao[] = "O utilizador ou email já existem noutra conta."; }
     $stmt_check->close();
 
-    // Whitelist de roles permitidas
-    $roles_validos = ['admin', 'superadmin', 'desenvolvedor'];
+    // Whitelist de roles permitidas conforme o nível de quem edita
+    $roles_validos = $is_dev ? ['admin', 'superadmin', 'desenvolvedor'] : ['admin', 'superadmin'];
     if (!in_array($role, $roles_validos, true)) {
         $erros_validacao[] = "Função (role) inválida.";
     }

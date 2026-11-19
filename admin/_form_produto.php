@@ -1,4 +1,8 @@
 <?php
+if (session_status() !== PHP_SESSION_ACTIVE || empty($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true || !isset($conn)) {
+    http_response_code(403);
+    exit('Acesso negado.');
+}
 // --- (O bloco de código PHP no início do ficheiro permanece inalterado) ---
 $nome_produto = $produto['nome'] ?? '';
 $referencia_produto = $produto['referencia'] ?? '';
@@ -27,10 +31,13 @@ $peso_gramas_produto = isset($produto['peso_gramas']) ? $produto['peso_gramas'] 
 // --- INÍCIO DA ALTERAÇÃO ---
 $guia_tamanho_id = $produto['guia_tamanho_id'] ?? null;
 // --- FIM DA ALTERAÇÃO ---
-$atributos_guardados_json = $produto['atributos'] ?? '{}';
-$imagens_iniciais_json = isset($todas_as_imagens) ? json_encode($todas_as_imagens) : '[]';
-$produto_id_para_js = $produto['id'] ?? 0;
-$variacoes_guardadas_json = $variacoes_guardadas_json ?? '[]';
+$_json_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
+$_atributos_dec = json_decode((string)($produto['atributos'] ?? '{}'), true);
+$atributos_guardados_json = json_encode(is_array($_atributos_dec) ? $_atributos_dec : new stdClass(), $_json_flags);
+$imagens_iniciais_json = json_encode(isset($todas_as_imagens) && is_array($todas_as_imagens) ? $todas_as_imagens : [], $_json_flags);
+$produto_id_para_js = (int)($produto['id'] ?? 0);
+$_variacoes_dec = isset($variacoes_guardadas_json) ? json_decode((string)$variacoes_guardadas_json, true) : [];
+$variacoes_guardadas_json = json_encode(is_array($_variacoes_dec) ? $_variacoes_dec : [], $_json_flags);
 ?>
 
 <main class="dashboard-container animate-entry">
@@ -329,12 +336,20 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('nome', nomeInput.value);
         formData.append('referencia', referenciaInput.value);
         formData.append('id', produtoIdInput.value);
+        const csrfInput = form.querySelector('input[name="csrf_token"]');
+        if (csrfInput) {
+            formData.append('csrf_token', csrfInput.value);
+        }
 
         try {
             const response = await fetch('ajax_validar_produto.php', { method: 'POST', body: formData });
             const data = await response.json();
 
             if (data.valido === false) {
+                if (data.campo === 'geral') {
+                    mostrarPopup(data.mensagem || 'Erro ao validar o produto.', 'erro');
+                    return;
+                }
                 const field = data.campo === 'nome' ? nomeInput : referenciaInput;
                 field.setCustomValidity(data.mensagem);
                 field.reportValidity();

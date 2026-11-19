@@ -122,7 +122,7 @@ function renderHorarioFuncionamento($fallback = 'Por consulta (temporário)') {
         if ($texto === '') {
             $texto = $fallback;
         }
-        return '<p class="horario-texto-simples">' . $texto . '</p>';
+        return '<p class="horario-texto-simples">' . nl2br(htmlspecialchars($texto, ENT_QUOTES, 'UTF-8')) . '</p>';
     }
 
     $config = normalizarHorarioFuncionamento($raw);

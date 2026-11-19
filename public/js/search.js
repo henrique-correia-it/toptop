@@ -156,6 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const resultsContainer = formElement.querySelector(".search-results-container");
     let debounceTimer;
     let lastTerm = "";
+    let activeSearchController = null;
 
     const hideResults = () => {
       resultsContainer.style.display = "none";
@@ -197,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
       produtos.forEach((p) => {
         const precoFinal = p.preco_promocional > 0 ? p.preco_promocional : p.preco;
         const item = document.createElement("a");
-        item.href = "/produtos.php";
+        item.href = p.url || `/produto/${p.slug}`;
         item.classList.add("search-result-item");
         item.dataset.produtoId = p.id;
         item.dataset.searchTerm = termo;
@@ -248,10 +249,18 @@ document.addEventListener("DOMContentLoaded", () => {
       debounceTimer = setTimeout(() => {
         const termo = input.value.trim();
         if (termo.length >= 2) {
-          fetch(`/ajax_search.php?q=${encodeURIComponent(termo)}`)
-            .then((response) => response.json())
+          if (activeSearchController) activeSearchController.abort();
+          activeSearchController = new AbortController();
+          fetch(`/ajax_search.php?q=${encodeURIComponent(termo)}`, { signal: activeSearchController.signal })
+            .then((response) => {
+              if (!response.ok) throw new Error("HTTP " + response.status);
+              return response.json();
+            })
             .then((data) => renderResults(data, termo))
-            .catch(() => showMessage("A pesquisa falhou. Tente novamente.", termo));
+            .catch((err) => {
+              if (err && err.name === "AbortError") return;
+              showMessage("A pesquisa falhou. Tente novamente.", termo);
+            });
         } else if (termo.length === 1) {
           showMessage("Escreva pelo menos 2 caracteres.");
         } else {
@@ -267,10 +276,22 @@ document.addEventListener("DOMContentLoaded", () => {
     resultsContainer.addEventListener("click", function (e) {
       const resultItem = e.target.closest(".search-result-item");
       if (resultItem && resultItem.dataset.produtoId) {
-        e.preventDefault();
         saveHistoryTerm(resultItem.dataset.searchTerm || lastTerm || input.value);
-        sessionStorage.setItem("abrirModalProdutoId", resultItem.dataset.produtoId);
-        window.location.href = "/produtos.php";
+
+        // Permitir abrir em novo separador (Ctrl/Cmd/Shift + clique)
+        if (e.metaKey || e.ctrlKey || e.shiftKey) {
+          return;
+        }
+
+        // Em mobile (<= 768px), abre diretamente a página do produto (consistente com produtos.php)
+        if (window.matchMedia("(max-width: 768px)").matches) {
+          return;
+        }
+
+        e.preventDefault();
+        const produtoId = resultItem.dataset.produtoId;
+        sessionStorage.setItem("abrirModalProdutoId", produtoId);
+        window.location.href = `/produtos.php?abrir_produto=${encodeURIComponent(produtoId)}`;
       }
     });
 

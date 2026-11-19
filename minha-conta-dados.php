@@ -7,12 +7,16 @@ require_once __DIR__ . '/config/cliente_auth.php';
 require_cliente();
 
 $cliente = cliente_atual($conn);
+if (!$cliente) {
+    header('Location: /entrar');
+    exit;
+}
 $erro = '';
 $sucesso = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_from_post()) {
-        $erro = 'Erro de seguranca. Recarregue a pagina.';
+        $erro = 'Erro de segurança. Recarregue a página.';
     } else {
         $acao = $_POST['acao'] ?? 'dados';
         try {
@@ -20,11 +24,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $nome = trim($_POST['nome'] ?? '');
                 $telefone = trim($_POST['telefone'] ?? '');
                 $nif = trim($_POST['nif'] ?? '');
-                $marketing = !empty($_POST['aceita_marketing']) ? 1 : 0;
                 if ($nome === '') throw new InvalidArgumentException('O nome é obrigatório.');
 
-                $stmt = $conn->prepare("UPDATE clientes SET nome = ?, telefone = ?, nif = ?, aceita_marketing = ?, data_atualizacao = NOW() WHERE id = ?");
-                $stmt->bind_param('sssii', $nome, $telefone, $nif, $marketing, $cliente['id']);
+                $stmt = $conn->prepare("UPDATE clientes SET nome = ?, telefone = ?, nif = ?, data_atualizacao = NOW() WHERE id = ?");
+                $stmt->bind_param('sssi', $nome, $telefone, $nif, $cliente['id']);
                 $stmt->execute();
                 $stmt->close();
                 $_SESSION['cliente_nome'] = $nome;
@@ -47,11 +50,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param('si', $hash, $cliente['id']);
                 $stmt->execute();
                 $stmt->close();
+                session_regenerate_id(true);
                 $sucesso = 'Palavra-passe atualizada com sucesso.';
             }
             $cliente = cliente_atual($conn);
-        } catch (Throwable $e) {
+        } catch (InvalidArgumentException $e) {
             $erro = $e->getMessage();
+        } catch (Throwable $e) {
+            log_app($e->getMessage(), 'ERROR', 'minha-conta-dados.php');
+            $erro = 'Ocorreu um erro interno. Tente novamente.';
         }
     }
 }

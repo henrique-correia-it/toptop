@@ -137,55 +137,67 @@ switch ($event_type) {
         }
         break;
 
-    // ── Pagamento falhou ou foi cancelado ────────────────────────────────────
+    // ── Tentativa de pagamento falhou (PI continua ativo para nova tentativa no checkout) ──
     case 'payment_intent.payment_failed':
+        log_wh("INFO: Tentativa de pagamento falhou para Enc #{$encomenda['id']} (PI {$pi_id}). Reserva mantida ativa para nova tentativa.");
+        break;
+
+    // ── Pagamento cancelado definitivamente ──────────────────────────────────
     case 'payment_intent.canceled':
         if (!in_array($encomenda['estado'], ['pago', 'cancelada', 'concluida', 'enviada'], true)) {
             $conn->begin_transaction();
             try {
-                $stmt_can = $conn->prepare("UPDATE encomendas SET estado = 'cancelada' WHERE id = ?");
+                $stmt_can = $conn->prepare("UPDATE encomendas SET estado = 'cancelada' WHERE id = ? AND estado IN ('pendente', 'incompleta')");
                 $stmt_can->bind_param("i", $encomenda['id']);
                 $stmt_can->execute();
+                $foi_cancelada = $stmt_can->affected_rows > 0;
                 $stmt_can->close();
 
-                // Devolve stock
-                $stmt_itens = $conn->prepare("SELECT variacao_id, quantidade FROM encomenda_itens WHERE encomenda_id = ?");
-                $stmt_itens->bind_param("i", $encomenda['id']);
-                $stmt_itens->execute();
-                $itens = $stmt_itens->get_result()->fetch_all(MYSQLI_ASSOC);
-                $stmt_itens->close();
+                if ($foi_cancelada) {
+                    // Devolve stock apenas se esta transação foi a que cancelou
+                    $stmt_itens = $conn->prepare("SELECT variacao_id, quantidade FROM encomenda_itens WHERE encomenda_id = ?");
+                    $stmt_itens->bind_param("i", $encomenda['id']);
+                    $stmt_itens->execute();
+                    $itens = $stmt_itens->get_result()->fetch_all(MYSQLI_ASSOC);
+                    $stmt_itens->close();
 
-                $stmt_stock = $conn->prepare("UPDATE produto_variacoes SET quantidade = quantidade + ? WHERE id = ?");
-                foreach ($itens as $it) {
-                    if (!$it['variacao_id']) continue;
-                    $stmt_stock->bind_param("ii", $it['quantidade'], $it['variacao_id']);
-                    $stmt_stock->execute();
+                    $stmt_stock = $conn->prepare("UPDATE produto_variacoes SET quantidade = quantidade + ? WHERE id = ?");
+                    foreach ($itens as $it) {
+                        if (!$it['variacao_id']) continue;
+                        $stmt_stock->bind_param("ii", $it['quantidade'], $it['variacao_id']);
+                        $stmt_stock->execute();
+                    }
+                    $stmt_stock->close();
                 }
-                $stmt_stock->close();
 
                 $conn->commit();
 
-                // Notifica o cliente sobre o pagamento falhado
-                try {
-                    enviarEmailEncomenda('cancelada_por_atraso', [
-                        'id'               => $encomenda['id'],
-                        'token'            => $encomenda['token'],
-                        'cliente_nome'     => $encomenda['cliente_nome'],
-                        'cliente_email'    => $encomenda['cliente_email'],
-                        'total'            => (float)$encomenda['total'],
-                        'portes_envio'     => (float)$encomenda['portes_envio'],
-                        'metodo_entrega'   => $encomenda['metodo_entrega'],
-                        'metodo_pagamento' => $encomenda['metodo_pagamento'],
-                    ]);
-                } catch (\Throwable $e_mail) {
-                    log_email("Webhook: falha no email de cancelamento para encomenda #{$encomenda['id']}: " . $e_mail->getMessage(), 'stripe_webhook.php');
-                    log_wh("Falha no email de cancelamento para Enc #{$encomenda['id']}: " . $e_mail->getMessage(), 'WARNING');
+                if ($foi_cancelada) {
+                    // Notifica o cliente sobre o cancelamento
+                    try {
+                        enviarEmailEncomenda('cancelada_por_atraso', [
+                            'id'               => $encomenda['id'],
+                            'token'            => $encomenda['token'],
+                            'cliente_nome'     => $encomenda['cliente_nome'],
+                            'cliente_email'    => $encomenda['cliente_email'],
+                            'total'            => (float)$encomenda['total'],
+                            'portes_envio'     => (float)$encomenda['portes_envio'],
+                            'metodo_entrega'   => $encomenda['metodo_entrega'],
+                            'metodo_pagamento' => $encomenda['metodo_pagamento'],
+                        ]);
+                    } catch (\Throwable $e_mail) {
+                        log_email("Webhook: falha no email de cancelamento para encomenda #{$encomenda['id']}: " . $e_mail->getMessage(), 'stripe_webhook.php');
+                        log_wh("Falha no email de cancelamento para Enc #{$encomenda['id']}: " . $e_mail->getMessage(), 'WARNING');
+                    }
                 }
 
             } catch (\Throwable $e) {
                 $conn->rollback();
                 log_wh("Erro ao cancelar encomenda #{$encomenda['id']}: " . $e->getMessage(), 'ERROR');
                 log_app("Webhook: erro ao cancelar encomenda #{$encomenda['id']}: " . $e->getMessage(), 'ERROR', 'stripe_webhook.php');
+                http_response_code(500);
+                echo json_encode(['error' => 'Erro interno ao processar cancelamento.']);
+                exit;
             }
         }
         break;

@@ -58,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     '{link_verificacao}' => $link,
                 ]);
 
+                $_SESSION['registo_pendente_email'] = $email;
                 header('Location: /registar?pendente=1');
                 exit;
             } catch (Throwable $e) {
@@ -76,8 +77,12 @@ include __DIR__ . '/templates/header.php';
         <div class="login-card">
 
             <?php if (!empty($_GET['pendente'])): ?>
+                <?php
+                $email_pendente = $_SESSION['registo_pendente_email'] ?? '';
+                unset($_SESSION['registo_pendente_email']);
+                ?>
                 <h2>Verifica o teu email</h2>
-                <p class="cliente-auth-copy">Enviámos um link de confirmação para <strong><?php echo htmlspecialchars($email); ?></strong>. Abre o email e clica no link para ativares a conta.</p>
+                <p class="cliente-auth-copy">Enviámos um link de confirmação para <strong><?php echo htmlspecialchars($email_pendente !== '' ? $email_pendente : 'o teu email', ENT_QUOTES, 'UTF-8'); ?></strong>. Abre o email e clica no link para ativares a conta.</p>
                 <div class="form-actions-footer" style="margin-top:1.5rem;">
                     <a href="/entrar" class="link-recuperar">Já ativei — entrar</a>
                 </div>

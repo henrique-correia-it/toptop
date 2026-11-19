@@ -113,6 +113,8 @@ if (!isset($_GET['dev_preview']) && in_array($encomenda['estado'], ['pendente', 
                     $metodo_real = 'Cartão';
                 } elseif ($tipo_pm === 'mb_way') {
                     $metodo_real = 'MB WAY';
+                } elseif ($tipo_pm === 'klarna') {
+                    $metodo_real = 'Klarna';
                 }
 
                 $stmt_up = $conn->prepare("UPDATE encomendas SET estado = 'pago', metodo_pagamento = ? WHERE id = ? AND estado IN ('pendente', 'incompleta')");
@@ -125,6 +127,8 @@ if (!isset($_GET['dev_preview']) && in_array($encomenda['estado'], ['pendente', 
                 $encomenda['metodo_pagamento'] = $metodo_real;
 
                 if ($foi_primeiro) {
+                    require_once __DIR__ . '/admin/includes/email_handler.php';
+
                     try {
                         $template_email = ($encomenda['metodo_entrega'] === 'recolha') ? 'recolha_paga' : 'confirmacao_stripe';
                         enviarEmailEncomenda($template_email, [
@@ -137,39 +141,54 @@ if (!isset($_GET['dev_preview']) && in_array($encomenda['estado'], ['pendente', 
                             'metodo_entrega'   => $encomenda['metodo_entrega'],
                             'metodo_pagamento' => $metodo_real,
                         ]);
-                    } catch (Exception $e) {
+                    } catch (\Throwable $e) {
                         error_log("estado_encomenda: falha no email ao cliente enc #{$encomenda['id']}: " . $e->getMessage());
                     }
 
-                    $total_enc = (float)$encomenda['total'] + (($encomenda['metodo_entrega'] === 'levantamento') ? 0 : (float)$encomenda['portes_envio']);
-                    enviarEmailNotificacaoLoja('nova_encomenda_loja', [
-                        'id'               => $encomenda['id'],
-                        'nome_cliente'     => $encomenda['cliente_nome'],
-                        'email_cliente'    => $encomenda['cliente_email'],
-                        'total_final'      => $total_enc,
-                        'metodo_pagamento' => $metodo_real,
-                    ]);
+                    try {
+                        $total_enc = (float)$encomenda['total'] + (($encomenda['metodo_entrega'] === 'recolha') ? 0 : (float)$encomenda['portes_envio']);
+                        enviarEmailNotificacaoLoja('nova_encomenda_loja', [
+                            'id'               => $encomenda['id'],
+                            'nome_cliente'     => $encomenda['cliente_nome'],
+                            'email_cliente'    => $encomenda['cliente_email'],
+                            'total_final'      => $total_enc,
+                            'metodo_pagamento' => $metodo_real,
+                        ]);
+                    } catch (\Throwable $e) {
+                        error_log("estado_encomenda: falha no email a loja enc #{$encomenda['id']}: " . $e->getMessage());
+                    }
                 }
-            } elseif ($pi_data['status'] === 'canceled') {
-                $stmt_can = $conn->prepare("UPDATE encomendas SET estado = 'cancelada' WHERE id = ?");
-                $stmt_can->bind_param("i", $encomenda['id']);
-                $stmt_can->execute();
-                $stmt_can->close();
+            } elseif (($pi_data['status'] ?? '') === 'canceled') {
+                $conn->begin_transaction();
+                try {
+                    $stmt_can = $conn->prepare("UPDATE encomendas SET estado = 'cancelada' WHERE id = ? AND estado IN ('pendente', 'incompleta')");
+                    $stmt_can->bind_param("i", $encomenda['id']);
+                    $stmt_can->execute();
+                    $foi_cancelada = $stmt_can->affected_rows > 0;
+                    $stmt_can->close();
 
-                $stmt_itens_stock = $conn->prepare("SELECT variacao_id, quantidade FROM encomenda_itens WHERE encomenda_id = ?");
-                $stmt_itens_stock->bind_param("i", $encomenda['id']);
-                $stmt_itens_stock->execute();
-                $itens_stock = $stmt_itens_stock->get_result()->fetch_all(MYSQLI_ASSOC);
-                $stmt_itens_stock->close();
+                    if ($foi_cancelada) {
+                        $stmt_itens_stock = $conn->prepare("SELECT variacao_id, quantidade FROM encomenda_itens WHERE encomenda_id = ?");
+                        $stmt_itens_stock->bind_param("i", $encomenda['id']);
+                        $stmt_itens_stock->execute();
+                        $itens_stock = $stmt_itens_stock->get_result()->fetch_all(MYSQLI_ASSOC);
+                        $stmt_itens_stock->close();
 
-                $stmt_stock = $conn->prepare("UPDATE produto_variacoes SET quantidade = quantidade + ? WHERE id = ?");
-                foreach ($itens_stock as $it) {
-                    $stmt_stock->bind_param("ii", $it['quantidade'], $it['variacao_id']);
-                    $stmt_stock->execute();
+                        $stmt_stock = $conn->prepare("UPDATE produto_variacoes SET quantidade = quantidade + ? WHERE id = ?");
+                        foreach ($itens_stock as $it) {
+                            if (empty($it['variacao_id'])) continue;
+                            $stmt_stock->bind_param("ii", $it['quantidade'], $it['variacao_id']);
+                            $stmt_stock->execute();
+                        }
+                        $stmt_stock->close();
+                    }
+
+                    $conn->commit();
+                    $encomenda['estado'] = 'cancelada';
+                } catch (\Throwable $e_can) {
+                    $conn->rollback();
+                    error_log("estado_encomenda: falha ao cancelar enc #{$encomenda['id']}: " . $e_can->getMessage());
                 }
-                $stmt_stock->close();
-
-                $encomenda['estado'] = 'cancelada';
             }
         }
     }
@@ -403,7 +422,7 @@ if ($indice_atual >= $total_passos) $progresso = 100;
                 <span><?php echo date('d/m/Y H:i', strtotime($msg['data'])); ?></span>
             </div>
             <div class="msg-assunto"><?php echo htmlspecialchars($msg['assunto']); ?></div>
-            <div class="msg-corpo"><?php echo $msg['mensagem']; ?></div>
+            <div class="msg-corpo"><?php echo sanitize_email_history_html($msg['mensagem'] ?? ''); ?></div>
         </div>
         <?php endforeach; ?>
     </div>

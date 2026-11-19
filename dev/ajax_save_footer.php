@@ -27,6 +27,32 @@ if (!csrf_from_array($data)) {
 $seccao = $data['seccao'];
 $conteudo = $data['conteudo'];
 
+$seccoes_permitidas = [
+    'titulo_sobre',
+    'sobre_nos',
+    'titulo_info',
+    'link_label_trocas',
+    'link_label_envios',
+    'link_label_encomenda',
+    'titulo_contactos',
+    'morada_rua',
+    'morada_cp',
+    'morada_localidade',
+    'telefone',
+    'email',
+    'link_whatsapp',
+    'link_instagram',
+    'link_facebook',
+    'titulo_pagamento',
+    'pagamento_seguro',
+    'copyright',
+    'horario_funcionamento',
+];
+
+if (!is_string($seccao) || !is_string($conteudo) || !in_array($seccao, $seccoes_permitidas, true)) {
+    json_error('Secção inválida.', 400);
+}
+
 // Upsert (Insert ou Update)
 $stmt = $conn->prepare("INSERT INTO footer_config (seccao, conteudo) VALUES (?, ?) ON DUPLICATE KEY UPDATE conteudo = ?, ultima_atualizacao = CURRENT_TIMESTAMP");
 $stmt->bind_param("sss", $seccao, $conteudo, $conteudo);

@@ -1,11 +1,14 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/csrf.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/loja_config.php';
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true || !in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor'])) {
+if (!admin_has_role(['superadmin', 'desenvolvedor'])) {
+    http_response_code(403);
     echo json_encode(['sucesso' => false, 'mensagem' => 'Acesso negado.']);
     exit;
 }
@@ -19,21 +22,23 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $isMultipart = strpos($_SERVER['CONTENT_TYPE'] ?? '', 'multipart') !== false;
 
 if ($isMultipart) {
-    $csrfToken = $_POST['csrf_token'] ?? '';
+    $csrfToken = $_POST['csrf_token'] ?? null;
     $chave = $_POST['chave'] ?? '';
 } else {
     $data = json_decode(file_get_contents('php://input'), true);
-    $csrfToken = $data['csrf_token'] ?? '';
-    $chave = $data['chave'] ?? '';
-    $conteudo = $data['conteudo'] ?? null;
+    $csrfToken = is_array($data) ? ($data['csrf_token'] ?? null) : null;
+    $chave = is_array($data) ? ($data['chave'] ?? '') : '';
+    $conteudo = is_array($data) ? ($data['conteudo'] ?? null) : null;
 }
 
-if (!hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+if (!csrf_verify(is_string($csrfToken) ? $csrfToken : null)) {
+    http_response_code(403);
     echo json_encode(['sucesso' => false, 'mensagem' => 'Erro de segurança (CSRF).']);
     exit;
 }
 
-if (empty($chave)) {
+if (!is_string($chave) || $chave === '') {
+    http_response_code(400);
     echo json_encode(['sucesso' => false, 'mensagem' => 'Chave inválida.']);
     exit;
 }
@@ -69,7 +74,7 @@ if ($isMultipart && $chave === 'home_hero_bg') {
         default => 'jpg',
     };
 
-    $dir = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') . '/public/assets/hero/';
+    $dir = __DIR__ . '/../public/assets/hero/';
     if (!is_dir($dir)) {
         mkdir($dir, 0755, true);
     }
@@ -83,29 +88,52 @@ if ($isMultipart && $chave === 'home_hero_bg') {
     }
 
     $url = '/public/assets/hero/' . $filename;
-
-    // Opcional: Apagar imagem antiga se não for a padrão
     $oldUrl = getLojaConfig('home_hero_bg', '');
-    if (!empty($oldUrl) && strpos($oldUrl, '/public/assets/hero/') !== false) {
-        $oldPath = $_SERVER['DOCUMENT_ROOT'] . $oldUrl;
-        if (file_exists($oldPath) && is_file($oldPath)) {
-            unlink($oldPath);
-        }
-    }
 
     if (setLojaConfig('home_hero_bg', $url)) {
+        // Apagar imagem antiga apenas após gravar na BD, com validação contra path traversal
+        if (!empty($oldUrl) && str_starts_with($oldUrl, '/public/assets/hero/')) {
+            $oldName = basename($oldUrl);
+            $realDir = realpath($dir);
+            $oldPath = $realDir ? realpath($dir . $oldName) : false;
+            if ($oldName !== $filename && $realDir && $oldPath && str_starts_with($oldPath, $realDir . DIRECTORY_SEPARATOR) && is_file($oldPath)) {
+                @unlink($oldPath);
+            }
+        }
         echo json_encode(['sucesso' => true, 'url' => $url, 'mensagem' => 'Fundo da Hero atualizado com sucesso!']);
     } else {
+        @unlink($dest);
+        http_response_code(500);
         echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao guardar na base de dados.']);
     }
     exit;
 }
 
-// Lógica para Texto (JSON)
-if (!$isMultipart && $conteudo !== null) {
+// Lógica para Texto (JSON) — whitelist estrita de chaves da homepage
+$chaves_home_permitidas = [
+    'home_hero_title',
+    'home_hero_subtitle',
+    'home_hero_cta',
+    'home_trust_1_title',
+    'home_trust_1_desc',
+    'home_trust_2_title',
+    'home_trust_2_desc',
+    'home_trust_3_title',
+    'home_trust_3_desc',
+    'home_cat_title',
+    'home_new_title',
+];
+
+if (!$isMultipart && is_string($conteudo)) {
+    if (!in_array($chave, $chaves_home_permitidas, true)) {
+        http_response_code(400);
+        echo json_encode(['sucesso' => false, 'mensagem' => 'Chave não permitida.']);
+        exit;
+    }
     if (setLojaConfig($chave, $conteudo)) {
         echo json_encode(['sucesso' => true, 'mensagem' => 'Texto atualizado com sucesso!']);
     } else {
+        http_response_code(500);
         echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao guardar na base de dados.']);
     }
     exit;
