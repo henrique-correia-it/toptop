@@ -79,153 +79,108 @@ $atividade_recente = array_slice($atividade_recente, 0, 5);
     <?php endif; ?>
 
     <div class="stats-grid">
-        <?php $label = getInterfaceString('card_produtos_ativos', 'Produtos Ativos'); ?>
-        <a href="admin_produtos.php" class="stat-card editable-card" data-label-key="card_produtos_ativos">
-            <div class="stat-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></div>
-            <div class="stat-card-info">
-                <span class="stat-number"><?php echo $total_produtos; ?></span>
-                <span class="stat-label"><?php echo htmlspecialchars($label['title']); ?></span>
-            </div>
-        </a>
+        <?php
+        $label = getInterfaceString('card_produtos_ativos', 'Produtos Ativos');
+        echo ui_stat_card((string)$total_produtos, $label['title'], [
+            'href'  => 'admin_produtos.php',
+            'class' => 'editable-card',
+            'attrs' => ['data-label-key' => 'card_produtos_ativos'],
+            'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>',
+        ]);
 
-        <?php $label = getInterfaceString('card_encomendas_por_enviar', 'Encomendas por Enviar'); ?>
-        <a href="encomendas.php?estado=por_enviar" class="stat-card editable-card" data-label-key="card_encomendas_por_enviar">
-            <div class="stat-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div>
-            <div class="stat-card-info">
-                <span class="stat-number"><?php echo $encomendas_nao_enviadas_count; ?></span>
-                <span class="stat-label"><?php echo htmlspecialchars($label['title']); ?></span>
-            </div>
-        </a>
+        $label = getInterfaceString('card_encomendas_por_enviar', 'Encomendas por Enviar');
+        echo ui_stat_card((string)$encomendas_nao_enviadas_count, $label['title'], [
+            'href'  => 'encomendas.php?estado=por_enviar',
+            'class' => 'editable-card',
+            'attrs' => ['data-label-key' => 'card_encomendas_por_enviar'],
+            'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>',
+        ]);
 
-        <?php $label = getInterfaceString('card_mensagens_por_responder', 'Mensagens por Responder'); ?>
-        <a href="mensagens.php" class="stat-card editable-card" data-label-key="card_mensagens_por_responder">
-            <div class="stat-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
-            <div class="stat-card-info">
-                <span class="stat-number"><?php echo $mensagens_pendentes_count; ?></span>
-                <span class="stat-label"><?php echo htmlspecialchars($label['title']); ?></span>
-            </div>
-        </a>
+        $label = getInterfaceString('card_mensagens_por_responder', 'Mensagens por Responder');
+        echo ui_stat_card((string)$mensagens_pendentes_count, $label['title'], [
+            'href'  => 'mensagens.php',
+            'class' => 'editable-card',
+            'attrs' => ['data-label-key' => 'card_mensagens_por_responder'],
+            'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>',
+        ]);
+        ?>
     </div>
 
     <div class="dashboard-grid-cols">
         <div class="main-actions-col">
             <h3 class="dashboard-section-title">Ações do Dia a Dia</h3>
             <div class="dashboard-grid">
-                <?php $label = getInterfaceString('nav_adicionar_produto', 'Adicionar Produto', 'Criar um novo item para a loja.'); ?>
-                <a href="adicionar.php" class="nav-card editable-card" data-label-key="nav_adicionar_produto">
-                    <div class="nav-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>
-                    <div class="nav-card-body">
-                        <h3><?php echo htmlspecialchars($label['title']); ?></h3>
-                        <p><?php echo htmlspecialchars($label['description']); ?></p>
-                    </div>
-                </a>
+                <?php
+                $l = getInterfaceString('nav_adicionar_produto', 'Adicionar Produto', 'Criar um novo item para a loja.');
+                echo ui_nav_card($l['title'], $l['description'], 'adicionar.php', [
+                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_adicionar_produto'],
+                    'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>',
+                ]);
 
-                <?php $label = getInterfaceString('nav_gerir_produtos', 'Gerir Produtos', 'Editar, apagar ou duplicar produtos.'); ?>
-                <a href="admin_produtos.php" class="nav-card editable-card" data-label-key="nav_gerir_produtos">
-                    <div class="nav-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></div>
-                    <div class="nav-card-body">
-                        <h3><?php echo htmlspecialchars($label['title']); ?></h3>
-                        <p><?php echo htmlspecialchars($label['description']); ?></p>
-                    </div>
-                </a>
+                $l = getInterfaceString('nav_gerir_produtos', 'Gerir Produtos', 'Editar, apagar ou duplicar produtos.');
+                echo ui_nav_card($l['title'], $l['description'], 'admin_produtos.php', [
+                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_gerir_produtos'],
+                    'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>',
+                ]);
 
-                <a href="reservas_stock.php" class="nav-card">
-                    <div class="nav-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg></div>
-                    <div class="nav-card-body">
-                        <h3>Reservas de Stock</h3>
-                        <p>Ver produtos temporariamente reservados no checkout.</p>
-                    </div>
-                </a>
+                echo ui_nav_card('Reservas de Stock', 'Ver produtos temporariamente reservados no checkout.', 'reservas_stock.php', [
+                    'icon' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg>',
+                ]);
 
-                <?php $label = getInterfaceString('nav_gerir_encomendas', 'Gerir Encomendas', 'Processar e atualizar estado dos pedidos.'); ?>
-                <a href="encomendas.php" class="nav-card editable-card" data-label-key="nav_gerir_encomendas">
-                    <div class="nav-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div>
-                    <div class="nav-card-body">
-                        <h3><?php echo htmlspecialchars($label['title']); ?></h3>
-                        <p><?php echo htmlspecialchars($label['description']); ?></p>
-                    </div>
-                </a>
+                $l = getInterfaceString('nav_gerir_encomendas', 'Gerir Encomendas', 'Processar e atualizar estado dos pedidos.');
+                echo ui_nav_card($l['title'], $l['description'], 'encomendas.php', [
+                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_gerir_encomendas'],
+                    'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>',
+                ]);
 
-                <a href="clientes.php" class="nav-card">
-                    <div class="nav-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
-                    <div class="nav-card-body">
-                        <h3>Contas de Clientes</h3>
-                        <p>Ver, gerir e remover contas de clientes registados.</p>
-                    </div>
-                </a>
+                echo ui_nav_card('Contas de Clientes', 'Ver, gerir e remover contas de clientes registados.', 'clientes.php', [
+                    'icon' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+                ]);
+                ?>
             </div>
 
             <?php if ($isSuperAdmin): ?>
             <h3 class="dashboard-section-title section-spacer">Configurações Avançadas</h3>
             <div class="dashboard-grid">
-                <a href="gerir_categorias.php" class="nav-card">
-                    <div class="nav-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></div>
-                    <div class="nav-card-body">
-                        <h3>Categorias</h3>
-                        <p>Gerir categorias e fotos de capa.</p>
-                    </div>
-                </a>
+                <?php
+                echo ui_nav_card('Categorias', 'Gerir categorias e fotos de capa.', 'gerir_categorias.php', [
+                    'icon' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>',
+                ]);
 
-                <a href="paleta_cores.php" class="nav-card">
-                    <div class="nav-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle><path d="M12 2a10 10 0 0 0 0 20h1.65a2.35 2.35 0 0 0 1.72-3.95 1.8 1.8 0 0 1 1.32-3.02H19a3 3 0 0 0 3-3A10 10 0 0 0 12 2z"></path></svg>
-                    </div>
-                    <div class="nav-card-body">
-                        <h3>Paleta de Cores</h3>
-                        <p>Personalizar a cor de fundo global do site.</p>
-                    </div>
-                </a>
+                echo ui_nav_card('Paleta de Cores', 'Personalizar a cor de fundo global do site.', 'paleta_cores.php', [
+                    'icon' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle><path d="M12 2a10 10 0 0 0 0 20h1.65a2.35 2.35 0 0 0 1.72-3.95 1.8 1.8 0 0 1 1.32-3.02H19a3 3 0 0 0 3-3A10 10 0 0 0 12 2z"></path></svg>',
+                ]);
 
-                <?php $label = getInterfaceString('nav_atributos', 'Atributos', 'Gerir cores, tamanhos, etc.'); ?>
-                <a href="gerir_atributos.php" class="nav-card editable-card" data-label-key="nav_atributos">
-                    <div class="nav-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg></div>
-                    <div class="nav-card-body">
-                        <h3><?php echo htmlspecialchars($label['title']); ?></h3>
-                        <p><?php echo htmlspecialchars($label['description']); ?></p>
-                    </div>
-                </a>
+                $l = getInterfaceString('nav_atributos', 'Atributos', 'Gerir cores, tamanhos, etc.');
+                echo ui_nav_card($l['title'], $l['description'], 'gerir_atributos.php', [
+                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_atributos'],
+                    'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>',
+                ]);
 
-                <?php $label = getInterfaceString('nav_guias_tamanho', 'Guias de Tamanho', 'Gerir tabelas de medidas.'); ?>
-                <a href="gerir_guias_tamanho.php" class="nav-card editable-card" data-label-key="nav_guias_tamanho">
-                    <div class="nav-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2" ry="2"></rect><line x1="7" y1="7" x2="7" y2="12"></line><line x1="12" y1="7" x2="12" y2="12"></line><line x1="17" y1="7" x2="17" y2="12"></line><line x1="7" y1="12" x2="17" y2="12"></line></svg>
-                    </div>
-                    <div class="nav-card-body">
-                        <h3><?php echo htmlspecialchars($label['title']); ?></h3>
-                        <p><?php echo htmlspecialchars($label['description']); ?></p>
-                    </div>
-                </a>
+                $l = getInterfaceString('nav_guias_tamanho', 'Guias de Tamanho', 'Gerir tabelas de medidas.');
+                echo ui_nav_card($l['title'], $l['description'], 'gerir_guias_tamanho.php', [
+                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_guias_tamanho'],
+                    'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2" ry="2"></rect><line x1="7" y1="7" x2="7" y2="12"></line><line x1="12" y1="7" x2="12" y2="12"></line><line x1="17" y1="7" x2="17" y2="12"></line><line x1="7" y1="12" x2="17" y2="12"></line></svg>',
+                ]);
 
-                <?php $label = getInterfaceString('nav_templates_email', 'Templates de Email', 'Personalizar emails automáticos.'); ?>
-                <a href="gestor_emails.php" class="nav-card editable-card" data-label-key="nav_templates_email">
-                    <div class="nav-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
-                    <div class="nav-card-body">
-                        <h3><?php echo htmlspecialchars($label['title']); ?></h3>
-                        <p><?php echo htmlspecialchars($label['description']); ?></p>
-                    </div>
-                </a>
+                $l = getInterfaceString('nav_templates_email', 'Templates de Email', 'Personalizar emails automáticos.');
+                echo ui_nav_card($l['title'], $l['description'], 'gestor_emails.php', [
+                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_templates_email'],
+                    'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>',
+                ]);
 
-                <?php $label = getInterfaceString('nav_administradores', 'Administradores', 'Gerir contas de acesso.'); ?>
-                <a href="listar_admins.php" class="nav-card editable-card" data-label-key="nav_administradores">
-                    <div class="nav-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
-                    <div class="nav-card-body">
-                        <h3><?php echo htmlspecialchars($label['title']); ?></h3>
-                        <p><?php echo htmlspecialchars($label['description']); ?></p>
-                    </div>
-                </a>
+                $l = getInterfaceString('nav_administradores', 'Administradores', 'Gerir contas de acesso.');
+                echo ui_nav_card($l['title'], $l['description'], 'listar_admins.php', [
+                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_administradores'],
+                    'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
+                ]);
 
-                <?php $label = getInterfaceString('nav_portes', 'Configurações de Portes', 'Gerir preços de envio por peso.'); ?>
-                <a href="portes.php" class="nav-card editable-card" data-label-key="nav_portes">
-                    <div class="nav-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-                    </div>
-                    <div class="nav-card-body">
-                        <h3><?php echo htmlspecialchars($label['title']); ?></h3>
-                        <p><?php echo htmlspecialchars($label['description']); ?></p>
-                    </div>
-                </a>
-
-
+                $l = getInterfaceString('nav_portes', 'Configurações de Portes', 'Gerir preços de envio por peso.');
+                echo ui_nav_card($l['title'], $l['description'], 'portes.php', [
+                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_portes'],
+                    'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>',
+                ]);
+                ?>
             </div>
             <?php endif; ?>
         </div>

@@ -840,7 +840,7 @@ if (!function_exists('ui_pagination')) {
     }
 }
 
-/** 14. KPI / Stat Card (.ui-stat-card) */
+/** 14. KPI / Stat Card (.stat-card) */
 if (!function_exists('ui_stat_card')) {
     function ui_stat_card(string $value, string $label, array $opts = []): string
     {
@@ -852,11 +852,13 @@ if (!function_exists('ui_stat_card')) {
             $attrs['href'] = $href;
         }
         $iconHtml = !empty($opts['icon']) ? '<div class="stat-card-icon" aria-hidden="true">' . (string)$opts['icon'] . '</div>' : '';
+        $valId    = !empty($opts['value_id']) ? ' id="' . ui_e($opts['value_id']) . '"' : '';
         $subHtml  = !empty($opts['subtitle']) ? '<small class="ui-stat-sub">' . ui_e($opts['subtitle']) . '</small>' : '';
+        $extra    = (string)($opts['extra_html'] ?? '');
         return '<' . $tag . ui_attrs($attrs) . '>'
             . $iconHtml
-            . '<div class="stat-card-info"><span class="stat-number">' . ui_e($value) . '</span>'
-            . '<span class="stat-label">' . ui_e($label) . '</span>' . $subHtml . '</div>'
+            . '<div class="stat-card-info"><span class="stat-number"' . $valId . '>' . ui_e($value) . '</span>'
+            . '<span class="stat-label">' . ui_e($label) . '</span>' . $subHtml . $extra . '</div>'
             . '</' . $tag . '>';
     }
 }

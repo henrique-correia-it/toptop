@@ -292,122 +292,76 @@ $recent_logs = getRecentAppLogs(3);
 
     <!-- ── Stats Grid ── -->
     <div class="stats-grid">
-        <!-- Stripe Toggle (Funcional) -->
-        <div class="stat-card <?php echo $is_live ? 'stripe-live' : 'stripe-test'; ?>" id="stripe-card-toggle" style="cursor: pointer; position: relative;">
-            <div class="stat-card-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            </div>
-            <div class="stat-card-info">
-                <span class="stat-number" id="stripe-mode-label"><?php echo $is_live ? 'LIVE' : 'TEST'; ?></span>
-                <span class="stat-label">Stripe Mode</span>
-                <input type="checkbox" id="stripe-mode-hidden-checkbox" style="display:none;" <?php echo $is_live ? 'checked' : ''; ?>>
-            </div>
-        </div>
+        <?php
+        echo ui_stat_card($is_live ? 'LIVE' : 'TEST', 'Stripe Mode', [
+            'class'      => $is_live ? 'stripe-live' : 'stripe-test',
+            'value_id'   => 'stripe-mode-label',
+            'attrs'      => ['id' => 'stripe-card-toggle', 'style' => 'cursor: pointer; position: relative;'],
+            'icon'       => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+            'extra_html' => '<input type="checkbox" id="stripe-mode-hidden-checkbox" style="display:none;"' . ($is_live ? ' checked' : '') . '>',
+        ]);
 
-        <!-- Ghost Photos -->
-        <a href="galeria_imagens.php" class="stat-card">
-            <div class="stat-card-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
-            </div>
-            <div class="stat-card-info">
-                <span class="stat-number"><?php echo $fotos_fantasma_real; ?></span>
-                <span class="stat-label">Fotos Fantasma</span>
-            </div>
-        </a>
+        echo ui_stat_card((string)$fotos_fantasma_real, 'Fotos Fantasma', [
+            'href' => 'galeria_imagens.php',
+            'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>',
+        ]);
 
-        <!-- Disk Space -->
-        <a href="uso_armazenamento.php" class="stat-card">
-            <div class="stat-card-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            </div>
-            <div class="stat-card-info">
-                <span class="stat-number"><?php echo $espaco_disco_real; ?></span>
-                <span class="stat-label">Espaço em Disco</span>
-            </div>
-        </a>
+        echo ui_stat_card((string)$espaco_disco_real, 'Espaço em Disco', [
+            'href' => 'uso_armazenamento.php',
+            'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+        ]);
 
-        <!-- Header Dinâmico Toggle (Funcional) -->
-        <div class="stat-card <?php echo $header_auto_hide ? 'header-hide-on' : 'header-hide-off'; ?>" id="header-hide-toggle" style="cursor: pointer; position: relative;" title="Esconder o cabeçalho ao fazer scroll para baixo">
-            <div class="stat-card-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline><polyline points="18 21 12 15 6 21"></polyline></svg>
-            </div>
-            <div class="stat-card-info">
-                <span class="stat-number" id="header-hide-label"><?php echo $header_auto_hide ? 'ON' : 'OFF'; ?></span>
-                <span class="stat-label">Header Dinâmico</span>
-                <input type="checkbox" id="header-hide-checkbox" style="display:none;" <?php echo $header_auto_hide ? 'checked' : ''; ?>>
-            </div>
-        </div>
+        echo ui_stat_card($header_auto_hide ? 'ON' : 'OFF', 'Header Dinâmico', [
+            'class'      => $header_auto_hide ? 'header-hide-on' : 'header-hide-off',
+            'value_id'   => 'header-hide-label',
+            'attrs'      => ['id' => 'header-hide-toggle', 'style' => 'cursor: pointer; position: relative;', 'title' => 'Esconder o cabeçalho ao fazer scroll para baixo'],
+            'icon'       => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline><polyline points="18 21 12 15 6 21"></polyline></svg>',
+            'extra_html' => '<input type="checkbox" id="header-hide-checkbox" style="display:none;"' . ($header_auto_hide ? ' checked' : '') . '>',
+        ]);
+        ?>
     </div>
 
-    <!-- ── Layout Principal ── -->
-    <!-- ── Layout em Grid (Alinhamento Preciso) ── -->
     <div class="dashboard-grid-cols">
-        
-        <!-- Coluna Esquerda: Conteúdo Principal -->
         <div class="main-actions-col">
-            <!-- Área: Gestão de Ativos -->
             <section class="grid-area-gestao">
                 <h3 class="dashboard-section-title">Gestão de Ativos</h3>
                 <div class="dashboard-grid">
-                    <a href="galeria_imagens.php" class="nav-card">
-                        <div class="nav-card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-                        <div class="nav-card-body">
-                            <h3>Galeria do Servidor</h3>
-                            <p>Gestão centralizada de todas as imagens.</p>
-                        </div>
-                    </a>
-
-                    <a href="uso_armazenamento.php" class="nav-card">
-                        <div class="nav-card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
-                        <div class="nav-card-body">
-                            <h3>Uso de Armazenamento</h3>
-                            <p>Análise detalhada do espaço em disco.</p>
-                        </div>
-                    </a>
+                    <?php
+                    echo ui_nav_card('Galeria do Servidor', 'Gestão centralizada de todas as imagens.', 'galeria_imagens.php', [
+                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+                    ]);
+                    echo ui_nav_card('Uso de Armazenamento', 'Análise detalhada do espaço em disco.', 'uso_armazenamento.php', [
+                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+                    ]);
+                    ?>
                 </div>
             </section>
 
-            <!-- Área: Segurança & Logs -->
             <section class="grid-area-seguranca">
                 <h3 class="dashboard-section-title section-spacer">Segurança & Logs</h3>
                 <div class="dashboard-grid">
-                    <a href="login_logs.php" class="nav-card">
-                        <div class="nav-card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></div>
-                        <div class="nav-card-body">
-                            <h3>Registos de Login</h3>
-                            <p>Histórico de acessos administrativos.</p>
-                        </div>
-                    </a>
-
-                    <a href="ver_logs.php" class="nav-card">
-                        <div class="nav-card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-                        <div class="nav-card-body">
-                            <h3>Registos de Erros</h3>
-                            <p>Logs de App, SQL, Email e Stripe.</p>
-                        </div>
-                    </a>
+                    <?php
+                    echo ui_nav_card('Registos de Login', 'Histórico de acessos administrativos.', 'login_logs.php', [
+                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>',
+                    ]);
+                    echo ui_nav_card('Registos de Erros', 'Logs de App, SQL, Email e Stripe.', 'ver_logs.php', [
+                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+                    ]);
+                    ?>
                 </div>
             </section>
 
-            <!-- Área: Ferramentas de Programador -->
             <section class="grid-area-ferramentas">
                 <h3 class="dashboard-section-title section-spacer">Ferramentas de Programador</h3>
                 <div class="dashboard-grid">
-                    <a href="previews.php" class="nav-card">
-                        <div class="nav-card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
-                        <div class="nav-card-body">
-                            <h3>Developer Previews</h3>
-                            <p>Visualizar templates com dados simulados.</p>
-                        </div>
-                    </a>
-
-                    <a href="design_system.php" class="nav-card">
-                        <div class="nav-card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></div>
-                        <div class="nav-card-body">
-                            <h3>Design System</h3>
-                            <p>Tokens, cores e biblioteca de 9 componentes.</p>
-                        </div>
-                    </a>
+                    <?php
+                    echo ui_nav_card('Developer Previews', 'Visualizar templates com dados simulados.', 'previews.php', [
+                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+                    ]);
+                    echo ui_nav_card('Design System', 'Tokens, cores e biblioteca de 16 componentes.', 'design_system.php', [
+                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>',
+                    ]);
+                    ?>
                 </div>
             </section>
         </div>
