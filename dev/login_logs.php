@@ -128,82 +128,46 @@ $qs_base = http_build_query(array_filter([
         </div>
     </div>
 
-    <!-- ── Selection mode info bar ── -->
-        <div class="sel-mode-bar" id="sel-mode-bar">
-            <span><span class="sel-count" id="sel-count">0</span> selecionado(s)</span>
-            <button class="btn-sel-all" id="btn-sel-all" type="button">Selecionar todos</button>
-        </div>
+    <?php
+        echo ui_selection_bar();
 
-        <div class="table-wrapper" id="table-wrapper" style="max-width: 1200px; width: 100%;">
-            <table class="admin-table logs-table">
-                <thead>
-                    <tr>
-                        <th class="col-sel" style="width: 40px; display: none;"></th>
-                        <th>Data / Hora</th>
-                        <th>Utilizador</th>
-                        <th>Resultado</th>
-                        <th>Dispositivo</th>
-                        <th>IP</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php if (empty($logs)): ?>
-                    <tr>
-                        <td colspan="6" class="reservation-empty">Nenhum registo encontrado para os filtros selecionados.</td>
-                    </tr>
-                <?php else: foreach ($logs as $log):
-                    $device = parseUserAgent($log['user_agent'] ?? '');
-                    $data_formatada = date('d/m/Y H:i:s', strtotime($log['created_at']));
-                    $relativo = format_time_ago($log['created_at'], 'short');
-                    $iniciais = strtoupper(substr($log['username'], 0, 2));
-                ?>
-                <tr data-id="<?php echo $log['id']; ?>">
-                    <td class="col-sel" style="display: none;">
-                        <div class="log-check-circle">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="time-cell">
-                            <span class="date"><?php echo $data_formatada; ?></span>
-                            <span class="rel"><?php echo $relativo; ?></span>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="user-cell">
-                            <div class="user-avatar"><?php echo $iniciais; ?></div>
-                            <div>
-                                <span style="font-weight:700; color:#1e293b;"><?php echo htmlspecialchars($log['username']); ?></span>
-                                <?php if ($log['role']): ?>
-                                    <br><span style="font-size:.7rem; color:#94a3b8; text-transform:uppercase; font-weight:700; letter-spacing:.05em;"><?php echo htmlspecialchars($log['role']); ?></span>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <?php if ($log['resultado'] === 'sucesso'): ?>
-                            <span class="badge badge-verde">Sucesso</span>
-                        <?php else: ?>
-                            <span class="badge badge-vermelho">Falha</span>
-                            <?php if ($log['motivo_falha']): ?>
-                                <span class="motivo"><?php echo htmlspecialchars($log['motivo_falha']); ?></span>
-                            <?php endif; ?>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <div class="device-info">
-                            <span class="browser"><?php echo htmlspecialchars($device['browser']); ?></span>
-                            <span class="os"><?php echo htmlspecialchars($device['os']); ?></span>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="ip-pill"><?php echo htmlspecialchars($log['ip']); ?></span>
-                    </td>
-                </tr>
-                <?php endforeach; endif; ?>
-                </tbody>
-            </table>
-        </div>
+        $logRows = [];
+        foreach ($logs as $log) {
+            $device         = parseUserAgent($log['user_agent'] ?? '');
+            $data_formatada = date('d/m/Y H:i:s', strtotime($log['created_at']));
+            $relativo       = format_time_ago($log['created_at'], 'short');
+            $iniciais       = strtoupper(substr($log['username'], 0, 2));
+
+            $userCell = '<div class="user-cell"><div class="user-avatar">' . ui_e($iniciais) . '</div><div>'
+                . '<span style="font-weight:700; color:var(--cor-slate-800);">' . ui_e($log['username']) . '</span>'
+                . ($log['role'] ? '<br><span style="font-size:.7rem; color:var(--cor-slate-400); text-transform:uppercase; font-weight:700; letter-spacing:.05em;">' . ui_e($log['role']) . '</span>' : '')
+                . '</div></div>';
+
+            $resCell = ($log['resultado'] === 'sucesso')
+                ? '<span class="badge badge-verde">Sucesso</span>'
+                : '<span class="badge badge-vermelho">Falha</span>' . ($log['motivo_falha'] ? '<span class="motivo">' . ui_e($log['motivo_falha']) . '</span>' : '');
+
+            $logRows[] = [
+                'attrs' => ['data-id' => (int)$log['id']],
+                'cells' => [
+                    '<div class="time-cell"><span class="date">' . ui_e($data_formatada) . '</span><span class="rel">' . ui_e($relativo) . '</span></div>',
+                    $userCell,
+                    $resCell,
+                    '<div class="device-info"><span class="browser">' . ui_e($device['browser']) . '</span><span class="os">' . ui_e($device['os']) . '</span></div>',
+                    '<span class="ip-pill">' . ui_e($log['ip']) . '</span>',
+                ],
+            ];
+        }
+
+        echo ui_table(['Data / Hora', 'Utilizador', 'Resultado', 'Dispositivo', 'IP'], $logRows, [
+            'selectable'        => true,
+            'sel_hidden_inline' => true,
+            'wrap_id'           => 'table-wrapper',
+            'wrap_style'        => 'max-width: 1200px; width: 100%;',
+            'table_class'       => 'admin-table logs-table',
+            'empty_message'     => 'Nenhum registo encontrado para os filtros selecionados.',
+        ]);
+        ?>
 
         <?php if ($total_paginas > 1): ?>
         <div class="logs-paginacao">

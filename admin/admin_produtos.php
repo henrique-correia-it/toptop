@@ -146,83 +146,60 @@ function gerarPaginacao($pagina_atual, $total_paginas, $ordenar_key = 'id_desc',
         $stmt->execute();
         $result = $stmt->get_result();
 
+        $prodRows = [];
         if ($result && $result->num_rows > 0) {
-            echo "<table class='admin-table tabela-produtos'>";
-            echo "<thead><tr>
-                    <th>Foto</th>
-                    <th>Nome</th>
-                    <th>Referência</th>
-                    <th>Stock</th>
-                    <th>Estado</th>
-                    <th>Preço</th>
-                    <th>Promo</th>
-                    <th>Categoria</th>
-                    <th>Ações</th>
-                </tr></thead>";
-
-            echo "<tbody>";
             while ($row = $result->fetch_assoc()) {
-                $id = $row['id'];
-                $stock_total = (int) ($row['stock_total'] ?? 0);
-                $ativo = (int) $row['ativo'];
+                $id = (int)$row['id'];
+                $stock_total = (int)($row['stock_total'] ?? 0);
+                $ativo = (int)$row['ativo'];
                 $mostrar_aviso_stock = ($ativo === 1 && $stock_total <= 0);
-                $motivo_aviso_stock = "Oculto na loja: sem stock.";
+                $motivo_aviso_stock = 'Oculto na loja: sem stock.';
                 $aviso_stock_html = $mostrar_aviso_stock
                     ? "<span class='stock-warning-wrap' tabindex='0' data-tooltip='{$motivo_aviso_stock}' aria-label='{$motivo_aviso_stock}'><span class='stock-zero-warning' aria-hidden='true'>!</span></span>"
-                    : "";
+                    : '';
                 $preco_fmt = number_format($row['preco'], 2, '.', '');
                 $promo_fmt = ($row['preco_promocional'] > 0) ? number_format($row['preco_promocional'], 2, '.', '') : '';
-                
-                echo "<tr data-id='{$id}' 
-                          data-edit-url='editar.php?id={$id}&return_to=admin_produtos'
-                          data-nome='" . htmlspecialchars($row['nome'], ENT_QUOTES) . "'
-                          data-ref='" . htmlspecialchars($row['referencia'], ENT_QUOTES) . "'
-                          data-stock='{$stock_total}'
-                          data-ativo='{$ativo}'
-                          data-preco='{$preco_fmt}'
-                          data-promo='{$promo_fmt}'>";
-                echo "<td>
-                        <div class='prod-foto-wrap'>
-                            <img src='/public/images/" . htmlspecialchars($row['foto_principal']) . "' alt='" . htmlspecialchars($row['nome']) . "'>
-                            <span class='prod-check-badge'>
-                                <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>
-                            </span>
-                        </div>
-                      </td>";
-                echo "<td><div class='nome-produto-tabela'>" . htmlspecialchars($row['nome']) . "</div></td>";
-                echo "<td>" . htmlspecialchars($row['referencia']) . "</td>";
-                echo "<td class='stock-cell'><span class='stock-value'>{$stock_total}</span>{$aviso_stock_html}</td>";
-                echo "<td style='text-align:center;'>
-                        <span class='badge " . ($ativo === 1 ? 'visivel' : 'oculto') . " interativo btn-toggle-status'
-                               data-id='{$id}'>" . ($ativo === 1 ? 'Visível' : 'Oculto') . "</span>
-                      </td>";
-                echo "<td><span class='preco-tabela'>" . format_money($row['preco']) . "</span></td>";
-                echo "<td>";
-                if (!empty($row['preco_promocional']) && $row['preco_promocional'] > 0) {
-                    echo "<span class='promo-tabela'>" . format_money($row['preco_promocional']) . "</span>";
-                } else { echo "—"; }
-                echo "</td>";
-                echo "<td><span style='font-size: 0.85rem; color: #64748b;'>" . htmlspecialchars($row['categoria']) . "</span></td>";
-                echo '<td>
-                        <div class="acoes-tabela" style="display:flex; gap:8px;">
-                            <a href="editar.php?id=' . $id . '&return_to=admin_produtos" class="btn-edit-single" title="Editar produto"></a>
-                            <button type="button" class="btn-duplicate-single btn-duplicar"
-                                    data-id="' . $id . '"
-                                    data-csrf="' . $_SESSION['csrf_token'] . '"
-                                    title="Duplicar produto"></button>
-                            <button type="button" class="btn-del-single"
-                                    data-id="' . $id . '"
-                                    data-nome="' . htmlspecialchars($row['nome'], ENT_QUOTES) . '"
-                                    title="Apagar produto"></button>
-                        </div>
-                      </td>';
-                echo "</tr>";
+
+                $fotoCell = "<div class='prod-foto-wrap'><img src='/public/images/" . ui_e($row['foto_principal']) . "' alt='" . ui_e($row['nome']) . "'>"
+                    . "<span class='prod-check-badge'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg></span></div>";
+
+                $acoesCell = '<div class="acoes-tabela" style="display:flex; gap:8px;">'
+                    . ui_icon_button('edit', ['href' => 'editar.php?id=' . $id . '&return_to=admin_produtos', 'title' => 'Editar produto'])
+                    . ui_icon_button('duplicate', ['class' => 'btn-duplicar', 'title' => 'Duplicar produto', 'attrs' => ['data-id' => $id, 'data-csrf' => $_SESSION['csrf_token']]])
+                    . ui_icon_button('delete', ['title' => 'Apagar produto', 'attrs' => ['data-id' => $id, 'data-nome' => $row['nome']]])
+                    . '</div>';
+
+                $prodRows[] = [
+                    'attrs' => [
+                        'data-id'       => $id,
+                        'data-edit-url' => 'editar.php?id=' . $id . '&return_to=admin_produtos',
+                        'data-nome'     => $row['nome'],
+                        'data-ref'      => $row['referencia'],
+                        'data-stock'    => $stock_total,
+                        'data-ativo'    => $ativo,
+                        'data-preco'    => $preco_fmt,
+                        'data-promo'    => $promo_fmt,
+                    ],
+                    'cells' => [
+                        $fotoCell,
+                        "<div class='nome-produto-tabela'>" . ui_e($row['nome']) . '</div>',
+                        ui_e($row['referencia']),
+                        ['class' => 'stock-cell', 'html' => "<span class='stock-value'>{$stock_total}</span>{$aviso_stock_html}"],
+                        ['style' => 'text-align:center;', 'html' => "<span class='badge " . ($ativo === 1 ? 'visivel' : 'oculto') . " interativo btn-toggle-status' data-id='{$id}'>" . ($ativo === 1 ? 'Visível' : 'Oculto') . '</span>'],
+                        "<span class='preco-tabela'>" . format_money($row['preco']) . '</span>',
+                        (!empty($row['preco_promocional']) && $row['preco_promocional'] > 0) ? "<span class='promo-tabela'>" . format_money($row['preco_promocional']) . '</span>' : '—',
+                        "<span style='font-size: 0.85rem; color: var(--cor-slate-500);'>" . ui_e($row['categoria']) . '</span>',
+                        $acoesCell,
+                    ],
+                ];
             }
-            echo "</tbody></table>";
             $stmt->close();
-        } else {
-            echo "<p>Ainda não há produtos registados.</p>";
         }
+        echo ui_table(['Foto', 'Nome', 'Referência', 'Stock', 'Estado', 'Preço', 'Promo', 'Categoria', 'Ações'], $prodRows, [
+            'wrap_class'    => 'ui-table-inner',
+            'table_class'   => 'admin-table tabela-produtos',
+            'empty_message' => 'Ainda não há produtos registados.',
+        ]);
         ?>
     </div>
 

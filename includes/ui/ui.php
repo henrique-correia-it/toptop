@@ -494,7 +494,127 @@ if (!function_exists('ui_product_card')) {
     }
 }
 
-/** 9b. Canonical Customer Orders Table (minha-conta.php & minha-conta-encomendas.php — DRY) */
+/** 9b. Canonical Table Component (usado por TODAS as tabelas da loja, cliente e admin/dev) */
+if (!function_exists('ui_table')) {
+    function ui_table(array $columns, array $rows, array $opts = []): string
+    {
+        $selectable   = !empty($opts['selectable']);
+        $selStyle     = !empty($opts['sel_hidden_inline']);
+        $wrapClass    = (string)($opts['wrap_class'] ?? 'table-wrapper');
+        $wrapId       = (string)($opts['wrap_id'] ?? '');
+        $wrapStyle    = (string)($opts['wrap_style'] ?? '');
+        $tableClass   = (string)($opts['table_class'] ?? 'admin-table');
+        $emptyMessage = (string)($opts['empty_message'] ?? 'Nenhum registo encontrado.');
+        $emptyClass   = (string)($opts['empty_class'] ?? 'reservation-empty');
+
+        $wrapAttrs = ['class' => $wrapClass];
+        if ($wrapId !== '') {
+            $wrapAttrs['id'] = $wrapId;
+        }
+        if ($wrapStyle !== '') {
+            $wrapAttrs['style'] = $wrapStyle;
+        }
+
+        $totalCols = count($columns) + ($selectable ? 1 : 0);
+
+        $html = '<div' . ui_attrs($wrapAttrs) . '>';
+        $html .= '<table class="' . ui_e($tableClass) . '"><thead><tr>';
+        if ($selectable) {
+            $html .= '<th class="col-sel"' . ($selStyle ? ' style="width:40px; display:none;"' : '') . '></th>';
+        }
+        foreach ($columns as $col) {
+            if (is_array($col)) {
+                $colAttrs = is_array($col['attrs'] ?? null) ? $col['attrs'] : [];
+                if (!empty($col['class'])) {
+                    $colAttrs['class'] = trim(($colAttrs['class'] ?? '') . ' ' . $col['class']);
+                }
+                $html .= '<th' . ui_attrs($colAttrs) . '>' . ui_e($col['label'] ?? '') . '</th>';
+            } else {
+                $html .= '<th>' . ui_e($col) . '</th>';
+            }
+        }
+        $html .= '</tr></thead><tbody>';
+
+        if (empty($rows)) {
+            $html .= '<tr><td colspan="' . $totalCols . '" class="' . ui_e($emptyClass) . '">' . ui_e($emptyMessage) . '</td></tr>';
+        } else {
+            $checkSvg = '<div class="log-check-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>';
+            foreach ($rows as $row) {
+                $rowAttrs = is_array($row['attrs'] ?? null) ? $row['attrs'] : [];
+                $cells    = is_array($row['cells'] ?? null) ? $row['cells'] : (is_array($row) ? $row : []);
+                $html .= '<tr' . ui_attrs($rowAttrs) . '>';
+                if ($selectable) {
+                    $html .= '<td class="col-sel"' . ($selStyle ? ' style="display:none;"' : '') . '>' . $checkSvg . '</td>';
+                }
+                foreach ($cells as $cell) {
+                    if (is_array($cell)) {
+                        $cellAttrs = is_array($cell['attrs'] ?? null) ? $cell['attrs'] : [];
+                        if (!empty($cell['class'])) {
+                            $cellAttrs['class'] = trim(($cellAttrs['class'] ?? '') . ' ' . $cell['class']);
+                        }
+                        if (!empty($cell['style'])) {
+                            $cellAttrs['style'] = $cell['style'];
+                        }
+                        $html .= '<td' . ui_attrs($cellAttrs) . '>' . (string)($cell['html'] ?? '') . '</td>';
+                    } else {
+                        $html .= '<td>' . (string)$cell . '</td>';
+                    }
+                }
+                $html .= '</tr>';
+            }
+        }
+
+        $html .= '</tbody></table></div>';
+        return $html;
+    }
+}
+
+/** 9c. Selection Mode Bar (unificada para todas as páginas com seleção em massa) */
+if (!function_exists('ui_selection_bar')) {
+    function ui_selection_bar(array $opts = []): string
+    {
+        $unit     = (string)($opts['unit'] ?? 'selecionado(s)');
+        $allLabel = (string)($opts['all_label'] ?? 'Selecionar todos');
+        $spacer   = !empty($opts['spacer']);
+        return '<div class="sel-mode-bar" id="sel-mode-bar">'
+            . '<span><span class="sel-count" id="sel-count">0</span> ' . ui_e($unit) . '</span>'
+            . '<button class="btn-sel-all" id="btn-sel-all" type="button">' . ui_e($allLabel) . '</button>'
+            . ($spacer ? '<div class="sel-spacer"></div>' : '')
+            . '</div>';
+    }
+}
+
+/** 9d. Floating Bulk Action Bar + Hidden POST Form (unificada) */
+if (!function_exists('ui_bulk_bar')) {
+    function ui_bulk_bar(string $formId, string $action, array $opts = []): string
+    {
+        $unit        = (string)($opts['unit'] ?? 'selecionado(s)');
+        $actionId    = (string)($opts['action_id'] ?? 'bulk-del');
+        $actionLabel = (string)($opts['action_label'] ?? 'Apagar Selecionados');
+        $csrf        = (string)($opts['csrf_token'] ?? ($_SESSION['csrf_token'] ?? ''));
+        $extraHidden = is_array($opts['hidden'] ?? null) ? $opts['hidden'] : [];
+        $idsDivId    = (string)($opts['ids_container_id'] ?? 'form-ids');
+
+        $html = '<div class="bulk-bar" id="bulk-bar">'
+            . '<span class="bulk-bar-count"><span id="bulk-count">0</span> ' . ui_e($unit) . '</span>'
+            . '<div class="bulk-bar-spacer"></div>'
+            . '<button class="bulk-bar-cancel" id="bulk-cancel" type="button">Cancelar</button>'
+            . '<button class="btn-admin-danger" id="' . ui_e($actionId) . '" type="button">' . ui_e($actionLabel) . '</button>'
+            . '</div>';
+
+        if ($formId !== '' && $action !== '') {
+            $html .= '<form id="' . ui_e($formId) . '" action="' . ui_e($action) . '" method="POST" style="display:none;">'
+                . '<input type="hidden" name="csrf_token" value="' . ui_e($csrf) . '">';
+            foreach ($extraHidden as $k => $v) {
+                $html .= '<input type="hidden" name="' . ui_e($k) . '" value="' . ui_e($v) . '">';
+            }
+            $html .= '<div id="' . ui_e($idsDivId) . '"></div></form>';
+        }
+        return $html;
+    }
+}
+
+/** 9e. Canonical Customer Orders Table (compõe ui_table() — DRY) */
 if (!function_exists('ui_customer_orders_table')) {
     function ui_customer_orders_table(array $orders, array $opts = []): string
     {
@@ -512,12 +632,16 @@ if (!function_exists('ui_customer_orders_table')) {
             ? 'format_money'
             : static fn($v) => '€' . number_format((float)$v, 2, ',', '.');
 
-        $html = '<div class="cliente-orders-table-wrap"><table class="cliente-orders-table">'
-            . '<thead><tr>'
-            . '<th>Encomenda</th><th>Data</th><th>Entrega</th><th>Estado</th>'
-            . '<th class="is-money">Total</th><th class="is-action">Ações</th>'
-            . '</tr></thead><tbody>';
+        $columns = [
+            'Encomenda',
+            'Data',
+            'Entrega',
+            'Estado',
+            ['label' => 'Total', 'class' => 'is-money'],
+            ['label' => 'Ações', 'class' => 'is-action'],
+        ];
 
+        $rows = [];
         foreach ($orders as $order) {
             $id          = (int)($order['id'] ?? 0);
             $estado      = (string)($order['estado'] ?? '');
@@ -527,22 +651,27 @@ if (!function_exists('ui_customer_orders_table')) {
             $token       = (string)($order['token'] ?? '');
             $dataFmt     = !empty($order['data_encomenda']) ? date('d/m/Y', strtotime((string)$order['data_encomenda'])) : '—';
 
-            $html .= '<tr>'
-                . '<td data-label="Encomenda"><a href="/minha-conta/encomenda?id=' . $id . '" class="order-id">#' . $id . '</a></td>'
-                . '<td data-label="Data"><span class="order-date">' . ui_e($dataFmt) . '</span></td>'
-                . '<td data-label="Entrega"><span class="order-delivery">' . ui_e($entrega) . '</span></td>'
-                . '<td data-label="Estado"><span class="order-status status-' . ui_e($estadoClass) . '">' . ui_e($estado) . '</span></td>'
-                . '<td data-label="Total" class="is-money"><strong class="order-total">' . ui_e($fmtMoney($total)) . '</strong></td>'
-                . '<td class="is-action"><div class="order-actions-cell">'
-                . '<a href="/estado_encomenda.php?id=' . $id . '&token=' . urlencode($token) . '" class="btn-track-mini" title="Rastrear Encomenda">'
-                . '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'
-                . '<span>Tracking</span></a>'
-                . '<a href="/minha-conta/encomenda?id=' . $id . '" class="order-icon-btn" aria-label="Ver detalhes da encomenda #' . $id . '">'
-                . '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
-                . '</a></div></td></tr>';
+            $rows[] = [
+                'cells' => [
+                    ['attrs' => ['data-label' => 'Encomenda'], 'html' => '<a href="/minha-conta/encomenda?id=' . $id . '" class="order-id">#' . $id . '</a>'],
+                    ['attrs' => ['data-label' => 'Data'], 'html' => '<span class="order-date">' . ui_e($dataFmt) . '</span>'],
+                    ['attrs' => ['data-label' => 'Entrega'], 'html' => '<span class="order-delivery">' . ui_e($entrega) . '</span>'],
+                    ['attrs' => ['data-label' => 'Estado'], 'html' => '<span class="order-status status-' . ui_e($estadoClass) . '">' . ui_e($estado) . '</span>'],
+                    ['attrs' => ['data-label' => 'Total'], 'class' => 'is-money', 'html' => '<strong class="order-total">' . ui_e($fmtMoney($total)) . '</strong>'],
+                    ['class' => 'is-action', 'html' => '<div class="order-actions-cell">'
+                        . '<a href="/estado_encomenda.php?id=' . $id . '&token=' . urlencode($token) . '" class="btn-track-mini" title="Rastrear Encomenda">'
+                        . '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'
+                        . '<span>Tracking</span></a>'
+                        . '<a href="/minha-conta/encomenda?id=' . $id . '" class="order-icon-btn" aria-label="Ver detalhes da encomenda #' . $id . '">'
+                        . '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+                        . '</a></div>'],
+                ],
+            ];
         }
 
-        $html .= '</tbody></table></div>';
-        return $html;
+        return ui_table($columns, $rows, [
+            'wrap_class'  => 'cliente-orders-table-wrap',
+            'table_class' => 'cliente-orders-table',
+        ]);
     }
 }

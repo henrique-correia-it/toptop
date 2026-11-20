@@ -207,71 +207,53 @@ include '../templates/header.php';
         </div>
     </div>
 
-    <div class="sel-mode-bar" id="sel-mode-bar">
-        <span><span class="sel-count" id="sel-count">0</span> selecionada(s)</span>
-        <button class="btn-sel-all" id="btn-sel-all" type="button">Selecionar todas</button>
-        <div class="sel-spacer"></div>
-    </div>
+    <?php
+    echo ui_selection_bar(['unit' => 'selecionada(s)', 'all_label' => 'Selecionar todas', 'spacer' => true]);
 
-    <div class="table-wrapper" style="max-width: 1200px; width: 100%;" id="table-wrapper">
-        <table class="admin-table tabela-encomendas">
-            <thead>
-                <tr>
-                    <th class="col-sel"></th>
-                    <th>ID</th>
-                    <th>Cliente</th>
-                    <th>Data</th>
-                    <th>Total</th>
-                    <th>Estado</th>
-                    <th>Pagamento</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($encomendas)): ?>
-                    <?php foreach ($encomendas as $enc):
-                        $total_final = (float)$enc['total'] + (float)$enc['portes_envio'];
-                    ?>
-                        <tr data-id="<?php echo $enc['id']; ?>" data-edit-url="detalhes_encomenda.php?id=<?php echo $enc['id']; ?>&return_to=encomendas">
-                            <td class="col-sel">
-                                <div class="log-check-circle">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="order-id-cell">
-                                    #<?php echo htmlspecialchars($enc['id']); ?>
-                                </span>
-                            </td>
-                            <td><?php echo htmlspecialchars($enc['cliente_nome']); ?></td>
-                            <td><?php echo date('d/m/Y H:i', strtotime($enc['data_encomenda'])); ?></td>
-                            <td><?php echo format_money($total_final); ?></td>
-                            <td><span class="badge <?= htmlspecialchars($map_badge_estados[$enc['estado']] ?? 'badge-cinzento') ?>"><?= htmlspecialchars($map_nomes_estados[$enc['estado']] ?? ucfirst($enc['estado'])) ?></span></td>
-                            <td>
-                                <?php
-                                $mp = $enc['metodo_pagamento'] ?? 'Stripe';
-                                $mp_badge = "<span class='badge badge-cinzento'>" . htmlspecialchars($mp) . "</span>";
-                                echo $mp_badge;
-                                ?>
-                            </td>
-                            <td>
-                                <div class="acoes-tabela">
-                                    <a href="detalhes_encomenda.php?id=<?php echo $enc['id']; ?>&return_to=encomendas" class="btn-edit-single" title="Gerir encomenda"></a>
-                                    <form action="apagar_encomenda.php" method="POST" style="margin: 0;">
-                                        <input type="hidden" name="id" value="<?php echo $enc['id']; ?>">
-                                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-                                        <button type="submit" class="btn-del-single btn-apagar-confirmado" data-mensagem-confirmacao="Tem a certeza que quer apagar permanentemente a encomenda #<?php echo $enc['id']; ?>? Esta ação não repõe o stock." title="Apagar encomenda"></button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr><td colspan="8" class="reservation-empty">Não foram encontradas encomendas com os critérios selecionados.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
+    $encRows = [];
+    foreach ($encomendas as $enc) {
+        $total_final = (float)$enc['total'] + (float)$enc['portes_envio'];
+        $mp = $enc['metodo_pagamento'] ?? 'Stripe';
+        $acoes = '<div class="acoes-tabela">'
+            . ui_icon_button('edit', ['href' => 'detalhes_encomenda.php?id=' . (int)$enc['id'] . '&return_to=encomendas', 'title' => 'Gerir encomenda'])
+            . '<form action="apagar_encomenda.php" method="POST" style="margin:0;">'
+            . '<input type="hidden" name="id" value="' . (int)$enc['id'] . '">'
+            . '<input type="hidden" name="csrf_token" value="' . ui_e($_SESSION['csrf_token']) . '">'
+            . ui_icon_button('delete', [
+                'type'  => 'submit',
+                'class' => 'btn-apagar-confirmado',
+                'title' => 'Apagar encomenda',
+                'attrs' => [
+                    'data-mensagem-confirmacao' => 'Tem a certeza que quer apagar permanentemente a encomenda #' . (int)$enc['id'] . '? Esta ação não repõe o stock.',
+                ],
+            ])
+            . '</form></div>';
+
+        $encRows[] = [
+            'attrs' => [
+                'data-id'       => (int)$enc['id'],
+                'data-edit-url' => 'detalhes_encomenda.php?id=' . (int)$enc['id'] . '&return_to=encomendas',
+            ],
+            'cells' => [
+                '<span class="order-id-cell">#' . (int)$enc['id'] . '</span>',
+                ui_e($enc['cliente_nome']),
+                date('d/m/Y H:i', strtotime($enc['data_encomenda'])),
+                format_money($total_final),
+                '<span class="badge ' . ui_e($map_badge_estados[$enc['estado']] ?? 'badge-cinzento') . '">' . ui_e($map_nomes_estados[$enc['estado']] ?? ucfirst($enc['estado'])) . '</span>',
+                '<span class="badge badge-cinzento">' . ui_e($mp) . '</span>',
+                $acoes,
+            ],
+        ];
+    }
+
+    echo ui_table(['ID', 'Cliente', 'Data', 'Total', 'Estado', 'Pagamento', 'Ações'], $encRows, [
+        'selectable'    => true,
+        'wrap_id'       => 'table-wrapper',
+        'wrap_style'    => 'max-width: 1200px; width: 100%;',
+        'table_class'   => 'admin-table tabela-encomendas',
+        'empty_message' => 'Não foram encontradas encomendas com os critérios selecionados.',
+    ]);
+    ?>
 
     <?php
     $query_params = ['estado' => $filtro_estado, 'q' => $termo_pesquisa];
@@ -279,20 +261,11 @@ include '../templates/header.php';
     ?>
 </main>
 
-<div class="bulk-bar" id="bulk-bar">
-    <span class="bulk-bar-count"><span id="bulk-count">0</span> selecionada(s)</span>
-    <div class="bulk-bar-spacer"></div>
-    <button class="bulk-bar-cancel" id="bulk-cancel" type="button">Cancelar</button>
-    <button class="btn-admin-danger" id="bulk-del" type="button" style="padding: 10px 20px;">
-        Apagar
-    </button>
-</div>
-
-<form id="form-delete" action="apagar_encomendas_massa.php" method="POST" style="display:none;">
-    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-    <input type="hidden" name="return_to" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8'); ?>">
-    <div id="form-ids"></div>
-</form>
+<?php echo ui_bulk_bar('form-delete', 'apagar_encomendas_massa.php', [
+    'unit'         => 'selecionada(s)',
+    'action_label' => 'Apagar',
+    'hidden'       => ['return_to' => $_SERVER['REQUEST_URI'] ?? '/admin/encomendas.php'],
+]); ?>
 
 <!-- ── Context Menu ── -->
 <?php 

@@ -118,94 +118,64 @@ $result = $stmt->get_result();
         </div>
     </div>
 
-    <div class="sel-mode-bar" id="sel-mode-bar">
-        <span><span id="sel-count">0</span> selecionado(s)</span>
-        <button class="btn-sel-all" id="btn-sel-all" type="button">Selecionar todos</button>
-    </div>
+    <?php
+    echo ui_selection_bar();
 
-    <div class="table-wrapper" id="table-wrapper" style="max-width: 1200px; margin: 0 auto;">
-        <table class="admin-table">
-            <thead>
-                <tr>
-                    <th class="col-sel" style="width:40px; display:none;"></th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Função</th>
-                    <th>Criado em</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if ($result && $result->num_rows > 0): ?>
-                    <?php while ($admin = $result->fetch_assoc()): ?>
-                        <tr data-id="<?php echo $admin['id']; ?>" data-username="<?php echo htmlspecialchars($admin['username']); ?>">
-                            <td class="col-sel" style="display:none;">
-                                <div class="log-check-circle">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                </div>
-                            </td>
-                            <td style="font-weight: 600; color: #1e293b;"><?php echo htmlspecialchars($admin['username']); ?></td>
-                            <td style="color: #64748b;"><?php echo htmlspecialchars($admin['email']); ?></td>
-                            <td>
-                                <?php
-                                $role_cor = match($admin['role']) {
-                                    'superadmin'   => 'badge-vermelho',
-                                    'admin'        => 'badge-verde',
-                                    'desenvolvedor'=> 'badge-dourado',
-                                    default        => 'badge-cinzento',
-                                };
-                                ?>
-                                <span class="badge <?= $role_cor ?>">
-                                    <?php echo htmlspecialchars($admin['role']); ?>
-                                </span>
-                            </td>
-                            <td style="color: #64748b; font-size: 0.85rem;">
-                                <?php echo date('d/m/Y', strtotime($admin['data_criacao'])); ?>
-                            </td>
-                            <td>
-                                <div class="acoes-tabela">
-                                    <?php if ($_SESSION['admin_role'] === 'desenvolvedor' || $admin['role'] !== 'desenvolvedor'): ?>
-                                        <a href="editar_admin.php?id=<?php echo $admin['id']; ?>&return_to=listar_admins" 
-                                           class="btn-edit-single" title="Editar admin"></a>
-                                        
-                                        <form action="apagar_admin.php" method="POST" style="margin: 0;">
-                                            <input type="hidden" name="id" value="<?php echo $admin['id']; ?>">
-                                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-                                            <button type="submit" name="action" value="apagar" 
-                                                    class="btn-del-single btn-apagar-confirmado" 
-                                                    data-titulo-confirmacao="Apagar Administrador"
-                                                    data-mensagem-confirmacao="Tem a certeza que deseja remover <strong><?php echo htmlspecialchars($admin['username']); ?></strong>?"
-                                                    title="Apagar admin"></button>
-                                        </form>
-                                    <?php else: ?>
-                                        <span class="badge badge-cinzento protected-badge">Protegido</span>
-                                    <?php endif; ?>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endwhile; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="6" class="reservation-empty">Nenhum administrador encontrado.</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
+    $adminRows = [];
+    if ($result && $result->num_rows > 0) {
+        while ($admin = $result->fetch_assoc()) {
+            $role_cor = match($admin['role']) {
+                'superadmin'    => 'badge-vermelho',
+                'admin'         => 'badge-verde',
+                'desenvolvedor' => 'badge-dourado',
+                default         => 'badge-cinzento',
+            };
+            if ($_SESSION['admin_role'] === 'desenvolvedor' || $admin['role'] !== 'desenvolvedor') {
+                $acoes = '<div class="acoes-tabela">'
+                    . ui_icon_button('edit', ['href' => 'editar_admin.php?id=' . (int)$admin['id'] . '&return_to=listar_admins', 'title' => 'Editar admin'])
+                    . '<form action="apagar_admin.php" method="POST" style="margin:0;">'
+                    . '<input type="hidden" name="id" value="' . (int)$admin['id'] . '">'
+                    . '<input type="hidden" name="csrf_token" value="' . ui_e($_SESSION['csrf_token']) . '">'
+                    . ui_icon_button('delete', [
+                        'type'  => 'submit',
+                        'class' => 'btn-apagar-confirmado',
+                        'title' => 'Apagar admin',
+                        'attrs' => [
+                            'name'                      => 'action',
+                            'value'                     => 'apagar',
+                            'data-titulo-confirmacao'   => 'Apagar Administrador',
+                            'data-mensagem-confirmacao' => 'Tem a certeza que deseja remover <strong>' . ui_e($admin['username']) . '</strong>?',
+                        ],
+                    ])
+                    . '</form></div>';
+            } else {
+                $acoes = '<div class="acoes-tabela"><span class="badge badge-cinzento protected-badge">Protegido</span></div>';
+            }
+
+            $adminRows[] = [
+                'attrs' => ['data-id' => (int)$admin['id'], 'data-username' => $admin['username']],
+                'cells' => [
+                    ['style' => 'font-weight:600; color:var(--cor-slate-800);', 'html' => ui_e($admin['username'])],
+                    ['style' => 'color:var(--cor-slate-500);', 'html' => ui_e($admin['email'])],
+                    '<span class="badge ' . $role_cor . '">' . ui_e($admin['role']) . '</span>',
+                    ['style' => 'color:var(--cor-slate-500); font-size:0.85rem;', 'html' => date('d/m/Y', strtotime($admin['data_criacao']))],
+                    $acoes,
+                ],
+            ];
+        }
+    }
+
+    echo ui_table(['Username', 'Email', 'Função', 'Criado em', 'Ações'], $adminRows, [
+        'selectable'        => true,
+        'sel_hidden_inline' => true,
+        'wrap_id'           => 'table-wrapper',
+        'wrap_style'        => 'max-width: 1200px; margin: 0 auto;',
+        'empty_message'     => 'Nenhum administrador encontrado.',
+    ]);
+    ?>
 </main>
 
-<!-- ── Bulk bar ── -->
-<div class="bulk-bar" id="bulk-bar">
-    <span class="bulk-bar-count"><span id="bulk-count">0</span> selecionado(s)</span>
-    <div class="bulk-bar-spacer"></div>
-    <button class="bulk-bar-cancel" id="bulk-cancel" type="button">Cancelar</button>
-    <button class="btn-admin-danger" id="bulk-del" type="button">Apagar Selecionados</button>
-</div>
-
-<form id="form-delete-admins" action="apagar_admins_massa.php" method="POST" style="display:none;">
-    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-    <div id="form-ids"></div>
-</form>
+<?php echo ui_bulk_bar('form-delete-admins', 'apagar_admins_massa.php', ['action_label' => 'Apagar Selecionados']); ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

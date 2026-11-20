@@ -76,67 +76,42 @@ include '../templates/header.php';
         </div>
     </div>
 
-    <div class="sel-mode-bar" id="sel-mode-bar">
-        <span><span id="sel-count">0</span> selecionado(s)</span>
-        <button class="btn-sel-all" id="btn-sel-all" type="button">Selecionar todos</button>
-    </div>
+    <?php
+    echo ui_selection_bar();
 
-    <div class="table-wrapper reservation-table-wrapper" id="table-wrapper">
-        <table class="admin-table reservation-table">
-            <thead>
-                <tr>
-                    <th class="col-sel" style="width:40px; display:none;"></th>
-                    <th>Encomenda</th>
-                    <th>Unidades</th>
-                    <th>Volta ao Stock em</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($encomendas_agrupadas)): ?>
-                    <?php foreach ($encomendas_agrupadas as $enc): ?>
-                        <tr data-id="<?= (int)$enc['id'] ?>">
-                            <td class="col-sel" style="display:none;">
-                                <div class="log-check-circle">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                </div>
-                            </td>
-                            <td><strong>#<?= (int)$enc['id'] ?></strong></td>
-                            <td><strong><?= (int)$enc['total_items'] ?></strong></td>
-                            <td>
-                                <span class="reservation-countdown" data-seconds="<?= $enc['segundos_restantes'] ?>">
-                                    <?= formatarTempoReserva($enc['segundos_restantes']) ?>
-                                </span>
-                            </td>
-                            <td>
-                                <div class="acoes-tabela">
-                                    <a href="detalhes_encomenda.php?id=<?= (int)$enc['id'] ?>&return_to=reservas_stock" class="btn-view-single" title="Ver encomenda"></a>
-                                    <button class="btn-cancel-single" data-id="<?= (int)$enc['id'] ?>" type="button" title="Cancelar reserva e repor stock"></button>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="5" class="reservation-empty">Não existem encomendas temporariamente reservadas neste momento.</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
+    $reservaRows = [];
+    foreach ($encomendas_agrupadas as $enc) {
+        $acoes = '<div class="acoes-tabela">'
+            . ui_icon_button('view', ['href' => 'detalhes_encomenda.php?id=' . (int)$enc['id'] . '&return_to=reservas_stock', 'title' => 'Ver encomenda'])
+            . ui_icon_button('cancel', ['title' => 'Cancelar reserva e repor stock', 'attrs' => ['data-id' => (int)$enc['id']]])
+            . '</div>';
+
+        $reservaRows[] = [
+            'attrs' => ['data-id' => (int)$enc['id']],
+            'cells' => [
+                '<strong>#' . (int)$enc['id'] . '</strong>',
+                '<strong>' . (int)$enc['total_items'] . '</strong>',
+                '<span class="reservation-countdown" data-seconds="' . (int)$enc['segundos_restantes'] . '">' . ui_e(formatarTempoReserva($enc['segundos_restantes'])) . '</span>',
+                $acoes,
+            ],
+        ];
+    }
+
+    echo ui_table(['Encomenda', 'Unidades', 'Volta ao Stock em', 'Ações'], $reservaRows, [
+        'selectable'        => true,
+        'sel_hidden_inline' => true,
+        'wrap_id'           => 'table-wrapper',
+        'wrap_class'        => 'table-wrapper reservation-table-wrapper',
+        'table_class'       => 'admin-table reservation-table',
+        'empty_message'     => 'Não existem encomendas temporariamente reservadas neste momento.',
+    ]);
+    ?>
 </main>
 
-<div class="bulk-bar" id="bulk-bar">
-    <span class="bulk-bar-count"><span id="bulk-count">0</span> selecionado(s)</span>
-    <div class="bulk-bar-spacer"></div>
-    <button class="bulk-bar-cancel" id="bulk-cancel" type="button">Cancelar</button>
-    <button class="btn-admin-danger" id="bulk-cancel-reservas" type="button">Cancelar e Repor Stock</button>
-</div>
-
-<form id="form-cancelar-massa" action="cancelar_reservas_massa.php" method="POST" style="display:none;">
-    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-    <div id="form-ids"></div>
-</form>
+<?php echo ui_bulk_bar('form-cancelar-massa', 'cancelar_reservas_massa.php', [
+    'action_id'    => 'bulk-cancel-reservas',
+    'action_label' => 'Cancelar e Repor Stock',
+]); ?>
 
 <script>
 const CSRF = <?= json_encode($_SESSION['csrf_token']) ?>;

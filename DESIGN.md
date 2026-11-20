@@ -172,10 +172,10 @@ Every UI element on the site MUST be composed from these **9 minimal primitives*
 - Unified modal shell with header, close button, scrollable body, and footer actions. Compatible with `admin-ui.js` (`qe-modal` and `ctx-menu` hooks; `admin/components/*` are thin wrappers over `includes/ui/ui.php`).
 - **PHP:** `ui_modal('modal-exemplo', 'Editar Item', $formHtml, ['footer' => $actionsHtml])`
 
-### 9. Product Card & Customer Orders Table (`ui_product_card`, `ui_customer_orders_table`)
-- Single canonical storefront product card used on `index.php` and `produtos.php` — handles image, secondary hover image, promo badge, out-of-stock overlay, quick-add button, price/promo formatting, and modal `data-*` attributes.
-- Canonical customer orders table shared by `minha-conta.php` and `minha-conta-encomendas.php`.
-- **PHP:** `ui_product_card($produto, $opts)` · `ui_customer_orders_table($orders, $opts)`
+### 9. Table, Bulk Selection & Product Card (`ui_table`, `ui_selection_bar`, `ui_bulk_bar`, `ui_product_card`)
+- **Single canonical table (`ui_table`):** Every table across the entire app (storefront customer orders in `minha-conta.php` / `minha-conta-encomendas.php` via `ui_customer_orders_table()`, and all 6 admin/dev tables in `admin_produtos.php`, `encomendas.php`, `clientes.php`, `listar_admins.php`, `reservas_stock.php`, `dev/login_logs.php`) renders through `ui_table()`.
+- **Bulk selection (`ui_selection_bar`, `ui_bulk_bar`):** Unified selection-mode bar and floating bulk action bar + hidden CSRF form.
+- **Product card (`ui_product_card`):** Single canonical storefront product card used on `index.php` and `produtos.php`.
 
 ---
 

@@ -109,75 +109,55 @@ $stmt->close();
     </div>
 </div>
 
-<div class="sel-mode-bar" id="sel-mode-bar">
-    <span><span id="sel-count">0</span> selecionado(s)</span>
-    <button class="btn-sel-all" id="btn-sel-all" type="button">Selecionar todos</button>
-</div>
+<?php
+echo ui_selection_bar();
 
-<div class="table-wrapper" id="table-wrapper" style="max-width:1200px;margin:0 auto;">
-    <table class="admin-table">
-        <thead>
-            <tr>
-                <th class="col-sel" style="width:40px;display:none;"></th>
-                <th>Nome</th>
-                <th>Email</th>
-                <th>Telefone</th>
-                <th>Estado</th>
-                <th>Encomendas</th>
-                <th>Registado em</th>
-                <th>Último login</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if ($clientes): ?>
-                <?php foreach ($clientes as $c): ?>
-                <tr data-id="<?= $c['id'] ?>" data-nome="<?= htmlspecialchars($c['nome']) ?>">
-                    <td class="col-sel" style="display:none;">
-                        <div class="log-check-circle">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        </div>
-                    </td>
-                    <td style="font-weight:600;color:#1e293b;"><?= htmlspecialchars($c['nome']) ?></td>
-                    <td style="color:#64748b;"><?= htmlspecialchars($c['email']) ?></td>
-                    <td style="color:#64748b;"><?= htmlspecialchars($c['telefone'] ?? '') ?: '<span style="color:#cbd5e1;">—</span>' ?></td>
-                    <td>
-                        <span class="badge <?= $c['ativo'] ? 'badge-verde' : 'badge-cinzento' ?> badge-ativo-toggle"
-                              data-id="<?= $c['id'] ?>"
-                              data-ativo="<?= (int)$c['ativo'] ?>"
-                              title="Clique para <?= $c['ativo'] ? 'suspender' : 'ativar' ?>"
-                              style="cursor:pointer;user-select:none;">
-                            <?= $c['ativo'] ? 'Ativo' : 'Inativo' ?>
-                        </span>
-                    </td>
-                    <td style="color:<?= $c['total_encomendas'] > 0 ? '#1e293b' : '#94a3b8' ?>;font-weight:<?= $c['total_encomendas'] > 0 ? '600' : '400' ?>;">
-                        <?= (int)$c['total_encomendas'] ?>
-                    </td>
-                    <td style="color:#64748b;font-size:0.85rem;"><?= date('d/m/Y', strtotime($c['data_criacao'])) ?></td>
-                    <td style="color:#64748b;font-size:0.85rem;"><?= $c['ultimo_login'] ? date('d/m/Y H:i', strtotime($c['ultimo_login'])) : '<span style="color:#cbd5e1;">—</span>' ?></td>
-                    <td>
-                        <div class="acoes-tabela">
-                            <form action="apagar_cliente_admin.php" method="POST" style="margin:0;">
-                                <input type="hidden" name="id"         value="<?= $c['id'] ?>">
-                                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-                                <button type="submit" name="action" value="apagar"
-                                        class="btn-del-single btn-apagar-confirmado"
-                                        data-titulo-confirmacao="Apagar Cliente"
-                                        data-mensagem-confirmacao="Apagar permanentemente a conta de <strong><?= htmlspecialchars($c['nome']) ?></strong>?<br>As suas encomendas ficam guardadas."
-                                        title="Apagar cliente"></button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <tr>
-                    <td colspan="9" class="reservation-empty">Nenhum cliente encontrado.</td>
-                </tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
-</div>
+$clienteRows = [];
+foreach ($clientes as $c) {
+    $acoes = '<div class="acoes-tabela"><form action="apagar_cliente_admin.php" method="POST" style="margin:0;">'
+        . '<input type="hidden" name="id" value="' . (int)$c['id'] . '">'
+        . '<input type="hidden" name="csrf_token" value="' . ui_e($_SESSION['csrf_token']) . '">'
+        . ui_icon_button('delete', [
+            'type'  => 'submit',
+            'class' => 'btn-apagar-confirmado',
+            'title' => 'Apagar cliente',
+            'attrs' => [
+                'name'                      => 'action',
+                'value'                     => 'apagar',
+                'data-titulo-confirmacao'   => 'Apagar Cliente',
+                'data-mensagem-confirmacao' => 'Apagar permanentemente a conta de <strong>' . ui_e($c['nome']) . '</strong>?<br>As suas encomendas ficam guardadas.',
+            ],
+        ])
+        . '</form></div>';
+
+    $badgeAtivo = '<span class="badge ' . ($c['ativo'] ? 'badge-verde' : 'badge-cinzento') . ' badge-ativo-toggle"'
+        . ' data-id="' . (int)$c['id'] . '" data-ativo="' . (int)$c['ativo'] . '"'
+        . ' title="Clique para ' . ($c['ativo'] ? 'suspender' : 'ativar') . '"'
+        . ' style="cursor:pointer;user-select:none;">' . ($c['ativo'] ? 'Ativo' : 'Inativo') . '</span>';
+
+    $clienteRows[] = [
+        'attrs' => ['data-id' => (int)$c['id'], 'data-nome' => $c['nome']],
+        'cells' => [
+            ['style' => 'font-weight:600;color:var(--cor-slate-800);', 'html' => ui_e($c['nome'])],
+            ['style' => 'color:var(--cor-slate-500);', 'html' => ui_e($c['email'])],
+            ['style' => 'color:var(--cor-slate-500);', 'html' => ui_e($c['telefone'] ?? '') ?: '<span style="color:var(--cor-slate-300);">—</span>'],
+            $badgeAtivo,
+            ['style' => 'color:' . ($c['total_encomendas'] > 0 ? 'var(--cor-slate-800)' : 'var(--cor-slate-400)') . ';font-weight:' . ($c['total_encomendas'] > 0 ? '600' : '400') . ';', 'html' => (string)(int)$c['total_encomendas']],
+            ['style' => 'color:var(--cor-slate-500);font-size:0.85rem;', 'html' => date('d/m/Y', strtotime($c['data_criacao']))],
+            ['style' => 'color:var(--cor-slate-500);font-size:0.85rem;', 'html' => $c['ultimo_login'] ? date('d/m/Y H:i', strtotime($c['ultimo_login'])) : '<span style="color:var(--cor-slate-300);">—</span>'],
+            $acoes,
+        ],
+    ];
+}
+
+echo ui_table(['Nome', 'Email', 'Telefone', 'Estado', 'Encomendas', 'Registado em', 'Último login', 'Ações'], $clienteRows, [
+    'selectable'        => true,
+    'sel_hidden_inline' => true,
+    'wrap_id'           => 'table-wrapper',
+    'wrap_style'        => 'max-width:1200px;margin:0 auto;',
+    'empty_message'     => 'Nenhum cliente encontrado.',
+]);
+?>
 
 <?php if ($total_paginas > 1): ?>
 <div style="max-width:1200px;margin:20px auto 0;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
@@ -193,18 +173,7 @@ $stmt->close();
 
 </main>
 
-<!-- Bulk bar -->
-<div class="bulk-bar" id="bulk-bar">
-    <span class="bulk-bar-count"><span id="bulk-count">0</span> selecionado(s)</span>
-    <div class="bulk-bar-spacer"></div>
-    <button class="bulk-bar-cancel" id="bulk-cancel" type="button">Cancelar</button>
-    <button class="btn-admin-danger" id="bulk-del" type="button">Apagar Selecionados</button>
-</div>
-
-<form id="form-delete-clientes" action="apagar_clientes_massa.php" method="POST" style="display:none;">
-    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-    <div id="form-ids"></div>
-</form>
+<?php echo ui_bulk_bar('form-delete-clientes', 'apagar_clientes_massa.php', ['action_label' => 'Apagar Selecionados']); ?>
 
 <script>
 const CSRF = '<?php echo $_SESSION['csrf_token']; ?>';

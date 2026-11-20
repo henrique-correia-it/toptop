@@ -103,12 +103,16 @@ $tokensCores = [
 
         // 5. Tabela & Modal
         ob_start();
-        echo '<div class="ui-table-wrap"><table class="ui-table"><thead><tr><th>Encomenda</th><th>Cliente</th><th>Estado</th><th>Total</th><th>Ações</th></tr></thead><tbody>';
-        echo '<tr><td>#1042</td><td>Maria Silva</td><td>' . ui_badge('Pago', 'success') . '</td><td>€49,90</td><td style="display:flex; gap:6px;">' . ui_icon_button('view', ['title' => 'Ver']) . ui_icon_button('edit', ['title' => 'Editar']) . '</td></tr>';
-        echo '<tr><td>#1041</td><td>João Santos</td><td>' . ui_badge('Enviada', 'info') . '</td><td>€84,50</td><td style="display:flex; gap:6px;">' . ui_icon_button('view', ['title' => 'Ver']) . ui_icon_button('delete', ['title' => 'Apagar']) . '</td></tr>';
-        echo '</tbody></table></div>';
+        echo ui_table(
+            ['Encomenda', 'Cliente', 'Estado', 'Total', 'Ações'],
+            [
+                ['cells' => ['#1042', 'Maria Silva', ui_badge('Pago', 'success'), '€49,90', '<div style="display:flex; gap:6px;">' . ui_icon_button('view', ['title' => 'Ver']) . ui_icon_button('edit', ['title' => 'Editar']) . '</div>']],
+                ['cells' => ['#1041', 'João Santos', ui_badge('Enviada', 'info'), '€84,50', '<div style="display:flex; gap:6px;">' . ui_icon_button('view', ['title' => 'Ver']) . ui_icon_button('delete', ['title' => 'Apagar']) . '</div>']],
+            ],
+            ['wrap_class' => 'ui-table-wrap', 'table_class' => 'ui-table']
+        );
         echo '<div style="margin-top:var(--space-4);">' . ui_button('Abrir Modal de Exemplo', ['attrs' => ['onclick' => "document.getElementById('ds-demo-modal').style.display='flex'"]]) . '</div>';
-        echo ui_card(ob_get_clean(), ['title' => '5. Tabela Unificada & Modal', 'subtitle' => '.ui-table-wrap / .ui-table e ui_modal()']);
+        echo ui_card(ob_get_clean(), ['title' => '5. Tabela Unificada & Modal', 'subtitle' => 'ui_table() e ui_modal()']);
         ?>
     </div>
 </main>
