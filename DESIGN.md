@@ -125,64 +125,74 @@ Depth is expressed through **tonal surface contrast + soft hairline borders** ra
 | `--radius-sm` | `4px` | Micro indicators, small tags |
 | `--radius-md` | `10px` | Inputs, selects, textareas, icon action buttons |
 | `--radius-lg` | `16px` | Cards, panels, modals, product image containers |
-| `--radius-pill` | `999px` | All text buttons (`.ui-btn`), badges (`.ui-badge`), toggles (`.ui-switch`) |
+| `--radius-pill` | `999px` | All text buttons (`.ui-btn`), badges (`.ui-badge`), toggles (`.switch-premium`) |
 
 ---
 
 ## Components
 
-Every UI element on the site MUST be composed from these **9 minimal primitives** defined in `includes/ui/ui.php` and styled in `public/css/ui/_primitives.css`.
+Every UI element on the site MUST be composed from these **16 minimal composable primitives (31 component functions)** defined in `includes/ui/ui.php` and styled in `public/css/ui/_primitives.css`.
 
 ### 1. Button (`ui_button` / `.ui-btn`)
-- **Variants:** `default` (white pill, subtle border — matches the signature TopTop button), `primary` (solid dark ink `#111111` for key conversions), `danger` (soft red border/text), `ghost` (transparent subtle action), `active` (indigo active filter/mode).
-- **Modifiers:** `size` (`sm`, `md`), `full` (`true`), `plus` (`true` for rotating `+` icon), `href` (renders `<a>`), `disabled`.
-- **PHP:** `ui_button('Guardar', ['variant' => 'primary', 'type' => 'submit'])`
+- **Variants:** `default` (white pill, subtle border), `primary` (solid dark ink `#111111`), `danger` (soft red), `ghost` (transparent), `active` (indigo active filter/mode).
+- **Options:** `size` (`sm`, `md`), `full`, `plus` (rotating `+`), `icon`, `href`, `target`, `type`, `name`, `value`, `disabled`, `attrs`.
 
-### 2. Icon Button (`ui_icon_button` / `.btn-*-single`)
-- Compact `34x34px` rounded-square (`10px`) icon-only action button for tables and cards.
-- **Actions:** `view`, `edit`, `delete`, `duplicate`, `cancel`, `archive`, `reply`, `check`, `close`.
-- **PHP:** `ui_icon_button('edit', ['href' => 'editar.php?id=1', 'title' => 'Editar'])`
+### 2. Icon & Close Buttons (`ui_icon_button`, `ui_close_button`)
+- `ui_icon_button($action, $opts)`: Compact `34×34px` rounded-square action buttons (`.btn-*-single`) for `view`, `edit`, `delete`, `duplicate`, `cancel`, `archive`, `reply`, `check`.
+- `ui_close_button($opts)`: Standalone `.btn-close-unified` dismiss button for modals, drawers, and overlays.
 
 ### 3. Card (`ui_card` / `.ui-card`)
-- Unified elevated container (`#FFFFFF`, `1px` border, `16px` radius, `20px–24px` padding).
-- **Variants:** `default`, `interactive` (hover lift when `href` is set), `stat` (KPI number + label + icon), `compact`.
-- **PHP:** `ui_card($bodyHtml, ['title' => 'Resumo', 'header_actions' => $btn])`
+- Unified elevated surface (`#FFFFFF`, `1px` border, `16px` radius).
+- **Options:** `eyebrow`, `title`, `subtitle`, `icon`, `header_actions`, `footer`, `compact`, `flush`, `interactive`, `danger`, `href`.
 
 ### 4. Badge (`ui_badge` / `.ui-badge`)
-- Compact pill status indicator (`font-size: 0.75rem`, `font-weight: 600`).
-- **Tones:** `neutral`, `success`, `warning`, `danger`, `info`, `accent`.
-- **PHP:** `ui_badge('Pago', 'success')`
+- Compact pill status indicator (`neutral`, `success`, `warning`, `danger`, `info`, `accent`).
+- **Options:** `dot` (live status dot), `icon`, `interactive` (clickable toggle).
 
-### 5. Form Controls (`ui_field`, `ui_switch` / `.ui-field`, `.ui-switch`)
-- Standardized label + input/select/textarea + helper/error text with `:focus-visible` accessibility ring.
-- **PHP:** `ui_field('email', 'Email', ['type' => 'email', 'required' => true, 'value' => $email])`
-- **PHP:** `ui_switch('ativo', 'Visível na loja', true)`
+### 5. Form Controls (`ui_field`, `ui_switch`, `ui_checkbox`, `ui_search_input`)
+- `ui_field($name, $label, $opts)`: Supports `text`, `email`, `password` (with `password_toggle => true`), `number`, `tel`, `select`, `textarea`, `prefix` (e.g., `€`), `label_id`, `disabled`, `hint`, `error`.
+- `ui_switch($name, $label, $checked, $opts)`: Unified toggle switch (`.switch-premium` + `.slider`) with keyboard `:focus-visible`.
+- `ui_checkbox($name, $label, $checked, $opts)`: Accessible custom checkbox (`.ui-checkbox`).
+- `ui_search_input($name, $placeholder, $opts)`: Pill search input with leading magnifying-glass icon.
 
-### 6. Feedback (`ui_alert`, `ui_empty_state` / `.ui-alert`, `.ui-empty`)
-- Inline banner messages (`success`, `danger`, `warning`, `info`) and centered empty-state blocks with optional CTA.
+### 6. Feedback & Loading (`ui_alert`, `ui_empty_state`, `ui_spinner`)
+- `ui_alert($message, $tone)`: Inline status banner (`info`, `success`, `warning`, `danger`).
+- `ui_empty_state($message, $opts)`: Centered empty-state block with optional CTA (`cta_label`, `cta_href`).
+- `ui_spinner($label)`: Accessible CSS loading spinner.
 - Global transient notifications use `mostrarPopup(texto, 'sucesso'|'erro')`.
-- **PHP:** `ui_alert('Guardado com sucesso!', 'success')`
-- **PHP:** `ui_empty_state('Ainda não existem encomendas.', ['cta_label' => 'Explorar loja', 'cta_href' => '/produtos'])`
 
-### 7. Page Header (`ui_page_header` / `.ui-page-header`)
-- Standardized page top bar with optional kicker, back arrow (`ui_back_button`), title, subtitle, and right-aligned action slot.
-- **PHP:** `ui_page_header('Gestão de Produtos', ['back_url' => '/admin', 'actions' => ui_button('Novo Produto', ['href' => 'adicionar.php', 'plus' => true])])`
+### 7. Page Chrome & Navigation (`ui_page_header`, `ui_back_button`, `ui_toolbar`, `ui_pagination`)
+- `ui_page_header($title, $opts)`: Supports storefront/default layout (`kicker`, `heading_tag`, `subtitle`, `center`, `actions`) and `'layout' => 'admin'` (`.admin-page-header` + `ui_back_button()`).
+- `ui_toolbar($leftHtml, $rightHtml)`: Unified left/right flex toolbar.
+- `ui_pagination($currentPage, $totalPages, $urlBuilder)`: Single canonical pagination bar.
 
-### 8. Modal & Context Menu (`ui_modal`, `ui_quick_edit_modal`, `ui_context_menu`)
-- Unified modal shell with header, close button, scrollable body, and footer actions. Compatible with `admin-ui.js` (`qe-modal` and `ctx-menu` hooks; `admin/components/*` are thin wrappers over `includes/ui/ui.php`).
-- **PHP:** `ui_modal('modal-exemplo', 'Editar Item', $formHtml, ['footer' => $actionsHtml])`
+### 8. Modals & Floating Menus (`ui_modal`, `ui_quick_edit_modal`, `ui_context_menu`)
+- Unified modal shells (`qe-modal`) and right-click context menu (`ctx-menu`); `admin/components/*` are thin wrappers delegating to these functions.
 
-### 9. Table, Bulk Selection & Product Card (`ui_table`, `ui_selection_bar`, `ui_bulk_bar`, `ui_product_card`)
-- **Single canonical table (`ui_table`):** Every table across the entire app (storefront customer orders in `minha-conta.php` / `minha-conta-encomendas.php` via `ui_customer_orders_table()`, and all 6 admin/dev tables in `admin_produtos.php`, `encomendas.php`, `clientes.php`, `listar_admins.php`, `reservas_stock.php`, `dev/login_logs.php`) renders through `ui_table()`.
-- **Bulk selection (`ui_selection_bar`, `ui_bulk_bar`):** Unified selection-mode bar and floating bulk action bar + hidden CSRF form.
-- **Product card (`ui_product_card`):** Single canonical storefront product card used on `index.php` and `produtos.php`.
+### 9. Tables & Bulk Selection (`ui_table`, `ui_selection_bar`, `ui_bulk_bar`, `ui_customer_orders_table`)
+- **Single canonical table (`ui_table`):** 100% of UI tables across storefront, customer area, admin, and dev render through `ui_table()`.
+- `ui_selection_bar()` + `ui_bulk_bar()`: Unified multi-select bar and floating bulk-action bar + hidden CSRF form.
+
+### 10. Product Card (`ui_product_card` / `.produto`)
+- Single canonical storefront product card used on `index.php` and `produtos.php` (promo badge, out-of-stock overlay, secondary hover image, quick-add button, `modalProduto.js` `data-*` hooks).
+
+### 11. Dashboard Cards (`ui_stat_card`, `ui_nav_card`)
+- `ui_stat_card($value, $label, $opts)`: KPI / interactive toggle stat cards (`admin.php`, `dev.php`).
+- `ui_nav_card($title, $description, $href, $opts)`: Dashboard navigation cards (`admin.php`, `dev.php`).
+
+### 12–16. Composable Widgets (`ui_tabs`, `ui_accordion`, `ui_progress_bar`, `ui_qty_stepper`, `ui_kv_list`)
+- `ui_tabs($tabs, $activeKey)`: Pill tab bar with optional badge counts.
+- `ui_accordion($title, $bodyHtml)`: Native `<details>` collapsible panel.
+- `ui_progress_bar($percent, $tone)`: Accessible `role="progressbar"` (`uso_armazenamento.php`).
+- `ui_qty_stepper($value, $opts)`: `- / input / +` quantity selector.
+- `ui_kv_list($items)`: Icon + label + value metadata list.
 
 ---
 
 ## Do's and Don'ts
 
 ### Do
-- **DO** import `require_once __DIR__ . '/includes/ui/ui.php';` (or `../includes/ui/ui.php`) and compose pages from the 9 primitives above.
+- **DO** import `includes/ui/ui.php` (auto-loaded by `templates/header.php`) and compose pages from the 16 primitives (31 functions) above.
 - **DO** use `var(--cor-*)`, `var(--space-*)`, `var(--radius-*)`, and `var(--sombra-*)` tokens exclusively.
 - **DO** keep all text outputs escaped via `htmlspecialchars(..., ENT_QUOTES, 'UTF-8')` (handled automatically by `includes/ui/ui.php`).
 - **DO** bump `config/versao_site.php` whenever any CSS or JS file is modified.
@@ -210,7 +220,7 @@ When an AI agent builds or modifies any page in TopTop:
 
 ## Complete Application Component Inventory (100% Page-by-Page Matrix)
 
-Every single UI-rendering file in the repository (50 PHP views + 15 JS modules + 19 CSS component partials) maps to the minimal component library in `includes/ui/ui.php` (24 functions grouped into 16 composable primitives):
+Every single UI-rendering file in the repository (50 PHP views + 15 JS modules + 19 CSS component partials) maps to the minimal component library in `includes/ui/ui.php` (31 component functions grouped into 16 composable primitives):
 
 ### A. Storefront (12 Pages)
 | Page | UI Components Used | Library Primitive(s) |

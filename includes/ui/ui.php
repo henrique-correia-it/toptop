@@ -1,17 +1,24 @@
 <?php
 /**
- * includes/ui/ui.php — Biblioteca Mínima de Componentes TopTop (DESIGN.md)
+ * includes/ui/ui.php — Biblioteca Completa de Componentes TopTop (DESIGN.md)
  *
- * 9 primitivos componíveis que cobrem toda a loja, área de cliente e backoffice:
- *  1. ui_button()        — Botões e links CTA (.ui-btn)
- *  2. ui_icon_button()   — Botões compactos só com ícone (.btn-*-single)
- *  3. ui_card()          — Cartões/superfícies elevadas (.ui-card)
- *  4. ui_badge()         — Etiquetas de estado (.ui-badge)
- *  5. ui_field() / ui_switch() — Campos de formulário e interruptores
- *  6. ui_alert() / ui_empty_state() — Mensagens inline e estados vazios
- *  7. ui_page_header() / ui_back_button() — Cabeçalhos de página e navegação
- *  8. ui_modal()         — Contentor modal unificado (.qe-modal / .ui-modal)
- *  9. ui_product_card()  — Cartão canónico de produto da loja (.produto)
+ * 16 primitivos componíveis (31 funções ui_*()) que cobrem 100% da loja, área de cliente e backoffice:
+ *  1. ui_button()                               — Botões e links CTA (.ui-btn)
+ *  2. ui_icon_button() / ui_close_button()      — Botões compactos de ícone e fechar
+ *  3. ui_card()                                 — Cartões/superfícies elevadas (.ui-card)
+ *  4. ui_badge()                                — Etiquetas de estado (.ui-badge)
+ *  5. ui_field() / ui_switch() / ui_checkbox() / ui_search_input() — Controlos de formulário
+ *  6. ui_alert() / ui_empty_state() / ui_spinner() — Mensagens, estados vazios e loading
+ *  7. ui_page_header() / ui_back_button() / ui_toolbar() / ui_pagination() — Navegação e paginação
+ *  8. ui_modal() / ui_quick_edit_modal() / ui_context_menu() — Modais e menus flutuantes
+ *  9. ui_table() / ui_selection_bar() / ui_bulk_bar() / ui_customer_orders_table() — Tabelas e seleção
+ * 10. ui_product_card()                         — Cartão canónico de produto (.produto)
+ * 11. ui_stat_card() / ui_nav_card()            — Cartões KPI e navegação de dashboards
+ * 12. ui_tabs()                                 — Separadores (.ui-tabs)
+ * 13. ui_accordion()                            — Secções colapsáveis (.ui-accordion)
+ * 14. ui_progress_bar()                         — Barras de progresso (.ui-progress)
+ * 15. ui_qty_stepper()                          — Seletor de quantidade (.ui-qty)
+ * 16. ui_kv_list()                              — Lista chave-valor com ícones (.ui-kv-list)
  */
 
 if (!function_exists('ui_e')) {
@@ -722,7 +729,7 @@ if (!function_exists('ui_customer_orders_table')) {
             $id          = (int)($order['id'] ?? 0);
             $estado      = (string)($order['estado'] ?? '');
             $estadoClass = strtolower(str_replace(' ', '-', $estado));
-            $entrega     = (string)($order['metodo_entrega'] ?: 'Envio');
+            $entrega     = (string)(($order['metodo_entrega'] ?? '') ?: 'Envio');
             $total       = (float)($order['total'] ?? 0) + (float)($order['portes_envio'] ?? 0);
             $token       = (string)($order['token'] ?? '');
             $dataFmt     = !empty($order['data_encomenda']) ? date('d/m/Y', strtotime((string)$order['data_encomenda'])) : '—';

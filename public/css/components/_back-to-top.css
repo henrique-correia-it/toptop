@@ -5,7 +5,7 @@
     right: 32px;
     width: 52px;
     height: 52px;
-    background: linear-gradient(135deg, var(--cor-destaque, #1a1a1a) 0%, var(--cor-cinza-escuro) 100%);
+    background: linear-gradient(135deg, var(--cor-ink, #1a1a1a) 0%, var(--cor-cinza-escuro) 100%);
     color: var(--cor-branco);
     border: none;
     border-radius: 50%;

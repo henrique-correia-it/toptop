@@ -31,7 +31,7 @@ $tokensCores = [
 <main class="dashboard-container" style="max-width:1160px; margin:0 auto; padding:var(--space-6) var(--space-4) var(--space-12);">
     <?php
     echo ui_page_header('TopTop Design System', [
-        'kicker'     => 'DESIGN.md · Biblioteca Mínima (9 Primitivos)',
+        'kicker'     => 'DESIGN.md · Biblioteca Completa (16 Primitivos / 31 Funções)',
         'subtitle'   => 'Referência viva de tokens, cores, tipografia e componentes reutilizáveis (includes/ui/ui.php).',
         'back_url'   => '/dev',
         'back_title' => 'Voltar ao Painel Dev',
@@ -142,11 +142,45 @@ $tokensCores = [
         ]);
         echo '</div>';
         echo ui_card(ob_get_clean(), ['title' => '6. Tabs, Accordion, Progresso, Quantidade, Pesquisa, Spinner & KV List', 'subtitle' => 'ui_tabs(), ui_accordion(), ui_progress_bar(), ui_qty_stepper(), ui_checkbox(), ui_search_input(), ui_spinner(), ui_kv_list()']);
+
+        // 7. Dashboard Cards, Toolbar, Product Card, Customer Orders Table & Bulk/Context Demos
+        ob_start();
+        echo '<div style="display:grid; gap:var(--space-5);">';
+        echo ui_toolbar(
+            ui_button('Adicionar Item', ['plus' => true]),
+            ui_search_input('demo_toolbar_q', 'Filtrar...') . ui_button('Selecionar', ['variant' => 'default'])
+        );
+        echo '<div class="stats-grid" style="margin:0;">'
+            . ui_stat_card('128', 'Produtos Ativos', ['href' => '#'])
+            . ui_stat_card('14', 'Encomendas Hoje', ['href' => '#'])
+            . '</div>';
+        echo '<div class="dashboard-grid">'
+            . ui_nav_card('Cartão de Navegação', 'Exemplo de ui_nav_card() usado nos painéis Admin e Dev.', '#')
+            . '</div>';
+        echo '<div style="max-width:260px;">'
+            . ui_product_card(['id' => 1, 'nome' => 'Camisa Linho Exemplo', 'preco' => 39.90, 'preco_promocional' => 29.90, 'stock_total' => 5, 'foto_principal' => 'default.jpg'], ['slug' => 'camisa-linho-exemplo'])
+            . '</div>';
+        echo ui_customer_orders_table([
+            ['id' => 1042, 'data_encomenda' => date('Y-m-d'), 'metodo_entrega' => 'Envio', 'estado' => 'pago', 'total' => 45.00, 'portes_envio' => 4.90, 'token' => 'demo'],
+        ]);
+        echo '<div style="display:flex; gap:var(--space-2); flex-wrap:wrap;">'
+            . ui_button('Abrir Quick Edit Modal', ['attrs' => ['onclick' => "document.getElementById('ds-qe-demo').style.display='flex'"]])
+            . '</div>';
+        echo ui_selection_bar();
+        echo '</div>';
+        echo ui_card(ob_get_clean(), ['title' => '7. Toolbar, Dashboard Cards, Cartão Produto, Encomendas Cliente & Seleção', 'subtitle' => 'ui_toolbar(), ui_stat_card(), ui_nav_card(), ui_product_card(), ui_customer_orders_table(), ui_selection_bar(), ui_bulk_bar(), ui_quick_edit_modal(), ui_context_menu()']);
         ?>
     </div>
 </main>
 
 <?php
+echo ui_bulk_bar('ds-demo-bulk-form', '#', ['action_label' => 'Apagar Selecionados']);
+echo ui_quick_edit_modal('ds-qe-demo', 'Quick Edit Demo (ui_quick_edit_modal)');
+echo ui_context_menu([
+    ['href' => '#', 'label' => 'Editar'],
+    'separator',
+    ['href' => '#', 'class' => 'danger', 'label' => 'Apagar'],
+], 'ds-ctx-demo');
 echo ui_modal(
     'ds-demo-modal',
     'Modal Unificado (ui_modal)',

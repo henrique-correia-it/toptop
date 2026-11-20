@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const n = selected.size;
         selCountEl.textContent = n;
         bulkCountEl.textContent = n;
-        const total = document.querySelectorAll('.tabela-produtos tbody tr').length;
+        const total = document.querySelectorAll('.tabela-produtos tbody tr[data-id]').length;
         btnSelAll.textContent = selected.size === total ? 'Desselecionar todos' : 'Selecionar todos';
         bulkBar.classList.toggle('visible', n > 0);
     }
@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function () {
         selModeBar.classList.toggle('visible', selMode);
         if (!selMode) {
             selected.clear();
-            document.querySelectorAll('.tabela-produtos tbody tr').forEach(r => r.classList.remove('selecionado'));
+            document.querySelectorAll('.tabela-produtos tbody tr[data-id]').forEach(r => r.classList.remove('selecionado'));
         }
         updateUI();
     });
@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     btnSelAll.addEventListener('click', () => {
-        const rows = document.querySelectorAll('.tabela-produtos tbody tr');
+        const rows = document.querySelectorAll('.tabela-produtos tbody tr[data-id]');
         const allSel = [...rows].every(r => selected.has(r.dataset.id));
         rows.forEach(r => {
             if (allSel) { selected.delete(r.dataset.id); r.classList.remove('selecionado'); }
