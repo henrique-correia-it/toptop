@@ -22,12 +22,7 @@ include '../templates/header.php';
     }
     window.scrollTo(0, 0);
 </script>
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton('/dev', 'Painel Dev'); ?>
-            <h2>Registos de Erros</h2>
-        </div>
-    </div>
+    <?php echo ui_page_header("Registos de Erros", ['layout' => 'admin', 'back_url' => '/dev', 'back_title' => 'Painel Dev']); ?>
 
     <div class="logs-container">
         <div class="logs-card">

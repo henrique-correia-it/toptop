@@ -74,12 +74,7 @@ include '../templates/header.php';
 </script>
 <div class="gal-page">
 
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton('/dev', 'Painel Dev'); ?>
-            <h2>Galeria de Imagens do Servidor</h2>
-        </div>
-    </div>
+    <?php echo ui_page_header("Galeria de Imagens do Servidor", ['layout' => 'admin', 'back_url' => '/dev', 'back_title' => 'Painel Dev']); ?>
 
     <!-- ── Page Header ── -->
     <div class="gal-ph">

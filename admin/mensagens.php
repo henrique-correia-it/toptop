@@ -72,12 +72,7 @@ include '../templates/header.php';
     window.scrollTo(0, 0);
 </script>
 
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton('/admin', 'Voltar ao Painel'); ?>
-            <h2>Mensagens de Contacto</h2>
-        </div>
-    </div>
+    <?php echo ui_page_header("Mensagens de Contacto", ['layout' => 'admin', 'back_url' => '/admin', 'back_title' => 'Voltar ao Painel']); ?>
 
     <?php if (isset($_SESSION['flash_message'])): ?>
         <script>
@@ -109,12 +104,14 @@ include '../templates/header.php';
                                 <p><?php echo nl2br(htmlspecialchars($msg['mensagem'])); ?></p>
                             </div>
                             <div class="card-footer">
-                                <button type="button" class="btn-reply-single btn-responder-email" title="Responder por Email"></button>
+                                <?php echo ui_icon_button('reply', ['class' => 'btn-responder-email', 'title' => 'Responder por Email']); ?>
                                 <form action="mensagens.php" method="POST" style="display:inline-flex; gap: 8px; margin: 0;">
                                     <input type="hidden" name="id" value="<?php echo $msg['id']; ?>">
                                     <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-                                    <button type="submit" name="action" value="responder" class="btn-archive-single" title="Arquivar"></button>
-                                    <button type="submit" name="action" value="apagar" class="btn-del-single btn-apagar-confirmado" data-mensagem-confirmacao="Tem a certeza que quer apagar esta mensagem permanentemente?" title="Apagar"></button>
+                                    <?php
+                                    echo ui_icon_button('archive', ['type' => 'submit', 'title' => 'Arquivar', 'attrs' => ['name' => 'action', 'value' => 'responder']]);
+                                    echo ui_icon_button('delete', ['type' => 'submit', 'class' => 'btn-apagar-confirmado', 'title' => 'Apagar', 'attrs' => ['name' => 'action', 'value' => 'apagar', 'data-mensagem-confirmacao' => 'Tem a certeza que quer apagar esta mensagem permanentemente?']]);
+                                    ?>
                                 </form>
                             </div>
                         </div>
@@ -148,8 +145,10 @@ include '../templates/header.php';
                                 <form action="mensagens.php" method="POST" style="display:inline-flex; gap: 8px; margin: 0;">
                                     <input type="hidden" name="id" value="<?php echo $msg['id']; ?>">
                                     <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-                                    <button type="submit" name="action" value="desmarcar" class="btn-edit-single" title="Mover para Recebidas"></button>
-                                    <button type="submit" name="action" value="apagar" class="btn-del-single btn-apagar-confirmado" data-mensagem-confirmacao="Tem a certeza que quer apagar esta mensagem permanentemente?" title="Apagar"></button>
+                                    <?php
+                                    echo ui_icon_button('edit', ['type' => 'submit', 'title' => 'Mover para Recebidas', 'attrs' => ['name' => 'action', 'value' => 'desmarcar']]);
+                                    echo ui_icon_button('delete', ['type' => 'submit', 'class' => 'btn-apagar-confirmado', 'title' => 'Apagar', 'attrs' => ['name' => 'action', 'value' => 'apagar', 'data-mensagem-confirmacao' => 'Tem a certeza que quer apagar esta mensagem permanentemente?']]);
+                                    ?>
                                 </form>
                             </div>
                         </div>

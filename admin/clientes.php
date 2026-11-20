@@ -77,15 +77,12 @@ $stmt->close();
     window.scrollTo(0, 0);
 </script>
 
-<div class="admin-page-header">
-    <div class="header-title-container">
-        <?php renderBackButton('/admin', 'Painel'); ?>
-        <h2>Contas de Clientes</h2>
-    </div>
-    <div class="header-actions">
-        <span class="badge badge-cinzento"><?= $total ?> conta<?= $total !== 1 ? 's' : '' ?></span>
-    </div>
-</div>
+<?= ui_page_header('Contas de Clientes', [
+    'layout'     => 'admin',
+    'back_url'   => '/admin',
+    'back_title' => 'Painel',
+    'actions'    => ui_badge($total . ' conta' . ($total !== 1 ? 's' : ''), 'neutral'),
+]) ?>
 
 <?php if ($mensagem_sucesso): ?>
     <div style="max-width:1200px;margin:0 auto 20px;"><?= ui_alert($mensagem_sucesso, 'success') ?></div>

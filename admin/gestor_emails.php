@@ -50,12 +50,7 @@ foreach ($templates_db as $tpl) {
     }
     window.scrollTo(0, 0);
 </script>
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton('/admin', 'Voltar ao Painel'); ?>
-            <h2>Gestor de Templates de Email</h2>
-        </div>
-    </div>
+    <?php echo ui_page_header("Gestor de Templates de Email", ['layout' => 'admin', 'back_url' => '/admin', 'back_title' => 'Voltar ao Painel']); ?>
 
     <div class="admin-container" style="max-width: 1200px; margin: 0 auto;">
 

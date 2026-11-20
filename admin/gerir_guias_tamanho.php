@@ -26,12 +26,7 @@ include '../templates/header.php';
     }
     window.scrollTo(0, 0);
 </script>
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton('/admin', 'Voltar ao Painel'); ?>
-            <h2>Gerir Guias de Tamanho</h2>
-        </div>
-    </div>
+    <?php echo ui_page_header("Gerir Guias de Tamanho", ['layout' => 'admin', 'back_url' => '/admin', 'back_title' => 'Voltar ao Painel']); ?>
 
     <div class="admin-container" style="max-width: 1200px; margin: 0 auto;">
 
@@ -64,9 +59,11 @@ include '../templates/header.php';
                             </div>
                         </div>
                         <div class="guia-card-actions">
-                            <button type="button" class="btn-view-single btn-preview-guia" title="Ver Guia"></button>
-                            <button type="button" class="btn-edit-single btn-editar-guia" title="Editar Guia"></button>
-                            <button type="button" class="btn-del-single btn-apagar-guia" title="Apagar Guia"></button>
+                            <?php
+                            echo ui_icon_button('view', ['class' => 'btn-preview-guia', 'title' => 'Ver Guia']);
+                            echo ui_icon_button('edit', ['class' => 'btn-editar-guia', 'title' => 'Editar Guia']);
+                            echo ui_icon_button('delete', ['class' => 'btn-apagar-guia', 'title' => 'Apagar Guia']);
+                            ?>
                         </div>
                     </div> <!-- fecha guia-card -->
                 <?php endforeach; ?>

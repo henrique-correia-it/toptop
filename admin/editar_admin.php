@@ -156,20 +156,15 @@ include '../templates/header.php';
     }
     window.scrollTo(0, 0);
 </script>
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton($return_url, 'Voltar'); ?>
-            <h2><?php echo $is_own_profile ? 'O Meu Perfil' : 'Editar Administrador'; ?></h2>
-        </div>
-    </div>
+    <?php echo ui_page_header($is_own_profile ? 'O Meu Perfil' : 'Editar Administrador', ['layout' => 'admin', 'back_url' => $return_url, 'back_title' => 'Voltar']); ?>
 
     <div class="admin-container large">
 
         <?php if ($mensagem): ?>
-            <div class="auth-message error" style="margin-bottom: 30px;"><?php echo $mensagem; ?></div>
+            <?php echo ui_alert(strip_tags(str_replace('<br>', ' · ', $mensagem)), 'danger'); ?>
         <?php endif; ?>
         <?php if (isset($_GET['sucesso']) && $_GET['sucesso'] == 2 && $is_own_profile): ?>
-            <div class="auth-message success" style="margin-bottom: 30px;">Perfil atualizado com sucesso!</div>
+            <?php echo ui_alert('Perfil atualizado com sucesso!', 'success'); ?>
         <?php endif; ?>
 
         <form action="editar_admin.php?id=<?php echo $id_a_editar; ?>&return_to=<?php echo htmlspecialchars($return_to, ENT_QUOTES, 'UTF-8'); ?>" method="post" class="profile-edit-grid">

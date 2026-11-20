@@ -108,13 +108,10 @@ include '../templates/header.php';
     window.scrollTo(0, 0);
 </script>
     <div class="admin-container large">
-        <div class="admin-page-header">
-            <?php renderBackButton('listar_admins.php', 'Voltar'); ?>
-            <h2>Novo Administrador</h2>
-        </div>
+        <?php echo ui_page_header('Novo Administrador', ['layout' => 'admin', 'back_url' => 'listar_admins.php', 'back_title' => 'Voltar']); ?>
 
         <?php if ($mensagem): ?>
-            <div class="auth-message error" style="margin-bottom: 30px;"><?php echo $mensagem; ?></div>
+            <?php echo ui_alert(strip_tags(str_replace('<br>', ' · ', $mensagem)), 'danger'); ?>
         <?php endif; ?>
 
         <form action="adicionar_admin.php" method="post" class="profile-edit-grid" autocomplete="off">

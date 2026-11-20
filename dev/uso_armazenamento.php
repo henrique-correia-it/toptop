@@ -68,21 +68,14 @@ elseif ($percentagem_total > 60) $bar_class = 'warning';
     }
     window.scrollTo(0, 0);
 </script>
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton('/dev', 'Painel Dev'); ?>
-            <h2>Uso de Armazenamento</h2>
-        </div>
-    </div>
+    <?php echo ui_page_header("Uso de Armazenamento", ['layout' => 'admin', 'back_url' => '/dev', 'back_title' => 'Painel Dev']); ?>
 
     <div class="storage-container">
 
         <div class="storage-total-card">
             <p class="total-label">Espaço Total Utilizado</p>
             <div class="total-value"><?php echo format_bytes($total_size_bytes); ?></div>
-            <div class="progress-bar-container">
-                <div class="progress-bar <?php echo $bar_class; ?>" style="width: <?php echo min(100, $percentagem_total); ?>%;" title="<?php echo number_format($percentagem_total, 2); ?>% Usado"></div>
-            </div>
+            <?php echo ui_progress_bar(min(100, $percentagem_total), $bar_class); ?>
             <p class="progress-info">Ocupa <strong><?php echo number_format($percentagem_total, 2); ?>%</strong> do seu limite de <?php echo $limite_gb; ?> GB.</p>
         </div>
 
@@ -95,9 +88,7 @@ elseif ($percentagem_total > 60) $bar_class = 'warning';
                         <span class="label">Imagens de Produtos</span>
                         <span class="size"><?php echo format_bytes($size_images); ?></span>
                     </div>
-                    <div class="breakdown-bar-container">
-                        <div class="breakdown-bar images" style="width: <?php echo $total_size_bytes > 0 ? ($size_images / $total_size_bytes * 100) : 0; ?>%;"></div>
-                    </div>
+                    <?php echo ui_progress_bar($total_size_bytes > 0 ? ($size_images / $total_size_bytes * 100) : 0, 'info'); ?>
                 </div>
             </div>
             <div class="breakdown-item">
@@ -107,9 +98,7 @@ elseif ($percentagem_total > 60) $bar_class = 'warning';
                         <span class="label">Código e Scripts</span>
                         <span class="size"><?php echo format_bytes($size_code); ?></span>
                     </div>
-                    <div class="breakdown-bar-container">
-                        <div class="breakdown-bar code" style="width: <?php echo $total_size_bytes > 0 ? ($size_code / $total_size_bytes * 100) : 0; ?>%;"></div>
-                    </div>
+                    <?php echo ui_progress_bar($total_size_bytes > 0 ? ($size_code / $total_size_bytes * 100) : 0, 'accent'); ?>
                 </div>
             </div>
             <div class="breakdown-item">
@@ -119,9 +108,7 @@ elseif ($percentagem_total > 60) $bar_class = 'warning';
                         <span class="label">Outros Ativos</span>
                         <span class="size"><?php echo format_bytes($size_assets); ?></span>
                     </div>
-                    <div class="breakdown-bar-container">
-                        <div class="breakdown-bar assets" style="width: <?php echo $total_size_bytes > 0 ? ($size_assets / $total_size_bytes * 100) : 0; ?>%;"></div>
-                    </div>
+                    <?php echo ui_progress_bar($total_size_bytes > 0 ? ($size_assets / $total_size_bytes * 100) : 0, 'success'); ?>
                 </div>
             </div>
         </div>

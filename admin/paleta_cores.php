@@ -61,19 +61,14 @@ $accentFieldValue = $accentIsCustom ? $currentAccentSetting : $autoAccentPreview
 ?>
 
 <main class="dashboard-container palette-page animate-entry">
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton('/admin', 'Voltar ao Painel'); ?>
-            <h2>Paleta de Cores</h2>
-        </div>
-    </div>
+    <?php echo ui_page_header("Paleta de Cores", ['layout' => 'admin', 'back_url' => '/admin', 'back_title' => 'Voltar ao Painel']); ?>
 
     <?php if (isset($_GET['guardado'])): ?>
-        <div class="palette-alert palette-alert-success" role="status">Cor de fundo guardada com sucesso.</div>
+        <?php echo ui_alert('Cor de fundo guardada com sucesso.', 'success'); ?>
     <?php endif; ?>
 
     <?php if ($saveError !== ''): ?>
-        <div class="palette-alert palette-alert-error" role="alert"><?php echo htmlspecialchars($saveError, ENT_QUOTES, 'UTF-8'); ?></div>
+        <?php echo ui_alert($saveError, 'danger'); ?>
     <?php endif; ?>
 
     <div class="palette-layout">

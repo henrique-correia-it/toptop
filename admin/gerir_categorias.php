@@ -29,17 +29,13 @@ include '../templates/header.php';
     }
     window.scrollTo(0, 0);
 </script>
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton('/admin', 'Painel'); ?>
-            <h2>Gerir Categorias</h2>
-        </div>
-        <div class="header-actions-container">
-            <button type="button" class="btn-primary btn-with-plus btn-with-plus-text" id="btn-nova-categoria">
-                Nova Categoria
-            </button>
-        </div>
-    </div>
+    <?php echo ui_page_header('Gerir Categorias', [
+        'layout'        => 'admin',
+        'back_url'      => '/admin',
+        'back_title'    => 'Painel',
+        'actions_class' => 'header-actions-container',
+        'actions'       => ui_button('Nova Categoria', ['id' => 'btn-nova-categoria', 'variant' => 'primary', 'plus' => true]),
+    ]); ?>
 
     <div class="gc-wrap">
         <div class="gc-list" id="gc-list">

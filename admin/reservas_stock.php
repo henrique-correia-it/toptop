@@ -55,12 +55,7 @@ include '../templates/header.php';
 <main class="dashboard-container animate-entry">
 <script>if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; } window.scrollTo(0,0);</script>
 
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton('/admin', 'Voltar ao Painel'); ?>
-            <h2>Reservas de Stock</h2>
-        </div>
-    </div>
+    <?php echo ui_page_header("Reservas de Stock", ['layout' => 'admin', 'back_url' => '/admin', 'back_title' => 'Voltar ao Painel']); ?>
 
     <?php if (isset($_SESSION['flash_message'])): ?>
         <script>document.addEventListener('DOMContentLoaded',function(){mostrarPopup(<?= json_encode($_SESSION['flash_message']['texto'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,<?= json_encode($_SESSION['flash_message']['tipo'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>);});</script>

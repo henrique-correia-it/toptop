@@ -121,36 +121,7 @@ foreach ($estados_existentes as $estado_existente) {
 }
 
 // FUNÇÃO PARA GERAR OS LINKS DE PAGINAÇÃO
-function gerarPaginacao($pagina_atual, $total_paginas, $params) {
-    if ($total_paginas <= 1) return '';
-    $html = '<nav class="pagination-container"><ul class="pagination-list">';
-    
-    // Anterior
-    $params_prev = $params;
-    $params_prev['pagina'] = $pagina_atual - 1;
-    $html .= '<li class="pagination-item prev ' . ($pagina_atual <= 1 ? 'disabled' : '') . '">
-                <a class="page-link" href="?' . http_build_query($params_prev) . '" title="Anterior">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                </a></li>';
 
-    for ($i = 1; $i <= $total_paginas; $i++) {
-        $params_i = $params;
-        $params_i['pagina'] = $i;
-        $html .= '<li class="pagination-item ' . ($i == $pagina_atual ? 'active' : '') . '">
-                    <a class="page-link" href="?' . http_build_query($params_i) . '">' . $i . '</a></li>';
-    }
-
-    // Seguinte
-    $params_next = $params;
-    $params_next['pagina'] = $pagina_atual + 1;
-    $html .= '<li class="pagination-item next ' . ($pagina_atual >= $total_paginas ? 'disabled' : '') . '">
-                <a class="page-link" href="?' . http_build_query($params_next) . '" title="Seguinte">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a></li>';
-
-    $html .= '</ul></nav>';
-    return $html;
-}
 
 include '../templates/header.php';
 ?>
@@ -164,12 +135,7 @@ include '../templates/header.php';
     }
     window.scrollTo(0, 0);
 </script>
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton('/admin', 'Voltar ao Painel'); ?>
-            <h2>Gerir Encomendas</h2>
-        </div>
-    </div>
+    <?php echo ui_page_header("Gerir Encomendas", ['layout' => 'admin', 'back_url' => '/admin', 'back_title' => 'Voltar ao Painel']); ?>
 
     <?php if (isset($_SESSION['flash_message'])): ?>
         <script>
@@ -257,7 +223,10 @@ include '../templates/header.php';
 
     <?php
     $query_params = ['estado' => $filtro_estado, 'q' => $termo_pesquisa];
-    echo gerarPaginacao($pagina_atual, $total_paginas, $query_params);
+    echo ui_pagination((int)$pagina_atual, (int)$total_paginas, function ($p) use ($query_params) {
+        $params = array_merge($query_params, ['pagina' => $p]);
+        return '?' . http_build_query(array_filter($params, fn($v) => $v !== '' && $v !== null));
+    });
     ?>
 </main>
 

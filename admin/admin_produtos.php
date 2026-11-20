@@ -38,34 +38,7 @@ if (!array_key_exists($ordenar_key, $ordenar_opcoes)) $ordenar_key = 'id_desc';
 $ordem = $ordenar_opcoes[$ordenar_key];
 
 
-function gerarPaginacao($pagina_atual, $total_paginas, $ordenar_key = 'id_desc', $so_visiveis = false) {
-    if ($total_paginas <= 1) return '';
-    $params = [];
-    if ($ordenar_key !== 'id_desc') $params[] = 'ordenar=' . urlencode($ordenar_key);
-    if ($so_visiveis) $params[] = 'visiveis=1';
-    $extra = $params ? '&' . implode('&', $params) : '';
-    $html = '<nav class="pagination-container"><ul class="pagination-list">';
 
-    // Anterior
-    $html .= '<li class="pagination-item prev ' . ($pagina_atual <= 1 ? 'disabled' : '') . '">';
-    $html .= '<a class="page-link" href="?pagina=' . ($pagina_atual - 1) . $extra . '" title="Anterior">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-              </a></li>';
-
-    for ($i = 1; $i <= $total_paginas; $i++) {
-        $html .= '<li class="pagination-item ' . ($i == $pagina_atual ? 'active' : '') . '">';
-        $html .= '<a class="page-link" href="?pagina=' . $i . $extra . '">' . $i . '</a></li>';
-    }
-
-    // Seguinte
-    $html .= '<li class="pagination-item next ' . ($pagina_atual >= $total_paginas ? 'disabled' : '') . '">';
-    $html .= '<a class="page-link" href="?pagina=' . ($pagina_atual + 1) . $extra . '" title="Seguinte">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-              </a></li>';
-
-    $html .= '</ul></nav>';
-    return $html;
-}
 ?>
 
 
@@ -79,12 +52,7 @@ function gerarPaginacao($pagina_atual, $total_paginas, $ordenar_key = 'id_desc',
     window.scrollTo(0, 0);
 </script>
 
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton('/admin', 'Voltar ao Painel'); ?>
-            <h2>Gerir Produtos da Loja</h2>
-        </div>
-    </div>
+    <?php echo ui_page_header("Gerir Produtos da Loja", ['layout' => 'admin', 'back_url' => '/admin', 'back_title' => 'Voltar ao Painel']); ?>
 
     <?php if (isset($_SESSION['flash_message'])): ?>
         <script>
@@ -199,7 +167,15 @@ function gerarPaginacao($pagina_atual, $total_paginas, $ordenar_key = 'id_desc',
         ?>
     </div>
 
-    <?php echo gerarPaginacao($pagina_atual, $total_paginas, $ordenar_key, $so_visiveis); ?>
+    <?php
+    echo ui_pagination((int)$pagina_atual, (int)$total_paginas, function ($p) use ($ordenar_key, $so_visiveis) {
+        $params = [];
+        if ($ordenar_key && $ordenar_key !== 'mais_recentes') $params['ordenar'] = $ordenar_key;
+        if ($so_visiveis) $params['visiveis'] = '1';
+        $params['pagina'] = $p;
+        return '?' . http_build_query($params);
+    });
+    ?>
 
 </main>
 

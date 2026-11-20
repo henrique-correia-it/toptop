@@ -380,10 +380,31 @@ if (!function_exists('ui_back_button')) {
     }
 }
 
-/** 7b. Page Header */
+/** 7b. Page Header (suporta layout padrão 'ui' e layout 'admin' 100% compatível com .admin-page-header) */
 if (!function_exists('ui_page_header')) {
     function ui_page_header(string $title, array $opts = []): string
     {
+        if (($opts['layout'] ?? '') === 'admin') {
+            $titleCls = trim('header-title-container ' . ($opts['title_class'] ?? ''));
+            $html = '<div class="' . ui_e(trim('admin-page-header ' . ($opts['class'] ?? ''))) . '">'
+                . '<div class="' . ui_e($titleCls) . '">';
+            if (!empty($opts['back_url'])) {
+                $html .= ui_back_button((string)$opts['back_url'], (string)($opts['back_title'] ?? 'Voltar ao Painel'));
+            }
+            if (!empty($opts['subtitle'])) {
+                $html .= '<div class="order-title-copy"><h2>' . ui_e($title) . '</h2><p>' . ui_e($opts['subtitle']) . '</p></div>';
+            } else {
+                $html .= '<h2>' . ui_e($title) . '</h2>';
+            }
+            $html .= '</div>';
+            if (!empty($opts['actions'])) {
+                $actionsCls = trim(($opts['actions_class'] ?? 'header-actions'));
+                $html .= '<div class="' . ui_e($actionsCls) . '">' . (string)$opts['actions'] . '</div>';
+            }
+            $html .= '</div>';
+            return $html;
+        }
+
         $center = !empty($opts['center']);
         $cls = 'ui-page-header' . ($center ? ' ui-page-header--center' : '');
         if (!empty($opts['class'])) {

@@ -23,12 +23,7 @@ include '../templates/header.php';
 <link rel="stylesheet" href="/public/css/pages/_previews.css?v=<?php echo time(); ?>">
 
 <main class="dashboard-container animate-entry">
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton('/dev', 'Voltar ao Painel Dev'); ?>
-            <h2>Developer Previews</h2>
-        </div>
-    </div>
+    <?php echo ui_page_header("Developer Previews", ['layout' => 'admin', 'back_url' => '/dev', 'back_title' => 'Voltar ao Painel Dev']); ?>
     <div class="dashboard-header" style="margin-top: -10px; margin-bottom: 30px;">
         <div class="header-welcome">
             <p>Lista completa de templates e estados do sistema para testes visuais e depuração.</p>

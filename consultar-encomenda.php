@@ -49,7 +49,7 @@ include 'templates/header.php';
 
     <div class="info-bloco info-bloco-estreito">
         <?php if ($erro): ?>
-            <div class="auth-message error"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></div>
+            <?php echo ui_alert($erro, 'danger'); ?>
         <?php endif; ?>
 
         <form method="POST" action="consultar-encomenda.php">

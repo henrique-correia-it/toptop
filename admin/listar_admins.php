@@ -85,12 +85,7 @@ $result = $stmt->get_result();
     }
     window.scrollTo(0, 0);
 </script>
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton('/admin', 'Painel'); ?>
-            <h2>Gestão de Administradores</h2>
-        </div>
-    </div>
+    <?php echo ui_page_header("Gestão de Administradores", ['layout' => 'admin', 'back_url' => '/admin', 'back_title' => 'Painel']); ?>
 
     <?php if ($mensagem_sucesso): ?>
         <div style="max-width:1200px; margin:0 auto 20px;"><?php echo ui_alert($mensagem_sucesso, 'success'); ?></div>

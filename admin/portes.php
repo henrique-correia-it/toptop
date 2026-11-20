@@ -26,16 +26,13 @@ $portes_por_pais = $portes_js ?? [];
     }
     window.scrollTo(0, 0);
 </script>
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton('/admin', 'Voltar ao Painel'); ?>
-            <h2>Configurações de Portes</h2>
-        </div>
-        <div id="autosave-status" class="autosave-status header-actions-container">
-            <span class="dot"></span>
-            <span class="text">Tudo guardado</span>
-        </div>
-    </div>
+    <?php echo ui_page_header('Configurações de Portes', [
+        'layout'        => 'admin',
+        'back_url'      => '/admin',
+        'back_title'    => 'Voltar ao Painel',
+        'actions_class' => 'autosave-status header-actions-container',
+        'actions'       => '<span id="autosave-status" class="autosave-status"><span class="dot"></span><span class="text">Tudo guardado</span></span>',
+    ]); ?>
 
     <div class="admin-container" style="max-width: 1200px; margin: 0 auto;">
         <section class="free-shipping-config" aria-labelledby="free-shipping-title">

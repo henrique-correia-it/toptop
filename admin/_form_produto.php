@@ -49,14 +49,7 @@ $variacoes_guardadas_json = json_encode(is_array($_variacoes_dec) ? $_variacoes_
     }
     window.scrollTo(0, 0);
 </script>
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <a href="<?php echo $return_url; ?>" class="btn-back-arrow" title="Voltar">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            </a>
-            <h2><?php echo $titulo_pagina; ?></h2>
-        </div>
-    </div>
+    <?php echo ui_page_header($titulo_pagina, ['layout' => 'admin', 'back_url' => $return_url, 'back_title' => 'Voltar']); ?>
 
     <form id="formProduto" action="<?php echo $action_url; ?>" method="post" class="admin-form-container" style="max-width: 1200px;" novalidate>
         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">

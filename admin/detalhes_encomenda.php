@@ -195,22 +195,15 @@ include '../templates/header.php';
     }
     window.scrollTo(0, 0);
 </script>
-    <div class="admin-page-header">
-        <div class="header-title-container order-detail-title">
-            <a href="<?php echo $return_url; ?>" class="btn-back-arrow" title="Voltar">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            </a>
-            <div class="order-title-copy">
-                <h2>Encomenda #<?php echo htmlspecialchars($encomenda['id']); ?></h2>
-                <?php if ($is_encomenda_incompleta): ?>
-                    <p>Encomenda criada no checkout. Aguarda pagamento para passar ao fluxo normal.</p>
-                <?php endif; ?>
-            </div>
-        </div>
-        <div class="header-actions-container order-status-top">
-            <span class="badge <?php echo $map_badges[$encomenda['estado']] ?? 'badge-cinzento'; ?>"><?php echo $map_nomes[$encomenda['estado']] ?? ucfirst($encomenda['estado']); ?></span>
-        </div>
-    </div>
+    <?php echo ui_page_header('Encomenda #' . $encomenda['id'], [
+        'layout'        => 'admin',
+        'back_url'      => $return_url,
+        'back_title'    => 'Voltar',
+        'title_class'   => 'order-detail-title',
+        'subtitle'      => $is_encomenda_incompleta ? 'Encomenda criada no checkout. Aguarda pagamento para passar ao fluxo normal.' : '',
+        'actions_class' => 'header-actions-container order-status-top',
+        'actions'       => '<span class="badge ' . ui_e($map_badges[$encomenda['estado']] ?? 'badge-cinzento') . '">' . ui_e($map_nomes[$encomenda['estado']] ?? ucfirst($encomenda['estado'])) . '</span>',
+    ]); ?>
 
     <div class="admin-form-grid">
         <div class="form-coluna-principal">

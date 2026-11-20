@@ -88,12 +88,7 @@ $qs_base = http_build_query(array_filter([
     }
     window.scrollTo(0, 0);
 </script>
-    <div class="admin-page-header">
-        <div class="header-title-container">
-            <?php renderBackButton('/dev', 'Painel Dev'); ?>
-            <h2>Registos de Login</h2>
-        </div>
-    </div>
+    <?php echo ui_page_header("Registos de Login", ['layout' => 'admin', 'back_url' => '/dev', 'back_title' => 'Painel Dev']); ?>
 
     <?php if (isset($_SESSION['flash_message'])): ?>
         <script>
