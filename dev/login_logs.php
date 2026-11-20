@@ -169,51 +169,12 @@ $qs_base = http_build_query(array_filter([
         ]);
         ?>
 
-        <?php if ($total_paginas > 1): ?>
-        <div class="logs-paginacao">
-            <?php if ($pagina > 1): ?>
-                <a href="?p=1&<?php echo $qs_base; ?>" title="Primeira Página">«</a>
-                <a href="?p=<?php echo $pagina - 1; ?>&<?php echo $qs_base; ?>">‹</a>
-            <?php endif; ?>
-            
-            <?php 
-            $max_visible = 5;
-            $start = max(1, $pagina - floor($max_visible / 2));
-            $end = min($total_paginas, $start + $max_visible - 1);
-            if ($end - $start + 1 < $max_visible) $start = max(1, $end - $max_visible + 1);
-
-            for ($i = $start; $i <= $end; $i++): ?>
-                <?php if ($i === $pagina): ?>
-                    <span class="atual"><?php echo $i; ?></span>
-                <?php else: ?>
-                    <a href="?p=<?php echo $i; ?>&<?php echo $qs_base; ?>"><?php echo $i; ?></a>
-                <?php endif; ?>
-            <?php endfor; ?>
-
-            <?php if ($pagina < $total_paginas): ?>
-                <a href="?p=<?php echo $pagina + 1; ?>&<?php echo $qs_base; ?>">›</a>
-                <a href="?p=<?php echo $total_paginas; ?>&<?php echo $qs_base; ?>" title="Última Página">»</a>
-            <?php endif; ?>
-        </div>
-        <?php endif; ?>
+        <?php
+        echo ui_pagination($pagina, $total_paginas, fn($p) => '?p=' . $p . ($qs_base !== '' ? '&' . $qs_base : ''));
+        ?>
 </main>
 
-<!-- ── Floating bulk action bar ── -->
-<div class="bulk-bar" id="bulk-bar">
-    <span class="bulk-bar-count"><span id="bulk-count">0</span> selecionado(s)</span>
-    <div class="bulk-bar-spacer"></div>
-    <button class="bulk-bar-cancel" id="bulk-cancel" type="button">Cancelar</button>
-    <button class="btn-admin-danger" id="bulk-del" type="button">
-        Apagar Selecionados
-    </button>
-</div>
-
-<!-- Form para apagar -->
-<form id="form-delete-logs" action="apagar_logs_massa.php" method="POST" style="display:none;">
-    <?php echo csrf_input(); ?>
-    <div id="form-ids"></div>
-</form>
-
+<?php echo ui_bulk_bar('form-delete-logs', 'apagar_logs_massa.php', ['action_label' => 'Apagar Selecionados']); ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

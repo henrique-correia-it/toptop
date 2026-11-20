@@ -110,32 +110,24 @@ function formatPrice($price, $iso) {
                             <svg class="accordion-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </button>
                         <div class="accordion-content">
-                            <div class="portes-tabela-wrapper">
-                                <table class="portes-tabela">
-                                    <thead>
-                                        <tr>
-                                            <th><?php echo translateTerm('weight', $iso); ?></th>
-                                            <th><?php echo translateTerm('cost', $iso); ?></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($regras as $regra): ?>
-                                            <tr>
-                                                <td>
-                                                    <?php 
-                                                        $min = $regra['min'] / 1000;
-                                                        $max = $regra['max'] / 1000;
-                                                        echo $min . "kg - " . $max . "kg";
-                                                    ?>
-                                                </td>
-                                                <td>
-                                                    <span class="preco-tag"><?php echo formatPrice($regra['preco'], $iso); ?></span>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
+                            <?php
+                            $regraRows = [];
+                            foreach ($regras as $regra) {
+                                $min = $regra['min'] / 1000;
+                                $max = $regra['max'] / 1000;
+                                $regraRows[] = [
+                                    'cells' => [
+                                        ui_e($min . 'kg - ' . $max . 'kg'),
+                                        '<span class="preco-tag">' . ui_e(formatPrice($regra['preco'], $iso)) . '</span>',
+                                    ],
+                                ];
+                            }
+                            echo ui_table(
+                                [translateTerm('weight', $iso), translateTerm('cost', $iso)],
+                                $regraRows,
+                                ['wrap_class' => 'portes-tabela-wrapper', 'table_class' => 'portes-tabela']
+                            );
+                            ?>
                         </div>
                     </div>
                 <?php endforeach; ?>

@@ -456,3 +456,297 @@ a.ui-card--interactive:hover,
         align-items: flex-start;
     }
 }
+
+/* ── 8. CARD EXTENSIONS (icon, flush, danger) ── */
+.ui-card__heading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.ui-card__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    background: var(--cor-slate-100);
+    color: var(--cor-texto);
+    flex-shrink: 0;
+}
+
+.ui-card__body--flush {
+    padding: 0;
+}
+
+.ui-card--danger {
+    border-color: #fecaca;
+}
+
+/* ── 9. BADGE EXTENSIONS (dot, interactive) ── */
+.ui-badge__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    display: inline-block;
+}
+
+.ui-badge--interactive {
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.ui-badge--interactive:hover {
+    filter: brightness(0.95);
+    transform: translateY(-1px);
+}
+
+/* ── 10. FIELD PREFIX & CHECKBOX ── */
+.ui-field__prefix-wrap {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--cor-slate-300);
+    border-radius: var(--radius-md);
+    background: var(--cor-branco);
+    overflow: hidden;
+}
+
+.ui-field__prefix {
+    padding: 0 var(--space-3);
+    color: var(--cor-slate-500);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    background: var(--cor-slate-50);
+    align-self: stretch;
+    display: inline-flex;
+    align-items: center;
+    border-right: 1px solid var(--cor-slate-200);
+}
+
+.ui-field__prefix-wrap .ui-field__control {
+    border: none;
+    border-radius: 0;
+}
+
+.ui-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    user-select: none;
+    font-size: var(--text-sm);
+    color: var(--cor-texto);
+    position: relative;
+}
+
+.ui-checkbox input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.ui-checkbox__box {
+    width: 18px;
+    height: 18px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--cor-slate-300);
+    background: var(--cor-branco);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.ui-checkbox input:checked + .ui-checkbox__box {
+    background: var(--cor-preto-suave);
+    border-color: var(--cor-preto-suave);
+}
+
+.ui-checkbox input:checked + .ui-checkbox__box::after {
+    content: "";
+    width: 5px;
+    height: 9px;
+    border: solid var(--cor-branco);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    margin-bottom: 2px;
+}
+
+.ui-checkbox input:focus-visible + .ui-checkbox__box {
+    outline: 2px solid var(--cor-texto);
+    outline-offset: 2px;
+}
+
+/* ── 11. TABS (.ui-tabs) ── */
+.ui-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    background: var(--cor-slate-100);
+    border-radius: var(--radius-pill);
+    flex-wrap: wrap;
+}
+
+.ui-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 7px 14px;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--cor-slate-600);
+    font-family: var(--font-sans);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ui-tab.is-active {
+    background: var(--cor-branco);
+    color: var(--cor-texto);
+    box-shadow: var(--button-shadow);
+}
+
+/* ── 12. ACCORDION (.ui-accordion) ── */
+.ui-accordion {
+    border: 1px solid var(--cor-slate-200);
+    border-radius: var(--radius-md);
+    background: var(--cor-branco);
+    overflow: hidden;
+}
+
+.ui-accordion__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    font-weight: 600;
+    font-size: var(--text-base);
+    color: var(--cor-texto);
+    cursor: pointer;
+    list-style: none;
+}
+
+.ui-accordion__summary::-webkit-details-marker {
+    display: none;
+}
+
+.ui-accordion__chevron {
+    transition: transform 0.2s ease;
+    color: var(--cor-slate-500);
+    flex-shrink: 0;
+}
+
+.ui-accordion[open] .ui-accordion__chevron {
+    transform: rotate(180deg);
+}
+
+.ui-accordion__body {
+    padding: 0 var(--space-4) var(--space-4);
+    color: var(--cor-slate-600);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+}
+
+/* ── 13. PROGRESS BAR (.ui-progress) ── */
+.ui-progress {
+    width: 100%;
+    height: 10px;
+    border-radius: var(--radius-pill);
+    background: var(--cor-slate-100);
+    overflow: hidden;
+}
+
+.ui-progress__fill {
+    height: 100%;
+    border-radius: var(--radius-pill);
+    transition: width 0.35s ease;
+}
+
+.ui-progress__fill--success { background: var(--cor-sucesso); }
+.ui-progress__fill--warning { background: #f59e0b; }
+.ui-progress__fill--danger  { background: var(--cor-perigo); }
+.ui-progress__fill--info    { background: var(--cor-info); }
+.ui-progress__fill--accent  { background: var(--cor-accent); }
+
+/* ── 14. SPINNER (.ui-spinner) ── */
+.ui-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2.5px solid var(--cor-slate-200);
+    border-top-color: var(--cor-preto-suave);
+    border-radius: 50%;
+    animation: ui-spin 0.7s linear infinite;
+}
+
+@keyframes ui-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── 15. QTY STEPPER (.ui-qty) ── */
+.ui-qty__input {
+    width: 42px;
+    text-align: center;
+    border: none;
+    background: transparent;
+    font-weight: 600;
+    font-size: var(--text-sm);
+    color: var(--cor-texto);
+    -moz-appearance: textfield;
+}
+
+.ui-qty__input::-webkit-inner-spin-button,
+.ui-qty__input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* ── 16. KEY-VALUE LIST (.ui-kv-list) ── */
+.ui-kv-list {
+    margin: 0;
+    display: grid;
+    gap: var(--space-3);
+}
+
+.ui-kv-list__row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+}
+
+.ui-kv-list__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-md);
+    background: var(--cor-slate-100);
+    color: var(--cor-slate-600);
+    flex-shrink: 0;
+}
+
+.ui-kv-list__row dt {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--cor-slate-500);
+    margin: 0;
+}
+
+.ui-kv-list__row dd {
+    margin: 2px 0 0;
+    font-size: var(--text-sm);
+    color: var(--cor-texto);
+}

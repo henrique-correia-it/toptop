@@ -318,36 +318,41 @@ include '../templates/header.php';
                     </h3>
                 </div>
                 <div class="form-card-body" style="padding: 0;">
-                    <div class="table-wrapper">
-                        <table class="admin-table tabela-itens-encomenda">
-                            <thead><tr><th style="text-align: left;">Produto</th><th>Qtd</th><th style="text-align: right;">Total</th></tr></thead>
-                            <tbody>
-                                <?php foreach ($itens as $item): ?>
-                                <tr>
-                                    <td style="text-align: left;">
-                                        <?php if (!empty($item['foto_exibicao'])): ?><img src="/public/images/<?php echo htmlspecialchars($item['foto_exibicao']); ?>" alt=""><?php endif; ?>
-                                        <div class="item-info-cell">
-                                            <strong><?php echo htmlspecialchars($item['nome_produto']); ?></strong>
-                                            <?php $selecoes = json_decode($item['selecoes_atributos'], true);
-                                            if (!empty($selecoes)):
-                                                echo '<div class="item-atributos-cell">';
-                                                $detalhes_atributos = [];
-                                                foreach ($selecoes as $atributo => $valor) { $detalhes_atributos[] = htmlspecialchars($valor); }
-                                                echo implode(' / ', $detalhes_atributos);
-                                                echo '</div>';
-                                            endif; ?>
-                                            <?php if(!empty($item['ref_variacao'])): ?>
-                                                <div class="item-ref-cell">Ref: <?php echo htmlspecialchars($item['ref_variacao']); ?></div>
-                                            <?php endif; ?>
-                                        </div>
-                                    </td>
-                                    <td><?php echo htmlspecialchars($item['quantidade']); ?></td>
-                                    <td style="text-align: right;"><?php echo format_money($item['preco_unitario'] * $item['quantidade']); ?></td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                    <?php
+                    $itemRows = [];
+                    foreach ($itens as $item) {
+                        $prodCell = '';
+                        if (!empty($item['foto_exibicao'])) {
+                            $prodCell .= '<img src="/public/images/' . ui_e($item['foto_exibicao']) . '" alt="">';
+                        }
+                        $prodCell .= '<div class="item-info-cell"><strong>' . ui_e($item['nome_produto']) . '</strong>';
+                        $selecoes = json_decode($item['selecoes_atributos'] ?? '', true);
+                        if (!empty($selecoes) && is_array($selecoes)) {
+                            $prodCell .= '<div class="item-atributos-cell">' . implode(' / ', array_map('ui_e', array_values($selecoes))) . '</div>';
+                        }
+                        if (!empty($item['ref_variacao'])) {
+                            $prodCell .= '<div class="item-ref-cell">Ref: ' . ui_e($item['ref_variacao']) . '</div>';
+                        }
+                        $prodCell .= '</div>';
+
+                        $itemRows[] = [
+                            'cells' => [
+                                ['style' => 'text-align: left;', 'html' => $prodCell],
+                                ui_e($item['quantidade']),
+                                ['style' => 'text-align: right;', 'html' => format_money($item['preco_unitario'] * $item['quantidade'])],
+                            ],
+                        ];
+                    }
+                    echo ui_table(
+                        [
+                            ['label' => 'Produto', 'attrs' => ['style' => 'text-align: left;']],
+                            'Qtd',
+                            ['label' => 'Total', 'attrs' => ['style' => 'text-align: right;']],
+                        ],
+                        $itemRows,
+                        ['wrap_class' => 'table-wrapper', 'table_class' => 'admin-table tabela-itens-encomenda']
+                    );
+                    ?>
                     <div class="detalhes-card-sumario">
                         <div class="sumario-box">
                             <div class="sumario-linha"><span>Subtotal (Produtos)</span><span><?php echo format_money($encomenda['total']); ?></span></div>

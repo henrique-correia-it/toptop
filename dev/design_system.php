@@ -101,18 +101,47 @@ $tokensCores = [
         echo ui_switch('demo_visivel', 'Produto visível na loja', true);
         echo ui_card(ob_get_clean(), ['title' => '4. Campos de Formulário & Switch', 'subtitle' => 'ui_field() e ui_switch() com foco de teclado :focus-visible']);
 
-        // 5. Tabela & Modal
+        // 5. Tabela, Paginação & Modal
         ob_start();
         echo ui_table(
             ['Encomenda', 'Cliente', 'Estado', 'Total', 'Ações'],
             [
-                ['cells' => ['#1042', 'Maria Silva', ui_badge('Pago', 'success'), '€49,90', '<div style="display:flex; gap:6px;">' . ui_icon_button('view', ['title' => 'Ver']) . ui_icon_button('edit', ['title' => 'Editar']) . '</div>']],
-                ['cells' => ['#1041', 'João Santos', ui_badge('Enviada', 'info'), '€84,50', '<div style="display:flex; gap:6px;">' . ui_icon_button('view', ['title' => 'Ver']) . ui_icon_button('delete', ['title' => 'Apagar']) . '</div>']],
+                ['cells' => ['#1042', 'Maria Silva', ui_badge('Pago', 'success', ['dot' => true]), '€49,90', '<div style="display:flex; gap:6px;">' . ui_icon_button('view', ['title' => 'Ver']) . ui_icon_button('edit', ['title' => 'Editar']) . '</div>']],
+                ['cells' => ['#1041', 'João Santos', ui_badge('Enviada', 'info', ['dot' => true]), '€84,50', '<div style="display:flex; gap:6px;">' . ui_icon_button('view', ['title' => 'Ver']) . ui_icon_button('delete', ['title' => 'Apagar']) . '</div>']],
             ],
             ['wrap_class' => 'ui-table-wrap', 'table_class' => 'ui-table']
         );
+        echo ui_pagination(2, 5, fn($p) => '#page-' . $p);
         echo '<div style="margin-top:var(--space-4);">' . ui_button('Abrir Modal de Exemplo', ['attrs' => ['onclick' => "document.getElementById('ds-demo-modal').style.display='flex'"]]) . '</div>';
-        echo ui_card(ob_get_clean(), ['title' => '5. Tabela Unificada & Modal', 'subtitle' => 'ui_table() e ui_modal()']);
+        echo ui_card(ob_get_clean(), ['title' => '5. Tabela Unificada, Paginação & Modal', 'subtitle' => 'ui_table(), ui_pagination(), ui_selection_bar(), ui_bulk_bar() e ui_modal()']);
+
+        // 6. Tabs, Accordion, Progress Bar, Qty Stepper, Checkbox, Search, Spinner & KV List
+        ob_start();
+        echo '<div style="display:grid; gap:var(--space-5);">';
+        echo '<div>' . ui_tabs([
+            ['key' => 'todos', 'label' => 'Todos', 'badge' => '24'],
+            ['key' => 'ativos', 'label' => 'Ativos', 'badge' => '18', 'badge_tone' => 'success'],
+            ['key' => 'ocultos', 'label' => 'Ocultos', 'badge' => '6', 'badge_tone' => 'neutral'],
+        ], 'todos') . '</div>';
+        echo '<div style="display:flex; flex-wrap:wrap; gap:var(--space-4); align-items:center;">'
+            . ui_search_input('demo_q', 'Pesquisar na tabela...')
+            . ui_checkbox('demo_chk', 'Definir como principal', true)
+            . ui_qty_stepper(2, ['min' => 1, 'max' => 10])
+            . ui_spinner('A carregar')
+            . ui_close_button(['title' => 'Fechar'])
+            . '</div>';
+        echo '<div style="display:grid; gap:var(--space-2);">'
+            . ui_progress_bar(72, 'success')
+            . ui_progress_bar(45, 'warning')
+            . ui_progress_bar(90, 'danger')
+            . '</div>';
+        echo ui_accordion('Como funcionam as trocas e devoluções?', '<p style="margin:0;">Tens 14 dias após a receção da encomenda para efetuar troca ou devolução na loja ou por envio.</p>');
+        echo ui_kv_list([
+            ['label' => 'Morada da Loja', 'value' => 'Edifício Chafariz, Rua dos Fontenários, 4535-221 Lourosa'],
+            ['label' => 'Método de Pagamento', 'value' => 'Cartão / MB WAY / Klarna (Stripe)'],
+        ]);
+        echo '</div>';
+        echo ui_card(ob_get_clean(), ['title' => '6. Tabs, Accordion, Progresso, Quantidade, Pesquisa, Spinner & KV List', 'subtitle' => 'ui_tabs(), ui_accordion(), ui_progress_bar(), ui_qty_stepper(), ui_checkbox(), ui_search_input(), ui_spinner(), ui_kv_list()']);
         ?>
     </div>
 </main>

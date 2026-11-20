@@ -88,9 +88,9 @@ $stmt->close();
 </div>
 
 <?php if ($mensagem_sucesso): ?>
-    <p class="auth-message success" style="max-width:1200px;margin:0 auto 20px;"><?= htmlspecialchars($mensagem_sucesso) ?></p>
+    <div style="max-width:1200px;margin:0 auto 20px;"><?= ui_alert($mensagem_sucesso, 'success') ?></div>
 <?php elseif ($mensagem_erro): ?>
-    <p class="auth-message error" style="max-width:1200px;margin:0 auto 20px;"><?= htmlspecialchars($mensagem_erro) ?></p>
+    <div style="max-width:1200px;margin:0 auto 20px;"><?= ui_alert($mensagem_erro, 'danger') ?></div>
 <?php endif; ?>
 
 <div class="prod-toolbar">
@@ -159,17 +159,7 @@ echo ui_table(['Nome', 'Email', 'Telefone', 'Estado', 'Encomendas', 'Registado e
 ]);
 ?>
 
-<?php if ($total_paginas > 1): ?>
-<div style="max-width:1200px;margin:20px auto 0;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-    <?php for ($i = 1; $i <= $total_paginas; $i++): ?>
-        <?php $qs = http_build_query(array_filter(['q' => $filtro_q, 'p' => $i > 1 ? $i : null], fn($v) => $v !== '' && $v !== null)); ?>
-        <a href="?<?= $qs ?>"
-           style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;font-size:0.85rem;font-weight:600;text-decoration:none;border:1px solid <?= $i === $pagina ? '#111827' : '#e2e8f0' ?>;background:<?= $i === $pagina ? '#111827' : '#fff' ?>;color:<?= $i === $pagina ? '#fff' : '#374151' ?>;">
-            <?= $i ?>
-        </a>
-    <?php endfor; ?>
-</div>
-<?php endif; ?>
+<?= ui_pagination($pagina, $total_paginas, fn($i) => '?' . http_build_query(array_filter(['q' => $filtro_q, 'p' => $i > 1 ? $i : null], fn($v) => $v !== '' && $v !== null))) ?>
 
 </main>
 

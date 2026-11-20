@@ -130,11 +130,7 @@ function gerarPaginacao($pagina_atual, $total_paginas, $ordenar_key = 'id_desc',
     </div>
 
     <!-- ── Selection mode info bar ── -->
-    <div class="sel-mode-bar" id="sel-mode-bar">
-        <span><span class="sel-count" id="sel-count">0</span> selecionado(s)</span>
-        <button class="btn-sel-all" id="btn-sel-all" type="button">Selecionar todos</button>
-        <div class="sel-spacer"></div>
-    </div>
+    <?php echo ui_selection_bar(['spacer' => true]); ?>
 
     <!-- ── Table ── -->
     <div class="table-wrapper" style="max-width: 1200px; width: 100%; margin-left:auto; margin-right:auto;" id="table-wrapper">
@@ -207,15 +203,7 @@ function gerarPaginacao($pagina_atual, $total_paginas, $ordenar_key = 'id_desc',
 
 </main>
 
-<!-- ── Floating bulk action bar ── -->
-<div class="bulk-bar" id="bulk-bar">
-    <span class="bulk-bar-count"><span id="bulk-count">0</span> selecionado(s)</span>
-    <div class="bulk-bar-spacer"></div>
-    <button class="bulk-bar-cancel" id="bulk-cancel" type="button">Cancelar</button>
-    <button class="btn-admin-danger" id="bulk-del" type="button" style="padding: 10px 20px;">
-        Apagar
-    </button>
-</div>
+<?php echo ui_bulk_bar('', '', ['action_label' => 'Apagar']); ?>
 
 <!-- ── Context Menu ── -->
 <?php 

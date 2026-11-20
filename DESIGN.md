@@ -205,3 +205,70 @@ When an AI agent builds or modifies any page in TopTop:
 2. **Never duplicate markup** — call `ui_button()`, `ui_card()`, `ui_badge()`, `ui_field()`, `ui_alert()`, `ui_empty_state()`, `ui_page_header()`, `ui_modal()`, or `ui_product_card()` from `includes/ui/ui.php`.
 3. **Need a new variant?** Add a minimal modifier to `public/css/ui/_primitives.css` and document it in `DESIGN.md` and `/dev/design_system.php` instead of creating a one-off page style.
 4. **Keep storefront fast:** Storefront visitors load `public/css/style.php?scope=public`; admin-only styles stay in `$adminOnlyPartials`.
+
+---
+
+## Complete Application Component Inventory (100% Page-by-Page Matrix)
+
+Every single UI-rendering file in the repository (50 PHP views + 15 JS modules + 19 CSS component partials) maps to the minimal component library in `includes/ui/ui.php` (24 functions grouped into 16 composable primitives):
+
+### A. Storefront (12 Pages)
+| Page | UI Components Used | Library Primitive(s) |
+|---|---|---|
+| `index.php` | Hero banner, editorial marquee, trust strip, section headers, category bento cards, product grid, admin home/category edit modals | `ui_product_card`, `ui_page_header`, `ui_button`, `ui_modal`, `ui_field` (+ editorial homepage sections) |
+| `produtos.php` | Catalog header, promo switch, sort select, filter sidebar/drawer, filter accordions & checkboxes, product grid, empty state, pagination, product quick-view modal, qty stepper | `ui_product_card`, `ui_empty_state`, `ui_switch`, `ui_field`, `ui_checkbox`, `ui_accordion`, `ui_pagination`, `ui_modal`, `ui_close_button`, `ui_qty_stepper`, `ui_spinner`, `ui_badge`, `ui_button` |
+| `produto.php` | Gallery + thumbnails + spinner, product meta pills, description accordion, variation selects, qty stepper, add-to-cart CTA, related products, 404 empty state | `ui_empty_state`, `ui_badge`, `ui_accordion`, `ui_field`, `ui_qty_stepper`, `ui_button`, `ui_spinner`, `ui_product_card` |
+| `carrinho.php` | Page header, cart item rows (JS), qty stepper, order summary card, checkout CTA, loading spinner, empty state | `ui_page_header`, `ui_card`, `ui_button`, `ui_qty_stepper`, `ui_close_button`, `ui_spinner`, `ui_empty_state` |
+| `checkout.php` | Contact/delivery/payment cards, account notices/warnings, form fields, delivery choice cards, review KV list, summary sidebar + qty stepper, loading overlay | `ui_card`, `ui_alert`, `ui_field`, `ui_button`, `ui_kv_list`, `ui_qty_stepper`, `ui_close_button`, `ui_spinner` |
+| `sucesso.php` | Transaction status card (success/pending/failed), order badge, primary/secondary CTAs | `ui_card`, `ui_badge`, `ui_button` |
+| `estado_encomenda.php` | Tracking header, order progress timeline, status alert banner, GLS tracking box, order items & totals, delivery KV list, message history, empty state | `ui_page_header`, `ui_card`, `ui_alert`, `ui_kv_list`, `ui_badge`, `ui_button`, `ui_empty_state` |
+| `consultar-encomenda.php` | Page header, narrow form card, error alert, order/email fields, submit CTA | `ui_page_header`, `ui_card`, `ui_alert`, `ui_field`, `ui_button` |
+| `contacto.php` | Hero header, contact info card (KV list + social links), message form card, Google map embed | `ui_page_header`, `ui_card`, `ui_kv_list`, `ui_field`, `ui_button` |
+| `envios.php` | Page header, free-shipping banner, country search input, country accordions with ISO badge & shipping rate tables, extra info cards, empty state | `ui_table`, `ui_page_header`, `ui_alert`, `ui_card`, `ui_search_input`, `ui_accordion`, `ui_badge`, `ui_empty_state` |
+| `trocas.php` | Page header, policy info cards grid, admin inline edit buttons/icon picker | `ui_page_header`, `ui_card`, `ui_button`, `ui_icon_button`, `ui_close_button` |
+| `404.php` | 404 hero block, CTAs, interactive memory mini-game, victory modal | `ui_button`, `ui_modal` (+ 404 mini-game widget) |
+
+### B. Global Templates, Auth & Customer Account (13 Files)
+| File | UI Components Used | Library Primitive(s) |
+|---|---|---|
+| `templates/header.php` | Global site header bar, desktop/mobile navs, search overlay, account dropdown (with POST logout), cart badge | Global layout chrome singleton (auto-loads `includes/ui/ui.php`) |
+| `templates/footer.php` | Global 4-column footer, toast popup (`#popupMensagem`), confirmation modal, size-guide modal, side-cart drawer, back-to-top FAB, admin header/footer editor modals | Global chrome singletons + `ui_modal`, `ui_alert`, `ui_field`, `ui_button`, `ui_close_button` |
+| `templates/cliente-sidebar.php` | Customer avatar header + 4 account nav links | Account layout sidebar partial |
+| `entrar.php` | Auth card, profile choice buttons, login fields (password toggle), Caps Lock warning, submit button | `ui_card`, `ui_field` (`password_toggle`), `ui_alert`, `ui_button` |
+| `registar.php` | Auth card, registration fields (password toggle), pending verification state, submit button | `ui_card`, `ui_field` (`password_toggle`), `ui_alert`, `ui_button` |
+| `recuperar-conta.php` | Auth card, email field, generic success/error alerts, submit button | `ui_alert`, `ui_button`, `ui_card`, `ui_field` |
+| `redefinir-conta.php` | Auth card, password fields (password toggle), status alerts, submit button | `ui_card`, `ui_field` (`password_toggle`), `ui_alert`, `ui_button` |
+| `verificar-email.php` | Auth card, CSRF POST confirmation button, error alerts | `ui_alert`, `ui_button`, `ui_card` |
+| `minha-conta.php` | Account header, 2 KPI stat cards, recent orders panel & table / empty state | `ui_customer_orders_table` (`ui_table`), `ui_empty_state`, `ui_stat_card`, `ui_card`, `ui_page_header` |
+| `minha-conta-encomendas.php` | Account header, full orders history table / empty state with CTA | `ui_customer_orders_table` (`ui_table`), `ui_empty_state`, `ui_button`, `ui_card`, `ui_page_header` |
+| `minha-conta-encomenda.php` | Back link, order header + status badge, items & totals panel, tracking CTA, delivery & tracking box, 404 empty state | `ui_back_button`, `ui_page_header`, `ui_badge`, `ui_card`, `ui_button`, `ui_empty_state` |
+| `minha-conta-moradas.php` | Saved address cards, principal badge, edit/delete icon buttons, set-default button, empty state, add/edit address form & checkbox | `ui_icon_button`, `ui_button`, `ui_empty_state`, `ui_badge`, `ui_card`, `ui_field`, `ui_checkbox` |
+| `minha-conta-dados.php` | Profile form card, change password card (password toggles), danger zone card, delete account confirmation modal | `ui_card` (`danger`), `ui_field` (`password_toggle`), `ui_button`, `ui_modal` |
+
+### C. Admin & Developer Backoffice (25 Files)
+| File | UI Components Used | Library Primitive(s) |
+|---|---|---|
+| `admin/admin.php` | Dashboard header + edit-mode toggle, 3 KPI stat cards, 12 nav cards, activity feed + empty state, context menus, quick-edit modal | `ui_page_header`, `ui_stat_card`, `ui_nav_card`, `ui_empty_state`, `ui_context_menu`, `ui_quick_edit_modal`, `ui_button` |
+| `admin/admin_produtos.php` | Page header, toolbar (add CTA, visible switch, sort select, select toggle), selection bar, products table, status badges, icon buttons, pagination, bulk bar, context menu, quick-edit modal | `ui_table`, `ui_selection_bar`, `ui_bulk_bar`, `ui_icon_button`, `ui_context_menu`, `ui_quick_edit_modal`, `ui_page_header`, `ui_toolbar`, `ui_switch`, `ui_pagination`, `ui_badge`, `ui_button` |
+| `admin/_form_produto.php` (`adicionar.php`, `editar.php`) | Page header, 6 form section cards, inputs/selects/textareas, image uploader + cropper modal, attributes & variations builders, submit CTA | `ui_page_header`, `ui_card`, `ui_field`, `ui_button`, `ui_icon_button`, `ui_modal`, `ui_table` |
+| `admin/encomendas.php` | Page header, toolbar (status filter, search, select toggle), selection bar, orders table, status/payment badges, icon buttons, pagination, bulk bar, context menu | `ui_table`, `ui_selection_bar`, `ui_bulk_bar`, `ui_icon_button`, `ui_context_menu`, `ui_page_header`, `ui_toolbar`, `ui_pagination`, `ui_badge`, `ui_button` |
+| `admin/detalhes_encomenda.php` | Page header + status badge, customer info card (KV list + WhatsApp CTA), order items table + totals, message history, tabbed actions sidebar, warning/danger alerts, email modal | `ui_table`, `ui_page_header`, `ui_card`, `ui_kv_list`, `ui_tabs`, `ui_alert`, `ui_field`, `ui_button`, `ui_badge`, `ui_modal`, `ui_empty_state` |
+| `admin/reservas_stock.php` | Page header, toolbar, selection bar, reservations table + live countdown + icon buttons, bulk bar | `ui_table`, `ui_selection_bar`, `ui_bulk_bar`, `ui_icon_button`, `ui_page_header`, `ui_toolbar`, `ui_badge` |
+| `admin/clientes.php` | Page header + count badge, inline alerts, toolbar (search + select), selection bar, customers table + interactive active toggle + delete icon, pagination, bulk bar, context menu | `ui_table`, `ui_selection_bar`, `ui_bulk_bar`, `ui_alert`, `ui_pagination`, `ui_icon_button`, `ui_context_menu`, `ui_page_header`, `ui_toolbar`, `ui_badge` |
+| `admin/listar_admins.php` | Page header, inline alerts, toolbar (add + search + select), selection bar, admins table + role/protected badges + icon buttons, bulk bar, context menu | `ui_table`, `ui_selection_bar`, `ui_bulk_bar`, `ui_alert`, `ui_icon_button`, `ui_context_menu`, `ui_page_header`, `ui_toolbar`, `ui_badge`, `ui_button` |
+| `admin/adicionar_admin.php` & `admin/editar_admin.php` | Page header, inline alerts, 2-column form cards, inputs/selects/password toggles, footer actions | `ui_page_header`, `ui_alert`, `ui_card`, `ui_field` (`password_toggle`), `ui_button` |
+| `admin/gerir_atributos.php` | Page header, add-group card + switch, collapsible attribute group cards, sortable value rows, icon buttons, empty state, inline edit | `ui_page_header`, `ui_card`, `ui_accordion`, `ui_switch`, `ui_badge`, `ui_field`, `ui_button`, `ui_icon_button`, `ui_empty_state` |
+| `admin/gerir_categorias.php` | Page header + add CTA, category cards (photo thumb, inline name, visibility switch, tag, save/delete), empty state, new-category modal | `ui_page_header`, `ui_card`, `ui_switch`, `ui_badge`, `ui_button`, `ui_icon_button`, `ui_empty_state`, `ui_modal`, `ui_field` |
+| `admin/gerir_guias_tamanho.php` | Page header, search + new CTA toolbar, guide cards grid + icon buttons, empty state, visual table editor modal, preview modal | `ui_page_header`, `ui_toolbar`, `ui_search_input`, `ui_card`, `ui_icon_button`, `ui_button`, `ui_empty_state`, `ui_modal`, `ui_field` |
+| `admin/gestor_emails.php` | Page header, click-to-copy placeholders sidebar card, grouped template accordions + forms, context menu, quick-edit modal | `ui_page_header`, `ui_card`, `ui_accordion`, `ui_field`, `ui_button`, `ui_context_menu`, `ui_quick_edit_modal` |
+| `admin/mensagens.php` | Page header, 2-column Kanban board (received/archived) with counters, draggable message cards + icon buttons, empty state, reply modal | `ui_page_header`, `ui_card`, `ui_badge`, `ui_icon_button`, `ui_empty_state`, `ui_quick_edit_modal`, `ui_field` |
+| `admin/paleta_cores.php` | Page header, inline alerts, color settings card (color pickers + auto toggle + actions), live wireframe preview card | `ui_page_header`, `ui_alert`, `ui_card`, `ui_switch`, `ui_field`, `ui_button` |
+| `admin/portes.php` | Page header + autosave dot badge, free-shipping card (switch + `€` prefix input), toolbar, country shipping cards + weight rows, add-country modal with search | `ui_page_header`, `ui_badge` (`dot`), `ui_card`, `ui_switch`, `ui_field` (`prefix`), `ui_toolbar`, `ui_button`, `ui_icon_button`, `ui_modal`, `ui_search_input` |
+| `dev/dev.php` | Dashboard header + backup dialog + simulate dropdown, 4 KPI/toggle stat cards, 7 nav cards (incl. Design System), recent logs feed | `ui_page_header`, `ui_stat_card`, `ui_nav_card`, `ui_modal`, `ui_button`, `ui_alert` |
+| `dev/design_system.php` | Live showcase of all color tokens + all 16 UI primitives & variants (dev-only) | All `includes/ui/ui.php` primitives |
+| `dev/galeria_imagens.php` | Page header, compact stat strip, filter tabs + scan/delete toolbar, status banner, image gallery grid + ghost badges, lightbox | `ui_page_header`, `ui_stat_card`, `ui_toolbar`, `ui_tabs`, `ui_alert`, `ui_badge`, `ui_button`, `ui_empty_state`, `ui_close_button`, `ui_spinner` |
+| `dev/login_logs.php` | Page header, toolbar (filter + search + select), selection bar, logs table, pagination, bulk bar | `ui_table`, `ui_selection_bar`, `ui_bulk_bar`, `ui_pagination`, `ui_page_header`, `ui_toolbar`, `ui_badge` |
+| `dev/previews.php` | Page header + subtitle, 4 themed preview link cards | `ui_page_header`, `ui_card`, `ui_button` |
+| `dev/uso_armazenamento.php` | Page header, total storage card + progress bar, breakdown items + progress bars | `ui_page_header`, `ui_card`, `ui_progress_bar` |
+| `dev/ver_logs.php` | Page header, log viewer card, file tabs with size badges, monospace `<pre>` viewer, control bar (refresh/clear/auto-refresh) | `ui_page_header`, `ui_card`, `ui_tabs`, `ui_badge`, `ui_button`, `ui_switch` |
+| `admin/components/*.php` | `back_button.php`, `context_menu.php`, `quick_edit_modal.php` | Thin 4-line wrappers over `ui_back_button()`, `ui_context_menu()`, `ui_quick_edit_modal()` |
