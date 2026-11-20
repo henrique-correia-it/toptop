@@ -12,13 +12,21 @@
     white-space: nowrap; /* Garante que o texto fique numa linha só */
 }
 
-/* Esconder checkbox original */
+/* Esconder checkbox original (mantendo acessibilidade por teclado) */
 .switch-premium input,
 .toggle-visiveis input {
-    display: none;
-    width: 0;
-    height: 0;
+    position: absolute;
+    width: 1px;
+    height: 1px;
     opacity: 0;
+    margin: 0;
+    pointer-events: none;
+}
+
+.switch-premium input:focus-visible + .slider,
+.toggle-visiveis input:focus-visible ~ .toggle-track {
+    outline: 2px solid var(--cor-texto);
+    outline-offset: 2px;
 }
 
 /* ── TRACK (O fundo do interruptor) ── */
@@ -28,7 +36,7 @@
     display: block;
     width: 42px;
     height: 24px;
-    background-color: #e2e8f0;
+    background-color: var(--cor-slate-200);
     border-radius: 20px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
@@ -43,7 +51,7 @@
     width: 18px;
     left: 3px;
     top: 3px;
-    background-color: #fff;
+    background-color: var(--cor-branco);
     border-radius: 50%;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -52,7 +60,7 @@
 /* ── ESTADO: CHECKED (PRETO) ── */
 .switch-premium input:checked + .slider,
 .toggle-visiveis input:checked ~ .toggle-track {
-    background-color: #000;
+    background-color: var(--cor-preto);
 }
 
 /* ── MOVIMENTO DO THUMB ── */

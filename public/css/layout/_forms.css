@@ -140,7 +140,7 @@ form input:focus, form select:focus, form textarea:focus {
 .login-card {
     width: 100%;
     max-width: 440px;
-    background-color: #ffffff;
+    background-color: var(--cor-branco);
     padding: 45px 50px;
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02);
@@ -159,12 +159,12 @@ form input:focus, form select:focus, form textarea:focus {
     margin-bottom: 35px;
     font-size: 1.6rem;
     font-weight: 700;
-    color: #1a1a1a;
+    color: var(--cor-ink);
     letter-spacing: -0.02em;
 }
 
 .login-card p {
-    color: #666;
+    color: var(--cor-cinza-texto);
     font-size: 0.95rem;
     line-height: 1.5;
 }
@@ -197,8 +197,8 @@ form input:focus, form select:focus, form textarea:focus {
 }
 
 .login-card input:focus {
-    background-color: #ffffff;
-    border-color: #000000;
+    background-color: var(--cor-branco);
+    border-color: var(--cor-preto);
     box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
 }
 
@@ -206,8 +206,8 @@ form input:focus, form select:focus, form textarea:focus {
     width: 100%;
     padding: 15px;
     margin-top: 10px;
-    background-color: #000000;
-    color: #ffffff;
+    background-color: var(--cor-preto);
+    color: var(--cor-branco);
     border: none;
     border-radius: 10px;
     font-size: 1rem;
@@ -217,7 +217,7 @@ form input:focus, form select:focus, form textarea:focus {
 }
 
 .login-card input[type="submit"]:hover {
-    background-color: #333333;
+    background-color: var(--cor-cinza-escuro);
 }
 
 .login-card input[type="submit"]:active {
@@ -231,19 +231,19 @@ form input:focus, form select:focus, form textarea:focus {
     gap: 12px;
     margin-top: 30px;
     padding-top: 25px;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--cor-cinza-claro);
 }
 
 .link-recuperar {
     font-size: 0.9rem;
-    color: #666666;
+    color: var(--cor-cinza-texto);
     text-decoration: none;
     font-weight: 500;
     transition: color 0.2s ease;
 }
 
 .link-recuperar:hover {
-    color: #000000;
+    color: var(--cor-preto);
 }
 
 .login-card .input-com-olho {

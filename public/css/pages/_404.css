@@ -5,8 +5,8 @@
     min-height: 100vh;
     padding: 60px 20px;
     text-align: center;
-    background-color: #ffffff;
-    color: #1a1a1a;
+    background-color: var(--cor-branco);
+    color: var(--cor-ink);
     font-family: 'Inter', sans-serif;
 }
 
@@ -49,7 +49,7 @@
     font-size: 120px;
     font-weight: 900;
     line-height: 1;
-    color: #1a1a1a;
+    color: var(--cor-ink);
     margin-bottom: 10px;
     letter-spacing: -2px;
 }
@@ -58,7 +58,7 @@
     font-family: 'Playfair Display', serif;
     font-size: clamp(28px, 6vw, 42px);
     font-weight: 700;
-    color: #1a1a1a;
+    color: var(--cor-ink);
     margin-bottom: 24px;
     text-transform: none;
     letter-spacing: -0.5px;
@@ -66,7 +66,7 @@
 
 .texto-404 {
     font-size: 1.1rem;
-    color: #666;
+    color: var(--cor-cinza-texto);
     line-height: 1.8;
     margin-bottom: 48px;
     max-width: 480px;
@@ -98,25 +98,25 @@
 }
 
 .btn-boutique.primary {
-    background: #1a1a1a;
-    color: #fff;
-    border: 1px solid #1a1a1a;
+    background: var(--cor-ink);
+    color: var(--cor-branco);
+    border: 1px solid var(--cor-ink);
 }
 
 .btn-boutique.primary:hover {
     background: transparent;
-    color: #1a1a1a;
+    color: var(--cor-ink);
 }
 
 .btn-boutique.secondary {
     background: transparent;
-    color: #1a1a1a;
-    border: 1px solid #1a1a1a;
+    color: var(--cor-ink);
+    border: 1px solid var(--cor-ink);
 }
 
 .btn-boutique.secondary:hover {
     background: #D4AF37;
-    color: #fff;
+    color: var(--cor-branco);
     border-color: #D4AF37;
 }
 
@@ -124,7 +124,7 @@
 .game-section {
     margin-top: 80px;
     padding-top: 60px;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--cor-cinza-claro);
     animation: fadeIn 1.5s ease-out both;
 }
 
@@ -132,7 +132,7 @@
     font-family: 'Playfair Display', serif;
     font-size: 1.5rem;
     margin-bottom: 30px;
-    color: #1a1a1a;
+    color: var(--cor-ink);
 }
 
 .memory-grid {
@@ -171,7 +171,7 @@
     justify-content: center;
     border: 1px solid #eee;
     border-radius: 8px;
-    background: #fff;
+    background: var(--cor-branco);
 }
 
 .card-front {
@@ -189,7 +189,7 @@
 }
 
 .card-back {
-    background: #fff;
+    background: var(--cor-branco);
     transform: rotateY(180deg);
     font-size: 2rem;
     border-color: #D4AF37;
@@ -210,7 +210,7 @@
 
 #game-stats {
     font-weight: 600;
-    color: #666;
+    color: var(--cor-cinza-texto);
 }
 
 .btn-reset {
@@ -253,12 +253,12 @@
 }
 
 .win-modal-content {
-    background: #fff;
+    background: var(--cor-branco);
     padding: 60px 40px;
     max-width: 450px;
     width: 90%;
     text-align: center;
-    border: 1px solid #1a1a1a;
+    border: 1px solid var(--cor-ink);
     box-shadow: 0 30px 60px rgba(0,0,0,0.1);
     animation: modalSlideUp 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
@@ -278,12 +278,12 @@
     font-family: 'Playfair Display', serif;
     font-size: 2rem;
     margin-bottom: 15px;
-    color: #1a1a1a;
+    color: var(--cor-ink);
 }
 
 .win-text {
     font-size: 1.1rem;
-    color: #666;
+    color: var(--cor-cinza-texto);
     margin-bottom: 35px;
 }
 

@@ -10,6 +10,7 @@ require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/stripe.php';
 require_once __DIR__ . '/config/csrf.php';
 require_once __DIR__ . '/config/http.php';
+require_once __DIR__ . '/config/rate_limit.php';
 require_once __DIR__ . '/config/cliente_auth.php';
 require_once __DIR__ . '/includes/CartService.php';
 require_once __DIR__ . '/includes/OrderService.php';
@@ -29,6 +30,11 @@ if (
 ) {
     ob_end_clean();
     json_error('Erro de segurança. Recarregue a página e tente novamente.', 403);
+}
+
+if (!rate_limit_allow('create_payment_intent', 20, 600)) {
+    ob_end_clean();
+    json_error('Demasiadas tentativas de pagamento. Aguarde alguns minutos e tente novamente.', 429);
 }
 
 // Validação dos dados recebidos

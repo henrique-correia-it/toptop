@@ -28,44 +28,44 @@
 
 .order-title-copy p {
     margin: 0;
-    color: #64748b;
+    color: var(--cor-slate-500);
     font-size: 0.88rem;
     font-weight: 500;
 }
 
-.info-cliente-item { display: flex; gap: 15px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; align-items: flex-start; }
+.info-cliente-item { display: flex; gap: 15px; padding: 12px 0; border-bottom: 1px solid var(--cor-slate-100); align-items: flex-start; }
 .info-cliente-item:first-child { padding-top: 0; }
 .info-cliente-item:last-child { border-bottom: none; padding-bottom: 0; }
-.info-cliente-icon { flex-shrink: 0; color: #94a3b8; margin-top: 3px; }
+.info-cliente-icon { flex-shrink: 0; color: var(--cor-slate-400); margin-top: 3px; }
 .info-cliente-icon svg { width: 20px; height: 20px; stroke-width: 1.8; fill: none; stroke: currentColor; }
 .info-cliente-texto { flex-grow: 1; display: flex; flex-direction: column; }
-.info-cliente-texto strong { font-size: 0.7rem; text-transform: uppercase; color: #64748b; margin-bottom: 2px; font-weight: 700; letter-spacing: 0.05em; }
-.info-cliente-texto span, .info-cliente-texto a { font-size: 0.95rem; color: #000; text-decoration: none; }
+.info-cliente-texto strong { font-size: 0.7rem; text-transform: uppercase; color: var(--cor-slate-500); margin-bottom: 2px; font-weight: 700; letter-spacing: 0.05em; }
+.info-cliente-texto span, .info-cliente-texto a { font-size: 0.95rem; color: var(--cor-preto); text-decoration: none; }
 .info-cliente-texto a:hover { text-decoration: underline; color: var(--cor-accent); }
 .info-cliente-item.com-acoes { align-items: center; }
 .info-cliente-item.com-acoes .botoes-contacto { margin-left: auto; }
 .whatsapp-btn { font-size: 0.75rem; padding: 6px 14px; border-radius: 20px; border: 1px solid #c4eadc; background-color: #e7f8f0; color: #008a45; font-weight: 600; text-decoration: none; transition: all 0.2s ease; }
 .whatsapp-btn:hover { background-color: #d8f1e5; transform: translateY(-1px); }
-.morada-envio { margin-top: 5px; font-size: 0.9rem !important; line-height: 1.6; color: #475569 !important; text-align: left !important; }
+.morada-envio { margin-top: 5px; font-size: 0.9rem !important; line-height: 1.6; color: var(--cor-slate-600) !important; text-align: left !important; }
 
-.tabela-itens-encomenda img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; margin-right: 15px; float: left; border: 1px solid #e2e8f0; }
+.tabela-itens-encomenda img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; margin-right: 15px; float: left; border: 1px solid var(--cor-slate-200); }
 .item-info-cell { display: flex; flex-direction: column; justify-content: center; min-height: 60px; }
-.item-atributos-cell { font-size: 0.8rem; color: #64748b; font-weight: 500; }
-.item-ref-cell { font-size: 0.75rem; color: #94a3b8; margin-top: 4px; font-family: monospace; }
-.detalhes-card-sumario { padding: 24px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; }
+.item-atributos-cell { font-size: 0.8rem; color: var(--cor-slate-500); font-weight: 500; }
+.item-ref-cell { font-size: 0.75rem; color: var(--cor-slate-400); margin-top: 4px; font-family: monospace; }
+.detalhes-card-sumario { padding: 24px; background-color: var(--cor-slate-50); border-top: 1px solid var(--cor-slate-200); display: flex; justify-content: flex-end; }
 .sumario-box { width: 100%; max-width: 350px; }
 .sumario-linha { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 0.9rem; }
-.sumario-linha.total { font-size: 1.25rem; border-top: 2px solid #e2e8f0; margin-top: 12px; padding-top: 15px; font-weight: 800; color: #000; }
-.sumario-linha span:first-child { color: #64748b; font-weight: 500; }
-.sumario-linha span:last-child { color: #000; font-weight: 700; }
-.sumario-linha.total span { color: #000; }
+.sumario-linha.total { font-size: 1.25rem; border-top: 2px solid var(--cor-slate-200); margin-top: 12px; padding-top: 15px; font-weight: 800; color: var(--cor-preto); }
+.sumario-linha span:first-child { color: var(--cor-slate-500); font-weight: 500; }
+.sumario-linha span:last-child { color: var(--cor-preto); font-weight: 700; }
+.sumario-linha.total span { color: var(--cor-preto); }
 
 .painel-acoes-tabs {
     display: flex;
-    background-color: #f1f5f9;
+    background-color: var(--cor-slate-100);
     padding: 6px;
     gap: 4px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--cor-slate-200);
 }
 .tab-link {
     flex: 1;
@@ -76,7 +76,7 @@
     cursor: pointer;
     font-weight: 700;
     font-size: 0.72rem;
-    color: #64748b;
+    color: var(--cor-slate-500);
     text-transform: uppercase;
     letter-spacing: 0.03em;
     border-radius: 10px;
@@ -92,33 +92,33 @@
 }
 .tab-link:hover {
     background-color: rgba(255, 255, 255, 0.5);
-    color: #1e293b;
+    color: var(--cor-slate-800);
 }
 .tab-link.ativo {
-    color: #000;
-    background-color: #ffffff;
+    color: var(--cor-preto);
+    background-color: var(--cor-branco);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 .tab-link.ativo svg {
     opacity: 1;
-    color: #000;
+    color: var(--cor-preto);
 }
 
 .tab-content { display: none; padding: 24px; }
 .tab-content.ativo { display: flex; flex-direction: column; gap: 20px; }
 .tab-content .form-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 0; }
-.tab-content label { margin: 0; font-weight: 800; font-size: 0.72rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+.tab-content label { margin: 0; font-weight: 800; font-size: 0.72rem; color: var(--cor-slate-500); text-transform: uppercase; letter-spacing: 0.05em; }
 
-.tab-content hr { border: none; border-top: 1px solid #f1f5f9; margin: 25px 0; }
+.tab-content hr { border: none; border-top: 1px solid var(--cor-slate-100); margin: 25px 0; }
 .auto-resize-textarea {
     resize: none;
     min-height: 120px;
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid var(--cor-slate-200) !important;
     background-color: #fcfcfd !important;
 }
 .auto-resize-textarea:focus {
-    border-color: #000 !important;
-    background-color: #fff !important;
+    border-color: var(--cor-preto) !important;
+    background-color: var(--cor-branco) !important;
     box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.04) !important;
 }
 
@@ -146,7 +146,7 @@
     text-align: center;
     font-weight: 700;
     color: #b91c1c;
-    background-color: #fef2f2;
+    background-color: var(--cor-perigo-bg);
     padding: 20px;
     border-radius: 14px;
     border: 1px solid #fee2e2;
@@ -176,12 +176,12 @@
 }
 
 .historico-mensagens { padding: 10px 0 0 0; }
-.mensagem-item { border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; overflow: hidden; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-.mensagem-header { display: flex; justify-content: space-between; align-items: center; background-color: #f8fafc; padding: 10px 16px; border-bottom: 1px solid #e2e8f0; }
-.mensagem-tipo { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #475569; }
-.mensagem-data { font-size: 0.75rem; color: #94a3b8; font-weight: 500; }
-.mensagem-body { padding: 16px; font-size: 0.9rem; line-height: 1.6; color: #1e293b; }
-.mensagem-body strong { color: #000; }
+.mensagem-item { border: 1px solid var(--cor-slate-200); border-radius: 12px; margin-bottom: 15px; overflow: hidden; background: var(--cor-branco); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.mensagem-header { display: flex; justify-content: space-between; align-items: center; background-color: var(--cor-slate-50); padding: 10px 16px; border-bottom: 1px solid var(--cor-slate-200); }
+.mensagem-tipo { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--cor-slate-600); }
+.mensagem-data { font-size: 0.75rem; color: var(--cor-slate-400); font-weight: 500; }
+.mensagem-body { padding: 16px; font-size: 0.9rem; line-height: 1.6; color: var(--cor-slate-800); }
+.mensagem-body strong { color: var(--cor-preto); }
 
 #modal-comunicacao .modal-confirmacao-conteudo { max-height: 90vh; overflow-y: auto; }
 #modal-comunicacao .modal-confirmacao-acoes { justify-content: flex-end; }

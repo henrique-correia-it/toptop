@@ -16,7 +16,7 @@
 }
 
 .button:hover, button:hover, input[type="submit"]:hover, .add-btn:hover, .edit-btn:hover {
-    background-color: #333;
+    background-color: var(--cor-cinza-escuro);
     color: var(--cor-fundo);
 }
 
@@ -40,7 +40,7 @@
     height: 42px;
     border-radius: 12px; /* Estilo moderno levemente arredondado */
     border: 1px solid var(--cor-borda-subtil);
-    background: color-mix(in srgb, var(--cor-accent, #B08968) 10%, #fff);
+    background: color-mix(in srgb, var(--cor-accent, #B08968) 10%, var(--cor-branco));
     color: var(--cor-accent, #B08968);
     transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
     text-decoration: none;
@@ -50,7 +50,7 @@
 .btn-back-arrow:hover {
     background: var(--cor-accent, #B08968);
     border-color: var(--cor-accent, #B08968);
-    color: #fff;
+    color: var(--cor-branco);
     transform: translateX(-4px); /* Efeito de movimento para a esquerda */
     box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--cor-accent, #B08968) 55%, transparent);
 }
@@ -75,7 +75,7 @@
 .delete-btn:hover {
     background-color: var(--cor-erro);
     border-color: var(--cor-erro);
-    color: #fff;
+    color: var(--cor-branco);
 }
 /* --- FIM DAS ALTERAÇÕES --- */
 
@@ -116,7 +116,7 @@
 
 .btn-adicionar-rapido:hover {
     background-color: var(--cor-texto);
-    color: #fff;
+    color: var(--cor-branco);
     border-color: var(--cor-texto);
 }
 

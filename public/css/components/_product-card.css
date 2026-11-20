@@ -29,7 +29,7 @@
     width: 100%;
     aspect-ratio: 3/4;
     /* ALTERADO AQUI */
-    background-color: #f0f0f0;
+    background-color: var(--cor-cinza-claro);
     overflow: hidden;
 }
 
@@ -89,7 +89,7 @@
     top: 15px;
     left: 15px;
     background-color: var(--cor-erro);
-    color: #fff;
+    color: var(--cor-branco);
     padding: 4px 10px;
     font-size: 0.75rem;
     font-weight: 600;
@@ -147,7 +147,7 @@
 
 .btn-adicionar-rapido:hover {
     background-color: var(--cor-texto);
-    color: #fff;
+    color: var(--cor-branco);
     border-color: var(--cor-texto);
 }
 

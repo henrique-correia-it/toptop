@@ -1,7 +1,7 @@
 /* Estilos para o rodapé do site. */
 .site-footer {
     position: relative;
-    background-color: #ffffff;
+    background-color: var(--cor-branco);
     border-top: 1px solid var(--cor-borda-subtil);
     color: var(--cor-cinza-medio);
     padding: clamp(48px, 6vw, 72px) clamp(24px, 5vw, 40px) 28px;
@@ -182,7 +182,7 @@
     aspect-ratio: 1 / 1;
     border-radius: 50%;
     border: 1px solid var(--cor-borda-subtil);
-    background-color: #ffffff;
+    background-color: var(--cor-branco);
     color: var(--cor-cinza-medio);
     text-decoration: none;
     opacity: 1;
@@ -196,7 +196,7 @@
 }
 
 .footer-social-link:hover {
-    color: #ffffff;
+    color: var(--cor-branco);
     border-color: transparent;
     transform: translateY(-3px);
 }

@@ -22,7 +22,7 @@
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     position: relative !important;
     padding: 0 !important;
-    background-color: #f1f5f9 !important; /* Fundo suave padrão */
+    background-color: var(--cor-slate-100) !important; /* Fundo suave padrão */
     box-sizing: border-box !important;
     flex-shrink: 0 !important;
 }
@@ -36,18 +36,18 @@
 .btn-archive-single::after,
 .btn-reply-single::after,
 .btn-check-single::after {
-    content: "" !important;
-    display: block !important;
-    width: 18px !important;
-    height: 18px !important;
-    background-color: currentColor !important;
-    -webkit-mask-size: contain !important;
-    mask-size: contain !important;
-    -webkit-mask-repeat: no-repeat !important;
-    mask-repeat: no-repeat !important;
-    -webkit-mask-position: center !important;
-    mask-position: center !important;
-    transition: transform 0.2s ease !important;
+    content: "";
+    display: block;
+    width: 18px;
+    height: 18px;
+    background-color: currentColor;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    transition: transform 0.2s ease;
 }
 
 /* Ícones Específicos */
@@ -93,12 +93,12 @@
 .btn-view-single:hover { background-color: #eff6ff !important; transform: translateY(-2px) scale(1.05) !important; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2) !important; }
 
 /* Edição (Preto) */
-.btn-edit-single { color: #000 !important; }
+.btn-edit-single { color: var(--cor-preto) !important; }
 .btn-edit-single:hover { background-color: #f1f1f1 !important; transform: translateY(-2px) scale(1.05) !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important; }
 
 /* Duplicação / Resposta / Arquivo (Cinza/Azul) */
-.btn-duplicate-single, .btn-reply-single, .btn-archive-single { color: #64748b !important; }
-.btn-duplicate-single:hover, .btn-reply-single:hover, .btn-archive-single:hover { color: #1e293b !important; background-color: #f1f5f9 !important; transform: translateY(-2px) scale(1.05) !important; }
+.btn-duplicate-single, .btn-reply-single, .btn-archive-single { color: var(--cor-slate-500) !important; }
+.btn-duplicate-single:hover, .btn-reply-single:hover, .btn-archive-single:hover { color: var(--cor-slate-800) !important; background-color: var(--cor-slate-100) !important; transform: translateY(-2px) scale(1.05) !important; }
 
 /* Cancelar / Repor (Laranja) */
 .btn-cancel-single { color: #f97316 !important; }
@@ -109,8 +109,8 @@
 }
 
 /* Eliminação (Vermelho) */
-.btn-del-single { color: #ef4444 !important; }
-.btn-del-single:hover { background-color: #fef2f2 !important; transform: translateY(-2px) scale(1.05) !important; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2) !important; }
+.btn-del-single { color: var(--cor-perigo) !important; }
+.btn-del-single:hover { background-color: var(--cor-perigo-bg) !important; transform: translateY(-2px) scale(1.05) !important; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2) !important; }
 
 /* ── Botões de Admin (Padrão Retangular) ── */
 .btn-admin-primary,
@@ -130,14 +130,14 @@
     text-decoration: none;
 }
 
-.btn-admin-primary { background: #000; color: #fff; }
-.btn-admin-primary:hover { background: #333; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.btn-admin-primary { background: var(--cor-preto); color: var(--cor-branco); }
+.btn-admin-primary:hover { background: var(--cor-cinza-escuro); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
-.btn-admin-secondary { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
-.btn-admin-secondary:hover { background: #e2e8f0; color: #1e293b; }
+.btn-admin-secondary { background: var(--cor-slate-100); color: var(--cor-slate-600); border: 1px solid var(--cor-slate-200); }
+.btn-admin-secondary:hover { background: var(--cor-slate-200); color: var(--cor-slate-800); }
 
-.btn-admin-danger { background: #fee2e2; color: #ef4444; }
-.btn-admin-danger:hover { background: #ef4444; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
+.btn-admin-danger { background: #fee2e2; color: var(--cor-perigo); }
+.btn-admin-danger:hover { background: var(--cor-perigo); color: var(--cor-branco); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
 
 /* Ajustes para Botão Voltar (Global) */
 .btn-back-admin {
@@ -145,19 +145,19 @@
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-slate-200);
     border-radius: 10px;
-    color: #64748b;
+    color: var(--cor-slate-500);
     font-weight: 600;
     font-size: 0.85rem;
     transition: all 0.2s ease;
 }
 
 .btn-back-admin:hover {
-    border-color: #cbd5e1;
-    color: #1e293b;
-    background: #f8fafc;
+    border-color: var(--cor-slate-300);
+    color: var(--cor-slate-800);
+    background: var(--cor-slate-50);
     transform: translateX(-3px);
 }
 

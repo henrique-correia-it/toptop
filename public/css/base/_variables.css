@@ -1,6 +1,30 @@
 /* Contém todas as variáveis CSS para cores, sombras, etc. */
 :root {
-    /* Cores */
+    /* Cores Base & Escala Neutra (Fonte única de verdade — DRY) */
+    --cor-branco: #ffffff;
+    --cor-preto: #000000;
+    --cor-preto-suave: #111111;
+    --cor-ink: #1a1a1a;
+    --cor-creme: #faf8f4;
+    --cor-cinza-claro: #f0f0f0;
+    --cor-cinza-escuro: #333333;
+    --cor-cinza-texto: #666666;
+    --cor-slate-50: #f8fafc;
+    --cor-slate-100: #f1f5f9;
+    --cor-slate-200: #e2e8f0;
+    --cor-slate-300: #cbd5e1;
+    --cor-slate-400: #94a3b8;
+    --cor-slate-500: #64748b;
+    --cor-slate-600: #475569;
+    --cor-slate-800: #1e293b;
+    --cor-slate-900: #0f172a;
+    --cor-gray-900: #111827;
+    --cor-perigo: #ef4444;
+    --cor-perigo-bg: #fef2f2;
+    --cor-info: #2563eb;
+    --cor-sucesso-bg: #f0fdf4;
+
+    /* Cores Semânticas */
     --cor-texto: #1C1C1C;
     --cor-fundo: #FFFFFF;
     --cor-borda-subtil: #E5E5E5;

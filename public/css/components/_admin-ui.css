@@ -16,18 +16,18 @@
 }
 
 /* Variantes de cor genéricas */
-.badge-verde    { background: #f0fdf4; color: #15803d; border-color: #dcfce7; }
-.badge-vermelho { background: #fef2f2; color: #b91c1c; border-color: #fee2e2; }
+.badge-verde    { background: var(--cor-sucesso-bg); color: #15803d; border-color: #dcfce7; }
+.badge-vermelho { background: var(--cor-perigo-bg); color: #b91c1c; border-color: #fee2e2; }
 .badge-azul     { background: #eff6ff; color: #1d4ed8; border-color: #dbeafe; }
 .badge-amarelo  { background: #fff7ed; color: #c2410c; border-color: #ffedd5; }
 .badge-roxo     { background: #faf5ff; color: #7e22ce; border-color: #f3e8ff; }
 .badge-teal     { background: #f0fdfa; color: #0f766e; border-color: #ccfbf1; }
-.badge-cinzento { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
+.badge-cinzento { background: var(--cor-slate-50); color: var(--cor-slate-600); border-color: var(--cor-slate-200); }
 .badge-dourado  { background: #fefce8; color: #a16207; border-color: #fef08a; }
 
 /* Visibilidade (toggle em admin_produtos — classes mantidas para compat. JS) */
-.badge.visivel, .badge-status.visivel { background: #f0fdf4; color: #15803d; border-color: #dcfce7; }
-.badge.oculto,  .badge-status.oculto  { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
+.badge.visivel, .badge-status.visivel { background: var(--cor-sucesso-bg); color: #15803d; border-color: #dcfce7; }
+.badge.oculto,  .badge-status.oculto  { background: var(--cor-slate-50); color: var(--cor-slate-600); border-color: var(--cor-slate-200); }
 
 /* Badge interativo (toggle de visibilidade) */
 .badge.interativo, .badge-status.interativo {
@@ -63,8 +63,8 @@
 .sel-mode-bar.visible { display: flex; }
 
 .btn-sel-all {
-    background: #fff;
-    color: #2563eb;
+    background: var(--cor-branco);
+    color: var(--cor-info);
     border: 1px solid #bfdbfe;
     padding: 7px 14px;
     border-radius: 8px;
@@ -82,9 +82,9 @@
 }
 
 .btn-sel-all:hover {
-    background: #2563eb;
-    color: #fff;
-    border-color: #2563eb;
+    background: var(--cor-info);
+    color: var(--cor-branco);
+    border-color: var(--cor-info);
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
     transform: translateY(-1px);
 }
@@ -95,7 +95,7 @@
 
 .bulk-bar {
     position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%);
-    background: #000; color: #fff;
+    background: var(--cor-preto); color: var(--cor-branco);
     border-radius: 18px;
     padding: 12px 24px;
     display: flex; align-items: center; gap: 20px;
@@ -112,11 +112,11 @@
 /* ── Checkbox de seleção (partilhado) ── */
 .log-check-circle {
     width: 20px; height: 20px; border-radius: 50%;
-    border: 2px solid #cbd5e1;
+    border: 2px solid var(--cor-slate-300);
     display: inline-flex; align-items: center; justify-content: center;
     transition: all 0.2s; vertical-align: middle;
 }
-.log-check-circle svg { width: 12px; height: 12px; color: #fff; opacity: 0; }
+.log-check-circle svg { width: 12px; height: 12px; color: var(--cor-branco); opacity: 0; }
 
 /* ── Sel-mode genérico para todas as tabelas com .table-wrapper ── */
 .table-wrapper .col-sel                  { display: none; width: 40px; }
@@ -139,7 +139,7 @@
     left: 14px;
     top: 50%;
     transform: translateY(-50%);
-    color: #94a3b8;
+    color: var(--cor-slate-400);
     pointer-events: none;
     display: flex;
 }
@@ -148,7 +148,7 @@
     padding: 0 18px 0 40px;
     border-radius: 99px;
     border: 1px solid var(--cor-borda-subtil);
-    background: #fff;
+    background: var(--cor-branco);
     font-family: 'Inter', sans-serif;
     font-size: 0.85rem;
     font-weight: 500;
@@ -159,10 +159,10 @@
 }
 .search-input-toolbar:focus {
     outline: none;
-    border-color: #111;
+    border-color: var(--cor-preto-suave);
     box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.06);
 }
-.search-input-toolbar::placeholder { color: #94a3b8; }
+.search-input-toolbar::placeholder { color: var(--cor-slate-400); }
 /* remove o X nativo do type=search em webkit */
 .search-input-toolbar::-webkit-search-cancel-button { -webkit-appearance: none; }
 
@@ -172,12 +172,12 @@
     display: none;
     position: absolute; top: -5px; left: -5px;
     width: 20px; height: 20px;
-    background: #e2e8f0; border-radius: 50%;
-    border: 2px solid #fff;
+    background: var(--cor-slate-200); border-radius: 50%;
+    border: 2px solid var(--cor-branco);
     align-items: center; justify-content: center;
     box-shadow: 0 1px 4px rgba(0,0,0,.2);
 }
-.prod-check-badge svg { width: 11px; height: 11px; color: #fff; opacity: 0; }
+.prod-check-badge svg { width: 11px; height: 11px; color: var(--cor-branco); opacity: 0; }
 .sel-mode .prod-check-badge { display: flex; }
 .sel-mode tr.selecionado .prod-check-badge { background: #3b82f6; }
 .sel-mode tr.selecionado .prod-check-badge svg { opacity: 1; }

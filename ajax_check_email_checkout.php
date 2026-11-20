@@ -1,14 +1,22 @@
 <?php
 require_once __DIR__ . '/config/session.php';
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/csrf.php';
 require_once __DIR__ . '/config/http.php';
 require_once __DIR__ . '/config/cliente_auth.php';
+require_once __DIR__ . '/config/rate_limit.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    json_error('Pedido invalido.', 405);
+    json_error('Pedido inválido.', 405);
 }
 
 $dados = json_input();
+if (!csrf_from_array($dados)) {
+    json_error('Erro de segurança. Recarregue a página e tente novamente.', 403);
+}
+if (!rate_limit_allow('checkout_check_email', 20, 600)) {
+    json_error('Demasiados pedidos. Aguarde alguns minutos e tente novamente.', 429);
+}
 
 $email = customer_clean_email($dados['email'] ?? '');
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {

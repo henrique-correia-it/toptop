@@ -4,7 +4,7 @@
     position: fixed;
     display: none;
     z-index: 3000;
-    background: #fff;
+    background: var(--cor-branco);
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     border: 1px solid #edf2f7;
@@ -34,11 +34,11 @@
 
 .ctx-item:hover {
     background: #f7fafc;
-    color: #111;
+    color: var(--cor-preto-suave);
 }
 
 .ctx-item.danger, .ctx-item-danger {
-    color: #ef4444;
+    color: var(--cor-perigo);
 }
 
 .ctx-item.danger:hover, .ctx-item-danger:hover {

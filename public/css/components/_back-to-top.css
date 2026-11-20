@@ -5,8 +5,8 @@
     right: 32px;
     width: 52px;
     height: 52px;
-    background: linear-gradient(135deg, var(--cor-destaque, #1a1a1a) 0%, #333 100%);
-    color: #fff;
+    background: linear-gradient(135deg, var(--cor-destaque, #1a1a1a) 0%, var(--cor-cinza-escuro) 100%);
+    color: var(--cor-branco);
     border: none;
     border-radius: 50%;
     cursor: pointer;
@@ -45,7 +45,7 @@ body.app-panel-open .voltar-ao-topo-btn.ativo {
 }
 
 .voltar-ao-topo-btn:hover {
-    background: linear-gradient(135deg, #444 0%, #111 100%);
+    background: linear-gradient(135deg, #444 0%, var(--cor-preto-suave) 100%);
     transform: translateY(-4px) scale(1.08);
     box-shadow: 0 10px 32px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
 }

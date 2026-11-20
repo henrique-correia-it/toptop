@@ -229,7 +229,7 @@
 /* Modal de Confirmação */
 .modal-confirmacao { display: none; position: fixed; z-index: 20000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.6); align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
 .modal-confirmacao.ativo { display: flex; opacity: 1; pointer-events: auto; }
-.modal-confirmacao-conteudo { background-color: #fff; padding: 30px; border-radius: var(--border-radius-medio); width: 90%; max-width: 450px; text-align: center; box-shadow: var(--sombra-forte); /* MODIFICADO */ transform: scale(0.95); transition: transform 0.3s ease; }
+.modal-confirmacao-conteudo { background-color: var(--cor-branco); padding: 30px; border-radius: var(--border-radius-medio); width: 90%; max-width: 450px; text-align: center; box-shadow: var(--sombra-forte); /* MODIFICADO */ transform: scale(0.95); transition: transform 0.3s ease; }
 .modal-confirmacao.ativo .modal-confirmacao-conteudo { transform: scale(1); }
 .modal-confirmacao-conteudo h3 { margin-top: 0; margin-bottom: 15px; font-size: 1.4rem; }
 .modal-confirmacao-conteudo p { color: var(--cor-cinza-medio); margin-bottom: 30px; font-size: 1rem; line-height: 1.6; }
@@ -280,7 +280,7 @@
     align-items: center;
     border: 1px solid var(--cor-borda-subtil);
     border-radius: 25px; /* Arredondado como no carrinho */
-    background-color: #fff;
+    background-color: var(--cor-branco);
     height: 48px;
     transition: box-shadow 0.2s ease;
 }
@@ -454,7 +454,7 @@
     object-fit: cover;
     border: 1px solid #e2e8ef;
     border-radius: 12px;
-    background: #fff;
+    background: var(--cor-branco);
     opacity: 0.72;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
 }
@@ -550,7 +550,7 @@
     padding: 0 44px 0 16px;
     border: 1px solid #dfe3ea;
     border-radius: 999px;
-    background-color: #fff;
+    background-color: var(--cor-branco);
     color: var(--cor-texto);
     font-size: 0.92rem;
     font-weight: 600;
@@ -558,7 +558,7 @@
 
 .modal .select-estilizado:focus {
     outline: none;
-    border-color: #111;
+    border-color: var(--cor-preto-suave);
     box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.06);
 }
 
@@ -705,7 +705,7 @@
     padding: 8px;
     border: 1px solid #eef1f4;
     border-radius: 14px;
-    background: #fff;
+    background: var(--cor-branco);
     text-align: left;
     box-shadow: 0 8px 20px rgba(16, 24, 39, 0.04);
 }
@@ -917,13 +917,13 @@
 
 .modal .meta-item {
     border-color: var(--product-line);
-    background: color-mix(in srgb, var(--product-surface) 82%, #fff 18%);
+    background: color-mix(in srgb, var(--product-surface) 82%, var(--cor-branco) 18%);
 }
 
 .modal .select-estilizado,
 .modal .seletor-quantidade .input-wrapper {
     border-color: var(--product-line);
-    background-color: color-mix(in srgb, #fff 88%, var(--cor-fundo-pagina, #FAF8F4) 12%);
+    background-color: color-mix(in srgb, var(--cor-branco) 88%, var(--cor-fundo-pagina, #FAF8F4) 12%);
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.72) inset;
 }
 

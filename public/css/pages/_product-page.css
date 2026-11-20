@@ -24,7 +24,7 @@
     padding: 6px 12px;
     border: 1px solid #edf0f3;
     border-radius: 999px;
-    background: #fff;
+    background: var(--cor-branco);
     color: var(--cor-cinza-medio);
     text-decoration: none;
 }
@@ -112,7 +112,7 @@
     width: 100%;
     border: 1px solid #e4e8ed;
     border-radius: 12px;
-    background: #fff;
+    background: var(--cor-branco);
     object-fit: cover;
     opacity: 0.72;
     cursor: pointer;
@@ -181,7 +181,7 @@
     padding: 7px 12px;
     border: 1px solid #e6ebf0;
     border-radius: 999px;
-    background: #fff;
+    background: var(--cor-branco);
     color: #5f6874;
     font-size: 0.84rem;
     font-weight: 650;
@@ -206,7 +206,7 @@
 }
 
 .meta-item.stock-out {
-    background-color: #fef2f2;
+    background-color: var(--cor-perigo-bg);
     color: var(--cor-erro);
     border-color: #fecaca;
 }
@@ -253,7 +253,7 @@
     padding: 0 44px 0 16px;
     border: 1px solid #dfe3ea;
     border-radius: 999px;
-    background-color: #fff;
+    background-color: var(--cor-branco);
     color: var(--cor-texto);
     font-size: 0.92rem;
     font-weight: 600;
@@ -261,7 +261,7 @@
 
 .pagina-produto-detalhe .select-estilizado:focus {
     outline: none;
-    border-color: #111;
+    border-color: var(--cor-preto-suave);
     box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.06);
 }
 
@@ -285,7 +285,7 @@
     overflow: hidden;
     border: 1px solid #e5e9ef;
     border-radius: 16px;
-    background: #fff;
+    background: var(--cor-branco);
 }
 
 .detalhes-produto-acordeao .acordeao-header {
@@ -396,7 +396,7 @@
     padding: 8px;
     border: 1px solid #eef1f4;
     border-radius: 14px;
-    background: #fff;
+    background: var(--cor-branco);
     color: var(--cor-texto);
     text-align: left;
     box-shadow: 0 8px 20px rgba(16, 24, 39, 0.04);
@@ -617,13 +617,13 @@
 
 .pagina-produto-detalhe .meta-item {
     border-color: var(--product-line);
-    background: color-mix(in srgb, var(--product-surface) 82%, #fff 18%);
+    background: color-mix(in srgb, var(--product-surface) 82%, var(--cor-branco) 18%);
 }
 
 .pagina-produto-detalhe .select-estilizado,
 .pagina-produto-detalhe .seletor-quantidade .input-wrapper {
     border-color: var(--product-line);
-    background-color: color-mix(in srgb, #fff 88%, var(--cor-fundo-pagina, #FAF8F4) 12%);
+    background-color: color-mix(in srgb, var(--cor-branco) 88%, var(--cor-fundo-pagina, #FAF8F4) 12%);
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.72) inset;
 }
 

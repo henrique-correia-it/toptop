@@ -57,7 +57,7 @@
 }
 
 .mensagem-card {
-    background-color: #fff;
+    background-color: var(--cor-branco);
     border: 1px solid var(--cor-borda-subtil);
     border-radius: 8px;
     box-shadow: var(--sombra-subtil);
@@ -68,7 +68,7 @@
 }
 
 .mensagem-card:hover {
-    border-color: #cbd5e1;
+    border-color: var(--cor-slate-300);
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
     transform: translateY(-1px);
 }
@@ -92,7 +92,7 @@
     justify-content: space-between;
     align-items: flex-start;
     padding: 15px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--cor-cinza-claro);
 }
 
 .remetente {
@@ -141,7 +141,7 @@
 
 .card-footer {
     padding: 15px;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--cor-cinza-claro);
     background-color: #fdfdfd;
     display: flex;
     justify-content: space-between; /* Alinha botões nas extremidades */

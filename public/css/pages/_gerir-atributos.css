@@ -16,7 +16,7 @@
 
 /* --- Formulário de Adicionar Grupo (Novo Estilo) --- */
 .add-group-card {
-    background: #fff;
+    background: var(--cor-branco);
     border: 1px solid var(--cor-borda-subtil);
     border-radius: 12px;
     padding: 25px;
@@ -61,7 +61,7 @@
 }
 
 .attribute-card {
-    background: #fff;
+    background: var(--cor-branco);
     border: 1px solid var(--cor-borda-subtil);
     border-radius: 12px;
     overflow: hidden;
@@ -77,7 +77,7 @@
 /* Header do Card */
 .attribute-card-header {
     padding: 20px 25px;
-    background: #fff;
+    background: var(--cor-branco);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -118,7 +118,7 @@
     padding: 3px 8px;
     border-radius: 4px;
     background: #f1f3f5;
-    color: #666;
+    color: var(--cor-cinza-texto);
     text-transform: uppercase;
     font-weight: 700;
 }
@@ -219,7 +219,7 @@
     position: relative;
     padding: 5px;
     margin: -5px;
-    background-color: #fff;
+    background-color: var(--cor-branco);
     border: 1px solid var(--cor-texto);
     border-radius: 8px;
     z-index: 100;
@@ -259,13 +259,13 @@
 
 .editable-container .save-btn {
     background: var(--cor-texto);
-    color: #fff;
+    color: var(--cor-branco);
     border: none;
 }
 
 .editable-container .cancel-btn {
     background: #f8f9fa;
-    color: #666;
+    color: var(--cor-cinza-texto);
     border: 1px solid #ddd;
 }
 

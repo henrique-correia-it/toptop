@@ -218,9 +218,9 @@ input[type="submit"]:hover {
 .gal-btn-del-all.show,
 .action-btn-pill.btn-danger {
     --button-border: #fee2e2;
-    --button-color: #ef4444;
-    --button-icon-color: #ef4444;
-    --button-hover-bg: #fef2f2;
+    --button-color: var(--cor-perigo);
+    --button-icon-color: var(--cor-perigo);
+    --button-hover-bg: var(--cor-perigo-bg);
     --button-hover-border: #fecaca;
     --button-hover-color: #dc2626;
     --button-hover-icon-color: #dc2626;

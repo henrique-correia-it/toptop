@@ -86,38 +86,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
 
-            // 3. Processar novas imagens
-            $tipos_imagem_permitidos = [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP, IMAGETYPE_GIF];
+            // 3. Processar novas imagens (helper DRY)
+            require_once __DIR__ . '/includes/image_upload.php';
             $novas_imagens_info = json_decode($_POST['imagens_cortadas_json'] ?? '[]', true);
-            $mapa_placeholder_para_nome_novo = [];
             $ficheiros_novos_criados = [];
-            foreach ($novas_imagens_info as $img_info) {
-                $placeholder    = $img_info['placeholder'];
-                $base64_raw     = preg_replace('#^data:image/\w+;base64,#i', '', $img_info['dados'] ?? '');
-                $dados_binarios = base64_decode($base64_raw, true);
-
-                if ($dados_binarios === false || strlen($dados_binarios) < 12 || strlen($dados_binarios) > 5 * 1024 * 1024) {
-                    throw new Exception("Dados de imagem inválidos ou corrompidos.");
-                }
-
-                // Valida que o conteúdo binário é realmente uma imagem
-                $info_imagem = @getimagesizefromstring($dados_binarios);
-                if ($info_imagem === false || !in_array($info_imagem[2], $tipos_imagem_permitidos, true)) {
-                    throw new Exception("O ficheiro enviado não é uma imagem válida (JPEG, PNG, WEBP ou GIF).");
-                }
-
-                $ext_map = [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_WEBP => 'webp', IMAGETYPE_GIF => 'gif'];
-                $ext_real = $ext_map[$info_imagem[2]] ?? 'jpg';
-                $nome_ficheiro_novo = uniqid('img_', true) . "." . $ext_real;
-                $caminho_absoluto   = __DIR__ . '/../public/images/' . $nome_ficheiro_novo;
-
-                if (file_put_contents($caminho_absoluto, $dados_binarios) === false) {
-                    throw new Exception("Erro ao guardar a imagem. Verifique as permissões da pasta public/images no servidor.");
-                }
-
-                $ficheiros_novos_criados[] = $caminho_absoluto;
-                $mapa_placeholder_para_nome_novo[$placeholder] = $nome_ficheiro_novo;
-            }
+            $mapa_placeholder_para_nome_novo = is_array($novas_imagens_info)
+                ? salvar_imagens_base64_produto($novas_imagens_info, __DIR__ . '/../public/images', $ficheiros_novos_criados)
+                : [];
 
             // 4. Determinar a lista final e a ordem dos nomes de ficheiro
             $ordem_final_js = json_decode($_POST['ordem_imagens_json'] ?? '[]', true);

@@ -4,6 +4,31 @@ header("Cache-Control: public, max-age=31536000, immutable");
 
 // Versão mantida por compatibilidade (cache-busting feito via ?v= no <link> do header).
 $v = isset($_GET['v']) ? preg_replace('/[^0-9]/', '', $_GET['v']) : '1';
+$scope = (($_GET['scope'] ?? 'full') === 'public') ? 'public' : 'full';
+
+// Parciais exclusivamente usados no backoffice/dev ou por admins em modo de edição
+$adminOnlyPartials = [
+    'layout/_admin-layout.css'        => true,
+    'components/_admin-table.css'     => true,
+    'components/_admin-ui.css'        => true,
+    'components/_context-menu.css'    => true,
+    'components/_editable-content.css'=> true,
+    'pages/_gerir-atributos.css'      => true,
+    'pages/_dashboard.css'            => true,
+    'pages/_encomendas.css'           => true,
+    'pages/_gestor-emails.css'        => true,
+    'pages/_form-produto.css'         => true,
+    'pages/_mensagens.css'            => true,
+    'pages/_uso-armazenamento.css'    => true,
+    'pages/_editar-admin.css'         => true,
+    'pages/_login-logs.css'           => true,
+    'pages/_portes.css'               => true,
+    'pages/_paleta-cores.css'         => true,
+    'pages/_admin-produtos.css'       => true,
+    'pages/_galeria-imagens.css'      => true,
+    'pages/_gerir_categorias.css'     => true,
+    'pages/_ver-logs.css'             => true,
+];
 
 /* ==========================================================================
    FICHEIRO MESTRE - TOPTOP (BUNDLE)
@@ -78,6 +103,9 @@ $partials = [
 
 $baseDir = __DIR__ . '/';
 foreach ($partials as $rel) {
+    if ($scope === 'public' && isset($adminOnlyPartials[$rel])) {
+        continue;
+    }
     $path = $baseDir . $rel;
     if (is_file($path)) {
         echo "\n/* === " . $rel . " === */\n";

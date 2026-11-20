@@ -10,8 +10,8 @@
 
 /* ── Estilo dos Cards ── */
 .form-card {
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-slate-300);
     border-radius: 16px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     margin-bottom: 30px;
@@ -20,14 +20,14 @@
 }
 
 .form-card:hover {
-    border-color: #94a3b8;
+    border-color: var(--cor-slate-400);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
 }
 
 .form-card-header {
     padding: 20px 24px;
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
+    background: var(--cor-slate-50);
+    border-bottom: 1px solid var(--cor-slate-200);
 }
 
 .form-card-header h3 {
@@ -36,7 +36,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #000;
+    color: var(--cor-preto);
     display: flex;
     align-items: center;
 }
@@ -58,7 +58,7 @@
     display: block;
     font-size: 0.8rem;
     font-weight: 700;
-    color: #000;
+    color: var(--cor-preto);
     margin-bottom: 10px;
     text-transform: uppercase;
     letter-spacing: 0.02em;
@@ -71,11 +71,11 @@
 .form-group select {
     width: 100%;
     padding: 12px 16px;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--cor-slate-300);
     border-radius: 10px;
     font-size: 0.95rem;
-    color: #000;
-    background: #ffffff;
+    color: var(--cor-preto);
+    background: var(--cor-branco);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
@@ -92,7 +92,7 @@
     margin-top: 25px;
     padding: 25px;
     background: #fcfcfd;
-    border: 2px dashed #cbd5e1;
+    border: 2px dashed var(--cor-slate-300);
     border-radius: 14px;
     min-height: 180px;
 }
@@ -102,8 +102,8 @@
     border-radius: 12px;
     overflow: hidden;
     aspect-ratio: 1;
-    background: #fff;
-    border: 1px solid #cbd5e1;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-slate-300);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     transition: transform 0.2s ease;
 }
@@ -127,8 +127,8 @@
     position: absolute;
     top: 10px;
     left: 10px;
-    background: #000;
-    color: #fff;
+    background: var(--cor-preto);
+    color: var(--cor-branco);
     font-size: 0.65rem;
     font-weight: 800;
     text-transform: uppercase;
@@ -142,8 +142,8 @@
 /* ── Drag & Drop Sortable ── */
 .sortable-ghost {
     opacity: 0.3;
-    background: #f1f5f9;
-    border: 2px dashed #000 !important;
+    background: var(--cor-slate-100);
+    border: 2px dashed var(--cor-preto) !important;
 }
 
 /* Botão de Remover (Caixote do Lixo) - Base */
@@ -151,7 +151,7 @@
 .remover-preview-btn {
     background: none;
     border: none;
-    color: #94a3b8;
+    color: var(--cor-slate-400);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -165,8 +165,8 @@
     position: absolute;
     top: 8px;
     right: 8px;
-    background: #ef4444;
-    color: #ffffff;
+    background: var(--cor-perigo);
+    color: var(--cor-branco);
     border: none;
     width: 28px;
     height: 28px;
@@ -195,7 +195,7 @@
 }
 
 .btn-remover-atributo:hover {
-    color: #ef4444;
+    color: var(--cor-perigo);
     background: #fee2e2;
     transform: scale(1.1);
 }
@@ -216,7 +216,7 @@
     padding: 0 44px 0 16px;
     border: 1px solid #dfe3ea;
     border-radius: 999px;
-    background-color: #fff;
+    background-color: var(--cor-branco);
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
     font-size: 0.92rem;
     font-weight: 600;
@@ -229,8 +229,8 @@
     top: 50%;
     width: 7px;
     height: 7px;
-    border-right: 1.8px solid #111;
-    border-bottom: 1.8px solid #111;
+    border-right: 1.8px solid var(--cor-preto-suave);
+    border-bottom: 1.8px solid var(--cor-preto-suave);
     transform: translateY(-60%) rotate(45deg);
     transform-origin: 60% 60%;
     pointer-events: none;
@@ -242,7 +242,7 @@
 }
 
 .select-wrapper:focus-within::after {
-    border-color: #000;
+    border-color: var(--cor-preto);
 }
 
 /* ── Atributos Padrão (Pílulas) ── */
@@ -262,26 +262,26 @@
     display: inline-flex;
     align-items: center;
     padding: 8px 18px;
-    background: #f8fafc;
-    border: 1px solid #cbd5e1;
+    background: var(--cor-slate-50);
+    border: 1px solid var(--cor-slate-300);
     border-radius: 50px;
     font-size: 0.85rem;
     font-weight: 500;
-    color: #475569;
+    color: var(--cor-slate-600);
     transition: all 0.2s ease;
 }
 
 .atributo-bloco-valores input:checked+label,
 .atributo-bloco-valores label:has(input:checked) {
-    background: #000;
-    border-color: #000;
-    color: #fff;
+    background: var(--cor-preto);
+    border-color: var(--cor-preto);
+    color: var(--cor-branco);
 }
 
 /* ── Estilos de Blocos de Atributos (Cards) ── */
 .atributo-bloco {
-    background: #ffffff;
-    border: 1px solid #e2e8f0 !important;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-slate-200) !important;
     /* Forçar borda pois é um fieldset */
     border-radius: 16px;
     padding: 24px;
@@ -291,7 +291,7 @@
 }
 
 .atributo-bloco:hover {
-    border-color: #cbd5e1 !important;
+    border-color: var(--cor-slate-300) !important;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.04);
     transform: translateY(-2px);
 }
@@ -302,13 +302,13 @@
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 12px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--cor-slate-100);
 }
 
 .atributo-bloco-header legend {
     font-size: 0.85rem;
     font-weight: 800;
-    color: #1e293b;
+    color: var(--cor-slate-800);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     float: none;
@@ -328,27 +328,27 @@
     padding: 12px 16px !important;
     font-size: 0.9rem !important;
     border-radius: 10px !important;
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid var(--cor-slate-200) !important;
     background: #fdfdfd !important;
 }
 
 .input-nome-personalizado:focus,
 .input-valores-personalizado:focus {
-    background: #fff !important;
-    border-color: #000 !important;
+    background: var(--cor-branco) !important;
+    border-color: var(--cor-preto) !important;
 }
 
 
 .atributos-divisor {
     border: 0;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid var(--cor-slate-200);
     margin: 25px 0;
 }
 
 /* ── Gestão de Variações (Premium Look) ── */
 .variacoes-controlos {
     background: #fdfdfd;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--cor-slate-200);
     border-radius: 16px;
     padding: 24px;
     margin-bottom: 30px;
@@ -360,7 +360,7 @@
     margin-bottom: 20px;
     font-size: 0.85rem;
     font-weight: 800;
-    color: #1e293b;
+    color: var(--cor-slate-800);
     text-transform: uppercase;
     display: flex;
     align-items: center;
@@ -375,8 +375,8 @@
     justify-content: center;
     width: 24px;
     height: 24px;
-    background: #000;
-    color: #fff;
+    background: var(--cor-preto);
+    color: var(--cor-branco);
     border-radius: 50%;
     font-size: 11px;
     font-weight: 900;
@@ -391,12 +391,12 @@
     display: inline-flex;
     align-items: center;
     padding: 10px 20px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-slate-200);
     border-radius: 50px;
     font-size: 0.85rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--cor-slate-500);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     user-select: none;
     margin-right: 12px;
@@ -405,23 +405,23 @@
 }
 
 .variacoes-controlos label:hover {
-    border-color: #cbd5e1;
-    background: #f8fafc;
-    color: #1e293b;
+    border-color: var(--cor-slate-300);
+    background: var(--cor-slate-50);
+    color: var(--cor-slate-800);
     transform: translateY(-1px);
 }
 
 .variacoes-controlos label:has(input:checked),
 .variacoes-controlos input:checked+label {
-    background: #000;
-    border-color: #000;
-    color: #fff;
+    background: var(--cor-preto);
+    border-color: var(--cor-preto);
+    color: var(--cor-branco);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* ── Contentor de Stock Simples (Elegante e Integrado) ── */
 #stock-simples-container {
-    background: #ffffff;
+    background: var(--cor-branco);
     padding: 20px 0 40px 0;
     display: flex;
     flex-direction: column;
@@ -435,7 +435,7 @@
     margin: 0;
     font-size: 0.8rem;
     font-weight: 700;
-    color: #64748b;
+    color: var(--cor-slate-500);
     text-transform: uppercase;
     letter-spacing: 0.1em;
 }
@@ -455,16 +455,16 @@
     font-weight: 200 !important;
     text-align: center !important;
     border: none !important;
-    border-bottom: 2px solid #f1f5f9 !important;
+    border-bottom: 2px solid var(--cor-slate-100) !important;
     background: transparent !important;
-    color: #000 !important;
+    color: var(--cor-preto) !important;
     border-radius: 0 !important;
     padding: 0 !important;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 #stock-simples-container input:focus {
-    border-bottom-color: #000 !important;
+    border-bottom-color: var(--cor-preto) !important;
     outline: none !important;
     box-shadow: none !important;
     transform: scale(1.05);
@@ -481,7 +481,7 @@
     content: 'UNIDADES DISPONÍVEIS';
     font-size: 0.7rem;
     font-weight: 800;
-    color: #cbd5e1;
+    color: var(--cor-slate-300);
     text-transform: uppercase;
     letter-spacing: 0.2em;
     margin-top: 25px;
@@ -489,7 +489,7 @@
 }
 
 #stock-simples-container:focus-within::after {
-    color: #64748b;
+    color: var(--cor-slate-500);
 }
 
 
@@ -513,13 +513,13 @@
 }
 
 .variacoes-table th {
-    background: #f1f5f9;
+    background: var(--cor-slate-100);
     padding: 12px 20px;
     font-size: 0.7rem;
     font-weight: 800;
     text-transform: uppercase;
-    color: #94a3b8;
-    border-bottom: 1px solid #e2e8f0;
+    color: var(--cor-slate-400);
+    border-bottom: 1px solid var(--cor-slate-200);
     text-align: center;
     /* Centrado */
     letter-spacing: 0.05em;
@@ -527,11 +527,11 @@
 
 .variacoes-table td {
     padding: 10px 15px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--cor-slate-100);
     vertical-align: middle;
     text-align: center;
     /* Centrado */
-    color: #1e293b;
+    color: var(--cor-slate-800);
     transition: background-color 0.2s ease;
 }
 
@@ -546,7 +546,7 @@
 /* ── Alinhamento de Colunas ── */
 .col-atributo {
     font-weight: 700;
-    color: #000 !important;
+    color: var(--cor-preto) !important;
 }
 
 .col-stock {
@@ -571,25 +571,25 @@
 .variacao-input {
     width: 100% !important;
     padding: 8px 12px !important;
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid var(--cor-slate-200) !important;
     border-radius: 10px !important;
     font-size: 0.85rem !important;
     font-weight: 600 !important;
-    background: #ffffff !important;
-    color: #1e293b !important;
+    background: var(--cor-branco) !important;
+    color: var(--cor-slate-800) !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .variacao-input:focus {
-    border-color: #000 !important;
+    border-color: var(--cor-preto) !important;
     box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.04) !important;
-    background-color: #fff !important;
+    background-color: var(--cor-branco) !important;
 }
 
 .col-stock .variacao-input {
     text-align: center;
     font-weight: 800 !important;
-    color: #000 !important;
+    color: var(--cor-preto) !important;
 }
 
 .variacao-imagens-container {
@@ -608,13 +608,13 @@
     height: 64px;
     border-radius: 10px;
     overflow: hidden;
-    border: 2px solid #f1f5f9;
+    border: 2px solid var(--cor-slate-100);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    background: #fff;
+    background: var(--cor-branco);
 }
 
 .variacao-imagem-thumbnail:hover {
-    border-color: #cbd5e1;
+    border-color: var(--cor-slate-300);
     transform: scale(1.2);
     /* Zoom mais agressivo ao passar o rato */
     z-index: 10;
@@ -640,11 +640,11 @@
 
 .sem-imagens-aviso {
     font-size: 0.8rem;
-    color: #94a3b8;
-    background: #f8fafc;
+    color: var(--cor-slate-400);
+    background: var(--cor-slate-50);
     padding: 8px 16px;
     border-radius: 10px;
-    border: 1px dashed #cbd5e1;
+    border: 1px dashed var(--cor-slate-300);
     width: 100%;
     text-align: center;
 }
@@ -652,11 +652,11 @@
 .variacoes-placeholder {
     padding: 40px 20px;
     text-align: center;
-    background: #f8fafc;
+    background: var(--cor-slate-50);
     border-radius: 20px;
-    color: #64748b;
+    color: var(--cor-slate-500);
     font-size: 0.95rem;
-    border: 2px dashed #e2e8f0;
+    border: 2px dashed var(--cor-slate-200);
     margin: 20px 0;
 }
 
@@ -680,8 +680,8 @@
 }
 
 #btn-add-grupo-standard {
-    background: #000;
-    color: #fff;
+    background: var(--cor-preto);
+    color: var(--cor-branco);
     border: none;
     border-radius: 10px;
     font-weight: 700;
@@ -690,9 +690,9 @@
 
 .btn-add-full {
     width: 100%;
-    background: #f8fafc;
-    color: #475569;
-    border: 1px solid #cbd5e1;
+    background: var(--cor-slate-50);
+    color: var(--cor-slate-600);
+    border: 1px solid var(--cor-slate-300);
     padding: 15px;
     border-radius: 10px;
     font-weight: 600;
@@ -703,13 +703,13 @@
     display: flex;
     justify-content: flex-end;
     padding: 30px 0 30px 0;
-    border-top: 1px solid #cbd5e1;
+    border-top: 1px solid var(--cor-slate-300);
 }
 
 .form-actions input[type="submit"] {
     padding: 16px 60px;
-    background: #000;
-    color: #fff;
+    background: var(--cor-preto);
+    color: var(--cor-branco);
     border: none;
     border-radius: 12px;
     font-size: 1.1rem;
@@ -738,7 +738,7 @@
 }
 
 .modal-cropper-conteudo {
-    background: #ffffff;
+    background: var(--cor-branco);
     border-radius: 16px;
     padding: 24px;
     width: 90%;
@@ -755,7 +755,7 @@
     margin: 0;
     font-size: 0.9rem;
     font-weight: 600;
-    color: #000;
+    color: var(--cor-preto);
     text-align: center;
 }
 

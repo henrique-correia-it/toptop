@@ -86,7 +86,7 @@
 }
 
 .sidebar-desktop-header svg {
-    color: #000;
+    color: var(--cor-preto);
 }
 
 .sidebar-desktop-header span {
@@ -94,7 +94,7 @@
     font-weight: 800;
     text-transform: lowercase;
     letter-spacing: -0.02em;
-    color: #000;
+    color: var(--cor-preto);
 }
 
 /* ── Acordeão de Filtros ── */
@@ -114,7 +114,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #000;
+    color: var(--cor-preto);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -174,13 +174,13 @@
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 500;
-    color: #64748b; /* Slate 500 */
+    color: var(--cor-slate-500); /* Slate 500 */
     transition: all 0.2s ease;
     user-select: none;
 }
 
 .filtro-checkbox:hover {
-    color: #000;
+    color: var(--cor-preto);
 }
 
 .filtro-checkbox input[type="checkbox"] {
@@ -190,7 +190,7 @@
 .custom-checkbox {
     width: 20px;
     height: 20px;
-    border: 1.5px solid #e2e8f0;
+    border: 1.5px solid var(--cor-slate-200);
     border-radius: 6px;
     margin-right: 12px;
     position: relative;
@@ -198,12 +198,12 @@
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
-    background-color: #fff;
+    background-color: var(--cor-branco);
     flex-shrink: 0;
 }
 
 .filtro-checkbox:hover .custom-checkbox {
-    border-color: #cbd5e1;
+    border-color: var(--cor-slate-300);
 }
 
 .filtro-checkbox input[type="checkbox"]:checked + .custom-checkbox {
@@ -217,14 +217,14 @@
 }
 
 .filtro-checkbox input[type="checkbox"]:checked ~ .filtro-label-text {
-    color: #000;
+    color: var(--cor-preto);
     font-weight: 600;
 }
 
 /* Checkbox Destaque (Apenas promoções) */
 .filtro-checkbox.principal {
     font-weight: 600;
-    color: #111;
+    color: var(--cor-preto-suave);
 }
 
 /* ── Ações de Filtro ── */
@@ -246,7 +246,7 @@
     text-align: left;
     font-size: 0.85rem;
     font-weight: 650;
-    color: #64748b !important;
+    color: var(--cor-slate-500) !important;
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 4px;
@@ -396,7 +396,7 @@
     .filtro-sort-mobile label {
         display: block;
         margin-bottom: 10px;
-        color: #111;
+        color: var(--cor-preto-suave);
         font-size: 0.78rem;
         font-weight: 800;
         letter-spacing: 0.08em;
@@ -412,8 +412,8 @@
         min-height: 46px;
         border: 1px solid #dfe3ea;
         border-radius: 999px;
-        background-color: #fff;
-        color: #111;
+        background-color: var(--cor-branco);
+        color: var(--cor-preto-suave);
         font-size: 0.92rem;
         font-weight: 600;
         padding: 0 44px 0 16px;
@@ -466,18 +466,18 @@
     .site-bg-dark .filtros-sidebar .filtro-sort-mobile label,
     .site-bg-dark .filtros-sidebar .filtro-checkbox.principal,
     .site-bg-dark .filtros-sidebar .filtro-checkbox input[type="checkbox"]:checked ~ .filtro-label-text {
-        color: #111827;
+        color: var(--cor-gray-900);
     }
 
     .site-bg-dark .filtros-sidebar .filtro-checkbox,
     .site-bg-dark .filtros-sidebar .filtro-acoes .link-limpar {
-        color: #64748b !important;
+        color: var(--cor-slate-500) !important;
     }
 
     .site-bg-dark .filtros-sidebar .filtro-checkbox:hover,
     .site-bg-dark .filtros-sidebar .filtro-titulo:hover,
     .site-bg-dark .filtros-sidebar .filtro-acoes .link-limpar:hover {
-        color: #111827 !important;
+        color: var(--cor-gray-900) !important;
     }
     
     .filtros-mobile-header {
@@ -487,7 +487,7 @@
         flex-shrink: 0;
         padding: 30px 22px 18px;
         border-bottom: 1px solid var(--cor-divisor-cartao);
-        background-color: #fff;
+        background-color: var(--cor-branco);
         position: relative;
         cursor: grab;
         touch-action: none;
@@ -518,12 +518,12 @@
     .btn-fechar-filtros {
         width: 38px;
         height: 38px;
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
+        background: var(--cor-slate-50) !important;
+        border: 1px solid var(--cor-slate-200) !important;
         border-radius: 50%;
         font-size: 1.55rem;
         line-height: 1;
-        color: #111;
+        color: var(--cor-preto-suave);
         cursor: pointer;
         padding: 0 !important;
         display: inline-flex;
@@ -531,8 +531,8 @@
         justify-content: center;
     }
     .btn-fechar-filtros:hover {
-        background: #f1f5f9 !important;
-        color: #111;
+        background: var(--cor-slate-100) !important;
+        color: var(--cor-preto-suave);
         transform: none !important;
     }
     
@@ -575,7 +575,7 @@
 
     .filtro-acoes .link-limpar {
         background: transparent !important;
-        color: #64748b !important;
+        color: var(--cor-slate-500) !important;
         box-shadow: none !important;
         border: 0 !important;
         padding: 0 !important;
@@ -596,7 +596,7 @@
         font-weight: 700 !important;
         letter-spacing: 0.08em !important;
         text-transform: uppercase !important;
-        background-color: #fff !important;
+        background-color: var(--cor-branco) !important;
         color: var(--cor-texto) !important;
         border: 1px solid #dfe3ea !important;
         border-radius: 999px !important;
@@ -604,7 +604,7 @@
         transform: none !important;
     }
     .botao-filtros-mobile:hover {
-        background-color: #f8fafc !important;
+        background-color: var(--cor-slate-50) !important;
         transform: none !important;
     }
     .botao-filtros-mobile svg {

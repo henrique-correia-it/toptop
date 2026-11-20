@@ -42,7 +42,7 @@
 .admin-page-header .btn-back-arrow:hover {
     background: var(--cor-accent, #B08968);
     border-color: var(--cor-accent, #B08968);
-    color: #fff;
+    color: var(--cor-branco);
     transform: translateX(-4px);
 }
 

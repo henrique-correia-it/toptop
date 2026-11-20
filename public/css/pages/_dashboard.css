@@ -31,20 +31,20 @@
     font-size: 2.2rem;
     font-weight: 900;
     letter-spacing: -0.04em;
-    color: #000;
+    color: var(--cor-preto);
     line-height: 1.1;
 }
 
 .header-welcome p {
     margin: 0;
-    color: #64748b;
+    color: var(--cor-slate-500);
     font-size: 1.05rem;
     font-weight: 500;
     letter-spacing: -0.01em;
 }
 
 .header-welcome p strong {
-    color: #000;
+    color: var(--cor-preto);
     font-weight: 700;
     background: transparent;
     padding: 0;
@@ -72,24 +72,24 @@
 }
 
 .dashboard-header .header-actions .edit-btn {
-    background: #000;
-    color: #fff;
-    border: 1px solid #000;
+    background: var(--cor-preto);
+    color: var(--cor-branco);
+    border: 1px solid var(--cor-preto);
 }
 
 .dashboard-header .header-actions .edit-btn:hover {
     background: transparent;
-    color: #000;
+    color: var(--cor-preto);
 }
 
 .dashboard-header .header-actions .voltar-btn {
-    background: #fff;
-    color: #000;
+    background: var(--cor-branco);
+    color: var(--cor-preto);
     border: 1px solid var(--cor-borda-subtil);
 }
 
 .dashboard-header .header-actions .voltar-btn:hover {
-    border-color: #000;
+    border-color: var(--cor-preto);
     background: #fafafa;
 }
 
@@ -102,7 +102,7 @@
 }
 
 .stat-card {
-    background: #fff;
+    background: var(--cor-branco);
     border: 1px solid var(--cor-borda-subtil);
     border-radius: 24px;
     padding: 32px;
@@ -119,7 +119,7 @@
 .stat-card:hover {
     transform: translateY(-6px);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.06);
-    border-color: #000;
+    border-color: var(--cor-preto);
 }
 
 .stat-card-icon {
@@ -131,13 +131,13 @@
     justify-content: center;
     flex-shrink: 0;
     transition: all 0.4s ease;
-    background: #f8fafc;
-    color: #000;
+    background: var(--cor-slate-50);
+    color: var(--cor-preto);
 }
 
 .stat-card:hover .stat-card-icon {
-    background: #000;
-    color: #fff;
+    background: var(--cor-preto);
+    color: var(--cor-branco);
     transform: scale(1.05);
 }
 
@@ -149,7 +149,7 @@
 
 /* Variações de cor ultra-clean */
 .stat-card:nth-of-type(1):hover {
-    border-color: #000;
+    border-color: var(--cor-preto);
 }
 
 .stat-card:nth-of-type(2):hover {
@@ -180,7 +180,7 @@
     font-size: 2rem;
     font-weight: 800;
     line-height: 1;
-    color: #000;
+    color: var(--cor-preto);
     display: block;
     margin-bottom: 6px;
     letter-spacing: -0.04em;
@@ -189,7 +189,7 @@
 .stat-card-info .stat-label {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #94a3b8;
+    color: var(--cor-slate-400);
     text-transform: uppercase;
     letter-spacing: 0.08em;
 }
@@ -205,10 +205,10 @@
 .dashboard-section-title {
     font-size: 0.9rem;
     font-weight: 800;
-    color: #000;
+    color: var(--cor-preto);
     margin: 0 0 25px;
     padding-bottom: 15px;
-    border-bottom: 2px solid #000;
+    border-bottom: 2px solid var(--cor-preto);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     display: flex;
@@ -233,16 +233,16 @@
     align-items: flex-start;
     gap: 20px;
     padding: 25px;
-    background: #fff;
+    background: var(--cor-branco);
     border-radius: 18px;
     border: 1px solid var(--cor-borda-subtil);
     text-decoration: none;
-    color: #000;
+    color: var(--cor-preto);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-card:hover {
-    border-color: #000;
+    border-color: var(--cor-preto);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
     transform: translateX(5px);
 }
@@ -250,19 +250,19 @@
 .nav-card-icon {
     width: 44px;
     height: 44px;
-    background: #f8fafc;
+    background: var(--cor-slate-50);
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    color: #000;
+    color: var(--cor-preto);
     transition: all 0.3s;
 }
 
 .nav-card:hover .nav-card-icon {
-    background: #000;
-    color: #fff;
+    background: var(--cor-preto);
+    color: var(--cor-branco);
     transform: scale(1.1);
 }
 
@@ -307,19 +307,19 @@
 
 .res-item-main {
     font-size: 0.95rem;
-    color: #1a1a1a;
+    color: var(--cor-ink);
     margin-bottom: 2px;
 }
 
 .res-item-main strong {
     display: inline;
-    color: #000;
+    color: var(--cor-preto);
     margin-right: 4px;
 }
 
 .res-item-meta .reservation-muted {
     font-size: 0.78rem;
-    color: #64748b;
+    color: var(--cor-slate-500);
 }
 
 .reservation-countdown {
@@ -343,7 +343,7 @@
 .reservation-empty {
     text-align: center !important;
     padding: 32px !important;
-    color: #64748b;
+    color: var(--cor-slate-500);
     font-weight: 600;
 }
 
@@ -379,15 +379,15 @@
     padding: 16px;
     border-radius: 18px;
     text-decoration: none;
-    color: #000;
+    color: var(--cor-preto);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: #fff;
+    background: var(--cor-branco);
     border: 1px solid var(--cor-borda-subtil);
     margin-bottom: 4px;
 }
 
 .activity-item:hover {
-    background: #f8fafc;
+    background: var(--cor-slate-50);
     border-color: var(--cor-borda-subtil);
     transform: translateX(4px);
 }
@@ -413,7 +413,7 @@
 }
 
 .activity-icon-wrapper.mensagem {
-    background: #f0fdf4;
+    background: var(--cor-sucesso-bg);
     color: #22c55e;
 }
 
@@ -426,20 +426,20 @@
     font-weight: 700;
     display: block;
     margin-bottom: 2px;
-    color: #000;
+    color: var(--cor-preto);
 }
 
 .activity-content span {
     font-size: 0.82rem;
-    color: #64748b;
+    color: var(--cor-slate-500);
     font-weight: 500;
 }
 
 .activity-time {
     font-size: 0.72rem;
     font-weight: 700;
-    color: #94a3b8;
-    background: #f1f5f9;
+    color: var(--cor-slate-400);
+    background: var(--cor-slate-100);
     padding: 4px 8px;
     border-radius: 6px;
     text-transform: uppercase;
@@ -448,8 +448,8 @@
 }
 
 .activity-item:hover .activity-time {
-    background: #e2e8f0;
-    color: #64748b;
+    background: var(--cor-slate-200);
+    color: var(--cor-slate-500);
 }
 
 .activity-placeholder {
@@ -466,7 +466,7 @@
     font-size: 1.1rem;
     font-weight: 700;
     margin: 0 0 8px;
-    color: #000;
+    color: var(--cor-preto);
 }
 
 .activity-placeholder p {

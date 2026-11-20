@@ -3,6 +3,7 @@ $titulo_pagina = 'Contacto';
 $descricao_pagina = 'Fale connosco. Encontre a morada, telefone, email e horário da TopTop, ou envie-nos uma mensagem directamente.';
 include 'templates/header.php';
 require_once __DIR__ . '/config/footer_functions.php';
+require_once __DIR__ . '/config/rate_limit.php';
 
 $isAdmin = isset($_SESSION['admin_logado']) && $_SESSION['admin_logado'] === true && in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor']);
 $adminClass = $isAdmin ? 'footer-editable' : '';
@@ -14,6 +15,9 @@ $popupTipo = "sucesso";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!csrf_from_post()) {
         $popupMensagem = "Erro de segurança. Recarregue a página e tente novamente.";
+        $popupTipo = "erro";
+    } elseif (!rate_limit_allow('contacto_form', 5, 600)) {
+        $popupMensagem = "Demasiadas mensagens enviadas num curto espaço de tempo. Tente novamente dentro de alguns minutos.";
         $popupTipo = "erro";
     } else {
         $nome = trim($_POST['nome'] ?? '');

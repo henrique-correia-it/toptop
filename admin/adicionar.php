@@ -67,34 +67,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 throw new Exception("Pode enviar no máximo 5 imagens por produto.");
             }
             
-            $tipos_imagem_permitidos = [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP, IMAGETYPE_GIF];
-            $mapa_placeholder_para_nome = [];
-            foreach($novas_imagens_cortadas_info as $img_info) {
-                $placeholder = $img_info['placeholder'];
-                $base64_raw  = preg_replace('#^data:image/\w+;base64,#i', '', $img_info['dados'] ?? '');
-                $dados_binarios = base64_decode($base64_raw, true);
-
-                if ($dados_binarios === false || strlen($dados_binarios) < 12 || strlen($dados_binarios) > 5 * 1024 * 1024) {
-                    throw new Exception("Dados de imagem inválidos ou corrompidos.");
-                }
-
-                $info_imagem = @getimagesizefromstring($dados_binarios);
-                if ($info_imagem === false || !in_array($info_imagem[2], $tipos_imagem_permitidos, true)) {
-                    throw new Exception("O ficheiro enviado não é uma imagem válida (JPEG, PNG, WEBP ou GIF).");
-                }
-
-                $ext_map = [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_WEBP => 'webp', IMAGETYPE_GIF => 'gif'];
-                $ext_real = $ext_map[$info_imagem[2]] ?? 'jpg';
-                $nome_ficheiro    = uniqid('img_', true) . "." . $ext_real;
-                $caminho_absoluto = __DIR__ . '/../public/images/' . $nome_ficheiro;
-
-                if (file_put_contents($caminho_absoluto, $dados_binarios) === false) {
-                    throw new Exception("Erro ao guardar a imagem. Verifique as permissões da pasta public/images no servidor.");
-                }
-
-                $ficheiros_criados[] = $caminho_absoluto;
-                $mapa_placeholder_para_nome[$placeholder] = $nome_ficheiro;
-            }
+            require_once __DIR__ . '/includes/image_upload.php';
+            $mapa_placeholder_para_nome = salvar_imagens_base64_produto(
+                $novas_imagens_cortadas_info,
+                __DIR__ . '/../public/images',
+                $ficheiros_criados
+            );
 
             $nomes_ficheiros_finais = [];
             foreach($ordem_completa as $placeholder) {

@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . '/config/session.php';
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/csrf.php';
 require_once __DIR__ . '/config/cliente_auth.php';
+require_once __DIR__ . '/config/rate_limit.php';
 
 header('Content-Type: application/json');
 
@@ -15,8 +17,13 @@ if (!is_cliente_logged_in()) {
 
 $dados = json_decode(file_get_contents('php://input'), true);
 
-if (!hash_equals($_SESSION['csrf_token'], $dados['csrf_token'] ?? '')) {
+if (!is_array($dados) || !csrf_from_array($dados)) {
+    http_response_code(403);
     echo json_encode(['sucesso' => false, 'mensagem' => 'CSRF inválido']); exit;
+}
+if (!rate_limit_allow('apagar_conta_cliente', 5, 600, (string)($_SESSION['cliente_id'] ?? ''))) {
+    http_response_code(429);
+    echo json_encode(['sucesso' => false, 'mensagem' => 'Demasiadas tentativas. Aguarda alguns minutos.']); exit;
 }
 
 $cliente_id = (int)$_SESSION['cliente_id'];

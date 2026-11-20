@@ -249,7 +249,7 @@ async function emailTemConta(email) {
     const res = await fetch('ajax_check_email_checkout.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email, csrf_token: CSRF_TOKEN })
     });
     const data = await lerJsonSeguro(res);
     if (!res.ok && data.mensagem) throw new Error(data.mensagem);

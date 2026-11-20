@@ -7,8 +7,8 @@
 }
 
 .logs-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-slate-200);
     border-radius: 24px;
     padding: 30px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
@@ -21,7 +21,7 @@
     flex-wrap: wrap;
     margin-bottom: 24px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--cor-slate-100);
 }
 
 .log-tab {
@@ -31,9 +31,9 @@
     padding: 10px 20px;
     font-size: 0.8rem;
     font-weight: 800;
-    color: #64748b;
-    background: #f8fafc;
-    border: 1.5px solid #e2e8f0;
+    color: var(--cor-slate-500);
+    background: var(--cor-slate-50);
+    border: 1.5px solid var(--cor-slate-200);
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -43,17 +43,17 @@
 }
 
 .log-tab:hover {
-    background: #fff;
-    color: #000;
-    border-color: #000;
+    background: var(--cor-branco);
+    color: var(--cor-preto);
+    border-color: var(--cor-preto);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .log-tab.active {
-    background: #000;
-    color: #fff;
-    border-color: #000;
+    background: var(--cor-preto);
+    color: var(--cor-branco);
+    border-color: var(--cor-preto);
     box-shadow: 0 10px 20px rgba(0,0,0,0.15);
 }
 
@@ -65,8 +65,8 @@
     height: 18px;
     padding: 0 6px;
     border-radius: 10px;
-    background: #ef4444;
-    color: #fff;
+    background: var(--cor-perigo);
+    color: var(--cor-branco);
     font-size: 0.65rem;
     font-weight: 800;
     line-height: 1;
@@ -78,8 +78,8 @@
 
 /* Terminal View */
 #log-conteudo {
-    background: #0f172a;
-    color: #e2e8f0;
+    background: var(--cor-slate-900);
+    color: var(--cor-slate-200);
     font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
     font-size: 0.85rem;
     line-height: 1.6;
@@ -89,7 +89,7 @@
     min-height: 400px;
     max-height: 800px;
     overflow-y: auto;
-    border: 1px solid #1e293b;
+    border: 1px solid var(--cor-slate-800);
     box-shadow: inset 0 2px 15px rgba(0,0,0,0.4);
     white-space: pre-wrap;
     word-break: break-all;
@@ -101,16 +101,16 @@
     width: 10px;
 }
 #log-conteudo::-webkit-scrollbar-track {
-    background: #1e293b;
+    background: var(--cor-slate-800);
     border-radius: 0 16px 16px 0;
 }
 #log-conteudo::-webkit-scrollbar-thumb {
     background: #334155;
     border-radius: 10px;
-    border: 2px solid #1e293b;
+    border: 2px solid var(--cor-slate-800);
 }
 #log-conteudo::-webkit-scrollbar-thumb:hover {
-    background: #475569;
+    background: var(--cor-slate-600);
 }
 
 /* Footer Controls */
@@ -135,20 +135,20 @@
     gap: 10px;
     font-size: 0.85rem;
     font-weight: 700;
-    color: #64748b;
+    color: var(--cor-slate-500);
     cursor: pointer;
     user-select: none;
     padding: 10px 18px;
-    background: #f8fafc;
+    background: var(--cor-slate-50);
     border-radius: 12px;
-    border: 1.5px solid #e2e8f0;
+    border: 1.5px solid var(--cor-slate-200);
     transition: all 0.2s ease;
 }
 
 .log-label-ar:hover {
-    background: #fff;
-    border-color: #cbd5e1;
-    color: #1e293b;
+    background: var(--cor-branco);
+    border-color: var(--cor-slate-300);
+    color: var(--cor-slate-800);
 }
 
 .log-label-ar input {
@@ -160,11 +160,11 @@
 .log-meta {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #94a3b8;
-    background: #f8fafc;
+    color: var(--cor-slate-400);
+    background: var(--cor-slate-50);
     padding: 10px 18px;
     border-radius: 12px;
-    border: 1.5px solid #e2e8f0;
+    border: 1.5px solid var(--cor-slate-200);
     letter-spacing: 0.02em;
 }
 

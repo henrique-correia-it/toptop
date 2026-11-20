@@ -921,7 +921,9 @@ document.getElementById('header-edit-logo')?.addEventListener('change', function
     </svg>
 </a>
 
+<?php if (isset($_SESSION['admin_logado']) && $_SESSION['admin_logado'] === true): ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<?php endif; ?>
 
 <script src="/public/js/popup.js?v=<?php echo $versao_global; ?>"></script>
 <script src="/public/js/confirmacao.js?v=<?php echo $versao_global; ?>"></script>

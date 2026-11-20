@@ -20,8 +20,8 @@
     grid-template-columns: 100px 1fr auto;
     align-items: center;
     gap: 20px;
-    background: #fff;
-    border: 1px solid #f1f5f9;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-slate-100);
     border-radius: 16px;
     padding: 15px 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
@@ -29,7 +29,7 @@
 }
 
 .gc-item:hover {
-    border-color: #e2e8f0;
+    border-color: var(--cor-slate-200);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
     transform: translateY(-2px);
 }
@@ -40,7 +40,7 @@
     height: 80px;
     overflow: hidden;
     border-radius: 12px;
-    background: #f1f5f9;
+    background: var(--cor-slate-100);
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     transition: transform 0.2s ease;
@@ -63,8 +63,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #94a3b8;
-    background: #f8fafc;
+    color: var(--cor-slate-400);
+    background: var(--cor-slate-50);
 }
 
 .gc-foto-overlay {
@@ -84,7 +84,7 @@
 }
 
 .gc-foto-overlay span {
-    color: #fff;
+    color: var(--cor-branco);
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.1em;
@@ -108,8 +108,8 @@
     width: 20px;
     height: 20px;
     margin: -10px 0 0 -10px;
-    border: 2px solid #e2e8f0;
-    border-top-color: #000;
+    border: 2px solid var(--cor-slate-200);
+    border-top-color: var(--cor-preto);
     border-radius: 50%;
     animation: gc-spin 0.6s linear infinite;
 }
@@ -133,7 +133,7 @@
     border: 1px solid transparent;
     border-radius: 8px;
     background: transparent;
-    color: #0f172a;
+    color: var(--cor-slate-900);
     font-family: inherit;
     font-size: 1.1rem;
     font-weight: 700;
@@ -141,14 +141,14 @@
 }
 
 .gc-nome-input:hover {
-    background: #f8fafc;
-    border-color: #e2e8f0;
+    background: var(--cor-slate-50);
+    border-color: var(--cor-slate-200);
 }
 
 .gc-nome-input:focus {
     outline: none;
-    background: #fff;
-    border-color: #000;
+    background: var(--cor-branco);
+    border-color: var(--cor-preto);
     box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.03);
 }
 
@@ -193,8 +193,8 @@
 }
 
 .gc-tag.invisivel {
-    background: #f1f5f9;
-    color: #475569;
+    background: var(--cor-slate-100);
+    color: var(--cor-slate-600);
 }
 
 .gc-acoes {
@@ -205,10 +205,10 @@
 
 .gc-btn-guardar {
     padding: 8px 18px;
-    border: 1px solid #111;
+    border: 1px solid var(--cor-preto-suave);
     border-radius: 8px;
-    background: #111;
-    color: #fff;
+    background: var(--cor-preto-suave);
+    color: var(--cor-branco);
     cursor: pointer;
     font-size: 0.75rem;
     font-weight: 800;
@@ -219,7 +219,7 @@
 }
 
 .gc-btn-guardar:hover {
-    background: #000;
+    background: var(--cor-preto);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
     transform: translateY(-1px);
 }
@@ -234,10 +234,10 @@
 
 .gc-empty {
     padding: 80px 20px;
-    border: 2px dashed #e2e8f0;
+    border: 2px dashed var(--cor-slate-200);
     border-radius: 20px;
-    background: #fff;
-    color: #94a3b8;
+    background: var(--cor-branco);
+    color: var(--cor-slate-400);
     text-align: center;
     font-size: 1rem;
 }
@@ -284,13 +284,13 @@
         grid-area: actions;
         justify-content: flex-end;
         padding-top: 10px;
-        border-top: 1px solid #f1f5f9;
+        border-top: 1px solid var(--cor-slate-100);
     }
 
     .gc-nome-input {
         height: 46px;
         font-size: 1rem;
-        background: #f8fafc;
+        background: var(--cor-slate-50);
     }
 }
 

@@ -121,7 +121,7 @@
 }
 .pagina-contacto .info-item:hover .info-item-icona {
     background: var(--c-accent);
-    color: #fff;
+    color: var(--cor-branco);
     transform: translateY(-2px);
 }
 .pagina-contacto .info-item-texto {
@@ -285,7 +285,7 @@
 .pagina-contacto .contacto-social-link:hover {
     transform: translateY(-3px);
     border-color: transparent;
-    color: #fff;
+    color: var(--cor-branco);
 }
 .pagina-contacto .contacto-social-link.wa:hover { background: #25D366; }
 .pagina-contacto .contacto-social-link.ig:hover { background: #E1306C; }
@@ -312,7 +312,7 @@
     font-size: .95rem;
     font-family: inherit;
     color: var(--c-ink);
-    background: #fff;
+    background: var(--cor-branco);
     box-sizing: border-box;
     margin-bottom: 1.3rem;
     transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
@@ -321,7 +321,7 @@
 .pagina-contacto .form-coluna input[type="email"]:focus,
 .pagina-contacto .form-coluna textarea:focus {
     outline: none;
-    background: #fff;
+    background: var(--cor-branco);
     border-color: var(--c-accent-soft);
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--cor-accent) 16%, transparent);
 }
@@ -348,7 +348,7 @@
     border: 0;
     border-radius: 999px;
     background: var(--c-ink);
-    color: #fff;
+    color: var(--cor-branco);
     font-size: .78rem;
     font-weight: 700;
     letter-spacing: .16em;

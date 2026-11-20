@@ -5,8 +5,8 @@
 .cart-qty-editor {
     display: inline-flex;
     align-items: center;
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-slate-200);
     border-radius: 30px;
     padding: 2px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.03);
@@ -19,7 +19,7 @@
     height: 28px;
     border: none;
     background: none;
-    color: #000;
+    color: var(--cor-preto);
     font-size: 1.1rem;
     cursor: pointer;
     display: flex;
@@ -32,12 +32,12 @@
 }
 
 .qty-btn:hover:not(:disabled) {
-    background: #f1f5f9;
-    color: #000;
+    background: var(--cor-slate-100);
+    color: var(--cor-preto);
 }
 
 .qty-btn:disabled {
-    color: #cbd5e1;
+    color: var(--cor-slate-300);
     cursor: not-allowed;
     background: none;
 }
@@ -46,7 +46,7 @@
 .cart-qty-val {
     font-size: 0.85rem;
     font-weight: 700;
-    color: #111;
+    color: var(--cor-preto-suave);
     min-width: 28px;
     text-align: center;
 }

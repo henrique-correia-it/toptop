@@ -3,6 +3,7 @@ require_once __DIR__ . '/config/session.php'; // Caminho relativo correto
 include 'config/database.php';
 require_once __DIR__ . '/config/cliente_auth.php';
 require_once __DIR__ . '/config/csrf.php';
+require_once __DIR__ . '/config/rate_limit.php';
 
 $erro = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -11,6 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!csrf_from_post()) {
         $erro = "Sessão expirada. Recarrega a página e tenta novamente.";
+    } elseif (!rate_limit_allow('consultar_encomenda', 15, 600)) {
+        $erro = "Demasiadas consultas seguidas. Aguarde alguns minutos e tente novamente.";
     } elseif ($encomenda_id && $cliente_email) {
         $stmt = $conn->prepare("SELECT token FROM encomendas WHERE id = ? AND cliente_email = ?");
         $stmt->bind_param("is", $encomenda_id, $cliente_email);

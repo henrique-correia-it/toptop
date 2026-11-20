@@ -161,7 +161,7 @@
 }
 .pagina-info .info-card:hover h3 svg {
     background: var(--i-accent);
-    color: #fff;
+    color: var(--cor-branco);
     transform: translateY(-1px);
 }
 
@@ -286,7 +286,7 @@
 }
 .portes-filtro input:focus {
     outline: none;
-    background: #fff;
+    background: var(--cor-branco);
     border-color: var(--i-accent-soft);
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--cor-accent) 16%, transparent);
 }
@@ -454,12 +454,12 @@
 .pagina-info .form-group #cliente_email,
 .pagina-info .form-group #cliente_email:valid,
 .pagina-info .form-group #cliente_email:invalid {
-    background: #fff;
+    background: var(--cor-branco);
 }
 
 .pagina-info .form-group input:focus {
     outline: none;
-    background: #fff;
+    background: var(--cor-branco);
     border-color: var(--i-accent-soft);
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--cor-accent) 16%, transparent);
 }
@@ -483,7 +483,7 @@
     border: 0;
     border-radius: 999px;
     background: var(--i-ink);
-    color: #fff;
+    color: var(--cor-branco);
     font-size: .78rem;
     font-weight: 700;
     letter-spacing: .16em;
@@ -561,7 +561,7 @@
     background-color: rgba(37, 99, 235, 0.04);
 }
 .troca-editavel [contenteditable="true"]:focus {
-    outline: 2px solid #2563eb;
+    outline: 2px solid var(--cor-info);
     background-color: rgba(37, 99, 235, 0.08);
 }
 .troca-editavel [contenteditable="true"]:empty::before {
@@ -609,7 +609,7 @@
 .troca-card .troca-del-card:hover {
     background: var(--cor-erro, #c0392b);
     border-color: var(--cor-erro, #c0392b);
-    color: #fff;
+    color: var(--cor-branco);
 }
 
 /* Linhas editáveis: texto + botão remover lado a lado (mantém o bullet ::before) */
@@ -709,7 +709,7 @@
 }
 .troca-icon-btn:hover svg {
     background: var(--i-accent);
-    color: #fff;
+    color: var(--cor-branco);
     transform: translateY(-1px);
 }
 

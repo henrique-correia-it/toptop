@@ -184,7 +184,9 @@ if ($resCategoriasHeader && $resCategoriasHeader->num_rows > 0) {
     <!-- Pré-carrega o hero da homepage (LCP) com prioridade alta. URL idêntico ao background-image para ser reutilizado. -->
     <link rel="preload" as="image" fetchpriority="high" href="<?php echo htmlspecialchars(getLojaConfig('home_hero_bg', '/public/assets/hero.avif'), ENT_QUOTES, 'UTF-8'); ?>?v=<?php echo $versao_global; ?>">
     <?php endif; ?>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" defer></script>
+    <?php if (isset($_SESSION['admin_logado']) && $_SESSION['admin_logado'] === true): ?>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" defer></script>
+    <?php endif; ?>
     <script src="https://unpkg.com/popper.js@1" defer></script>
     <script src="https://unpkg.com/tippy.js@5" defer></script>
     <script>
@@ -204,7 +206,8 @@ if ($resCategoriasHeader && $resCategoriasHeader->num_rows > 0) {
         window.scrollTo(0, 0);
     </script>
     
-    <link rel="stylesheet" href="/public/css/style.php?v=<?php echo $versao_global; ?>">
+    <?php $cssScope = (isset($_SESSION['admin_logado']) && $_SESSION['admin_logado'] === true) ? 'full' : 'public'; ?>
+    <link rel="stylesheet" href="/public/css/style.php?scope=<?php echo $cssScope; ?>&amp;v=<?php echo $versao_global; ?>">
     <style>
         :root {
             --cor-fundo-pagina: <?php echo htmlspecialchars($siteBackgroundColor, ENT_QUOTES, 'UTF-8'); ?>;
@@ -219,8 +222,8 @@ if ($resCategoriasHeader && $resCategoriasHeader->num_rows > 0) {
             --cor-divisor-cartao: rgba(28,28,28,.11);
         }
     </style>
-    <?php if (strpos($_SERVER['REQUEST_URI'], '/admin') !== false || strpos($_SERVER['REQUEST_URI'], '/dev') !== false): ?>
-    <!-- Cropper.js só é usado no admin (recorte de imagens de produto) — não carregar no front-end. -->
+    <?php if (isset($_SESSION['admin_logado']) && $_SESSION['admin_logado'] === true): ?>
+    <!-- Cropper.js só é usado por admins (recorte de fotos de produto e logo no modo edição). -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <?php endif; ?>
 
@@ -329,10 +332,13 @@ $_og_image = (isset($produto) && !empty($produto['foto_principal']))
 
                     <div class="account-dropdown-divider"></div>
                     
-                    <a href="/sair" class="account-dropdown-link logout">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                        Sair
-                    </a>
+                    <form method="post" action="/sair" style="margin:0; width:100%;">
+                        <?php echo csrf_input(); ?>
+                        <button type="submit" class="account-dropdown-link logout" style="width:100%; background:none; border:none; font:inherit; text-align:left; cursor:pointer;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                            Sair
+                        </button>
+                    </form>
                 </div>
                 <?php endif; ?>
             </div>
@@ -450,10 +456,13 @@ $_og_image = (isset($produto) && !empty($produto['foto_principal']))
             </li>
             <?php if ($clienteHeaderLogado): ?>
                 <li>
-                    <a href="/sair">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                        Sair
-                    </a>
+                    <form method="post" action="/sair" style="margin:0; width:100%;">
+                        <?php echo csrf_input(); ?>
+                        <button type="submit" class="nav-mobile-logout-btn" style="display:flex; align-items:center; gap:12px; width:100%; padding:12px 16px; background:none; border:none; font:inherit; color:inherit; text-align:left; cursor:pointer;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            Sair
+                        </button>
+                    </form>
                 </li>
             <?php endif; ?>
 
@@ -474,10 +483,13 @@ $_og_image = (isset($produto) && !empty($produto['foto_principal']))
                 </li>
                 <?php endif; ?>
                 <li>
-                    <a href="/admin/logout.php">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                        Sair
-                    </a>
+                    <form method="post" action="/sair" style="margin:0; width:100%;">
+                        <?php echo csrf_input(); ?>
+                        <button type="submit" class="nav-mobile-logout-btn" style="display:flex; align-items:center; gap:12px; width:100%; padding:12px 16px; background:none; border:none; font:inherit; color:inherit; text-align:left; cursor:pointer;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            Sair
+                        </button>
+                    </form>
                 </li>
             <?php endif; ?>
         </ul>

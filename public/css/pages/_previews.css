@@ -9,9 +9,9 @@
 
 /* Custom Nav Card for Previews */
 .previews-card {
-    background: #fff;
+    background: var(--cor-branco);
     border-radius: 16px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--cor-slate-200);
     padding: 24px;
     display: flex;
     flex-direction: column;
@@ -21,7 +21,7 @@
 .previews-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08);
-    border-color: #cbd5e1;
+    border-color: var(--cor-slate-300);
 }
 
 .previews-card-header {
@@ -43,7 +43,7 @@
 .previews-card-header h3 {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--cor-slate-800);
     margin: 0;
 }
 
@@ -59,10 +59,10 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 16px;
-    background: #f8fafc;
-    border: 1px solid #f1f5f9;
+    background: var(--cor-slate-50);
+    border: 1px solid var(--cor-slate-100);
     border-radius: 10px;
-    color: #475569;
+    color: var(--cor-slate-600);
     text-decoration: none;
     font-size: 0.85rem;
     font-weight: 600;
@@ -70,9 +70,9 @@
 }
 
 .preview-link:hover {
-    background: #fff;
-    border-color: #000;
-    color: #000;
+    background: var(--cor-branco);
+    border-color: var(--cor-preto);
+    color: var(--cor-preto);
     transform: translateX(4px);
 }
 
@@ -91,5 +91,5 @@
 .theme-green .previews-icon { background: #ecfdf5; color: #10b981; }
 .theme-blue .previews-icon { background: #eff6ff; color: #3b82f6; }
 .theme-amber .previews-icon { background: #fffbeb; color: #f59e0b; }
-.theme-red .previews-icon { background: #fef2f2; color: #ef4444; }
+.theme-red .previews-icon { background: var(--cor-perigo-bg); color: var(--cor-perigo); }
 .theme-purple .previews-icon { background: #f5f3ff; color: #8b5cf6; }

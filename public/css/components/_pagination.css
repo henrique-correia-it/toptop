@@ -26,7 +26,7 @@
     border: 1px solid transparent;
     border-radius: 50%;
     background: transparent;
-    color: #94a3b8; /* Soft slate */
+    color: var(--cor-slate-400); /* Soft slate */
     font-size: 0.85rem;
     font-weight: 500;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -35,19 +35,19 @@
 }
 
 .pagination-item .page-link:hover {
-    color: #1e293b;
-    background-color: #f1f5f9;
+    color: var(--cor-slate-800);
+    background-color: var(--cor-slate-100);
 }
 
 .pagination-item.active .page-link {
-    background-color: #111;
-    color: #fff;
+    background-color: var(--cor-preto-suave);
+    color: var(--cor-branco);
     font-weight: 600;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .pagination-item.active .page-link:hover {
-    background-color: #000;
+    background-color: var(--cor-preto);
 }
 
 .pagination-item.prev .page-link,

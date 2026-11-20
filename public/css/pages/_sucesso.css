@@ -10,7 +10,7 @@ main.sucesso-main {
 }
 
 .sc-card {
-    background: #fff;
+    background: var(--cor-branco);
     border-radius: 20px;
     box-shadow: 0 8px 40px rgba(0,0,0,.08);
     max-width: 520px;
@@ -45,12 +45,12 @@ main.sucesso-main {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #f0f0f0;
+    background: var(--cor-cinza-claro);
     border-radius: 100px;
     padding: 6px 18px;
     font-size: .85rem;
     font-weight: 700;
-    color: #333;
+    color: var(--cor-cinza-escuro);
     letter-spacing: .03em;
     margin-bottom: 20px;
 }
@@ -58,14 +58,14 @@ main.sucesso-main {
 .sc-card h1 {
     font-size: 1.65rem;
     font-weight: 800;
-    color: #111;
+    color: var(--cor-preto-suave);
     margin: 0 0 14px;
     line-height: 1.2;
 }
 
 .sc-card p {
     font-size: .97rem;
-    color: #666;
+    color: var(--cor-cinza-texto);
     line-height: 1.75;
     margin: 0 0 10px;
 }
@@ -73,7 +73,7 @@ main.sucesso-main {
 /* ── Divider ── */
 .sc-divider {
     border: none;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--cor-cinza-claro);
     margin: 32px 0;
 }
 
@@ -86,8 +86,8 @@ main.sucesso-main {
 
 .sc-btn-primary {
     display: block;
-    background: #111;
-    color: #fff;
+    background: var(--cor-preto-suave);
+    color: var(--cor-branco);
     text-decoration: none;
     border-radius: 12px;
     padding: 15px 24px;
@@ -95,7 +95,7 @@ main.sucesso-main {
     font-weight: 700;
     transition: background .2s, transform .15s;
 }
-.sc-btn-primary:hover { background: #333; transform: translateY(-1px); }
+.sc-btn-primary:hover { background: var(--cor-cinza-escuro); transform: translateY(-1px); }
 
 .sc-btn-secondary {
     display: block;
@@ -106,7 +106,7 @@ main.sucesso-main {
     border-radius: 10px;
     transition: color .2s;
 }
-.sc-btn-secondary:hover { color: #111; }
+.sc-btn-secondary:hover { color: var(--cor-preto-suave); }
 
 @media (max-width: 480px) {
     .sc-card { padding: 40px 28px; }

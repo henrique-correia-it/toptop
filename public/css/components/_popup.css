@@ -24,7 +24,7 @@
     background-color: #28a745;
 }
 .popup.erro .popup-barra {
-    background-color: #c0392b;
+    background-color: var(--cor-erro);
 }
 .popup-conteudo {
     padding: 15px;

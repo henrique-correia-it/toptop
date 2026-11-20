@@ -1,7 +1,7 @@
 /* ── Painel Dev Overrides ── */
 
 .dev-badge {
-    background: #000;
+    background: var(--cor-preto);
     color: #10b981;
     padding: 4px 12px;
     border-radius: 6px;
@@ -17,7 +17,7 @@
 
 /* Estilo para simular o terminal no ícone de atividade */
 .activity-icon-wrapper.dev-terminal {
-    background: #000 !important;
+    background: var(--cor-preto) !important;
     color: #10b981 !important;
 }
 
@@ -39,8 +39,8 @@
 }
 
 .stat-card.header-hide-off .stat-card-icon {
-    background: #f1f5f9 !important;
-    color: #64748b !important;
+    background: var(--cor-slate-100) !important;
+    color: var(--cor-slate-500) !important;
 }
 
 
@@ -96,8 +96,8 @@
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-slate-200);
     border-radius: 14px;
     box-shadow: 0 12px 40px rgba(0,0,0,0.12);
     min-width: 260px;
@@ -117,7 +117,7 @@
 }
 
 .simulate-dropdown-item:hover {
-    background: #f8fafc;
+    background: var(--cor-slate-50);
 }
 
 .simulate-dropdown-item .sim-dot {
@@ -136,12 +136,12 @@
 .simulate-dropdown-item strong {
     font-size: 0.82rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--cor-slate-800);
 }
 
 .simulate-dropdown-item span {
     font-size: 0.73rem;
-    color: #94a3b8;
+    color: var(--cor-slate-400);
     font-weight: 400;
 }
 
