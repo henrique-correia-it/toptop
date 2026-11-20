@@ -8,15 +8,14 @@ if (!isset($_SESSION['admin_logado']) || !$_SESSION['admin_logado']) {
     exit;
 }
 
-// --- LÓGICA DO BOTÃO VOLTAR INTELIGENTE ---
+// --- LÓGICA DO BOTÃO VOLTAR INTELIGENTE (whitelist estrita contra Open Redirect) ---
 $return_to = $_GET['return_to'] ?? 'admin';
-if ($return_to === 'dev') {
-    $return_url = '/dev';
-} elseif ($return_to === 'admin') {
-    $return_url = '/admin';
-} else {
-    $return_url = htmlspecialchars($return_to) . '.php';
-}
+$return_map = [
+    'dev'           => '/dev',
+    'admin'         => '/admin',
+    'listar_admins' => 'listar_admins.php',
+];
+$return_url = $return_map[$return_to] ?? '/admin';
 
 $id_a_editar = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$id_a_editar) {

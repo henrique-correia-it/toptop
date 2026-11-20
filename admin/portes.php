@@ -344,7 +344,11 @@ function validarDados() {
         let regras = dadosPortes[iso];
         for (let i = 0; i < regras.length; i++) {
             let r = regras[i];
-            if (r.min >= r.max) {
+            if (!Number.isFinite(r.min) || !Number.isFinite(r.max) || !Number.isFinite(r.preco) || r.min < 0 || r.max < 0 || r.preco < 0) {
+                mostrarPopup(`Erro em ${iso}: Preencha valores numéricos válidos e não negativos.`, 'erro');
+                return false;
+            }
+            if (r.max > 0 && r.min >= r.max) {
                 mostrarPopup(`Erro em ${iso}: O peso mínimo (${r.min}) não pode ser maior ou igual ao máximo (${r.max}).`, 'erro');
                 return false;
             }

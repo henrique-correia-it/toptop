@@ -327,7 +327,8 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (target.closest('.btn-preview-guia')) {
             abrirPreview(info.dataset.titulo, info.dataset.conteudo);
         } else if (target.closest('.btn-apagar-guia')) {
-            mostrarModalConfirmacao('Apagar Guia', `Tem a certeza que quer apagar o guia "${info.dataset.titulo}"?`, () => {
+            const escTitulo = String(info.dataset.titulo || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+            mostrarModalConfirmacao('Apagar Guia', `Tem a certeza que quer apagar o guia "${escTitulo}"?`, () => {
                 const formData = new FormData();
                 formData.append('action', 'delete');
                 formData.append('id', id);

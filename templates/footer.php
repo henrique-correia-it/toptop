@@ -27,27 +27,27 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
 <footer class="site-footer site-footer-home<?php echo $footerHasWhiteBackground ? ' site-footer-white-bg' : ''; ?>">
     <div class="footer-grid">
         <div class="footer-coluna">
-            <h4 class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="titulo_sobre"><?php echo getFooterText('titulo_sobre', 'Sobre a TopTop'); ?></h4>
+            <h4 class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="titulo_sobre"><?php echo htmlspecialchars(getFooterText('titulo_sobre', 'Sobre a TopTop'), ENT_QUOTES, 'UTF-8'); ?></h4>
             <div class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="sobre_nos">
-                <p><?php echo getFooterText('sobre_nos', $fallback_sobre); ?></p>
+                <p><?php echo nl2br(htmlspecialchars(getFooterText('sobre_nos', $fallback_sobre), ENT_QUOTES, 'UTF-8')); ?></p>
             </div>
         </div>
         <div class="footer-coluna">
-            <h4 class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="titulo_info"><?php echo getFooterText('titulo_info', 'Informações'); ?></h4>
+            <h4 class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="titulo_info"><?php echo htmlspecialchars(getFooterText('titulo_info', 'Informações'), ENT_QUOTES, 'UTF-8'); ?></h4>
             <ul class="footer-links">
                 <li class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="link_label_trocas">
-                    <a href="/trocas.php"><?php echo getFooterText('link_label_trocas', 'Trocas e Devoluções'); ?></a>
+                    <a href="/trocas.php"><?php echo htmlspecialchars(getFooterText('link_label_trocas', 'Trocas e Devoluções'), ENT_QUOTES, 'UTF-8'); ?></a>
                 </li>
                 <li class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="link_label_envios">
-                    <a href="/envios.php"><?php echo getFooterText('link_label_envios', 'Portes e Envios'); ?></a>
+                    <a href="/envios.php"><?php echo htmlspecialchars(getFooterText('link_label_envios', 'Portes e Envios'), ENT_QUOTES, 'UTF-8'); ?></a>
                 </li>
                 <li class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="link_label_encomenda">
-                    <a href="/consultar-encomenda.php"><?php echo getFooterText('link_label_encomenda', 'Acompanhar Encomenda'); ?></a>
+                    <a href="/consultar-encomenda.php"><?php echo htmlspecialchars(getFooterText('link_label_encomenda', 'Acompanhar Encomenda'), ENT_QUOTES, 'UTF-8'); ?></a>
                 </li>
             </ul>
         </div>
         <div class="footer-coluna">
-            <h4 class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="titulo_contactos"><?php echo getFooterText('titulo_contactos', 'Fale Connosco'); ?></h4>
+            <h4 class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="titulo_contactos"><?php echo htmlspecialchars(getFooterText('titulo_contactos', 'Fale Connosco'), ENT_QUOTES, 'UTF-8'); ?></h4>
             <ul class="footer-contato-info">
                 <li class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="contactos_info">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
@@ -56,38 +56,38 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
                         $rua = getFooterText('morada_rua', 'Edifício Chafariz, Rua dos Fontenários');
                         $cp = getFooterText('morada_cp', '4535-221');
                         $local = getFooterText('morada_localidade', 'Lourosa, Portugal');
-                        echo "$rua, $cp $local";
+                        echo htmlspecialchars("$rua, $cp $local", ENT_QUOTES, 'UTF-8');
                         ?>
                     </span>
                 </li>
                 <li class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="telefone">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                    <a href="tel:<?php echo getFooterText('telefone', '351933169009'); ?>"><?php echo getFooterText('telefone', '(+351) 933 169 009'); ?></a>
+                    <a href="tel:<?php echo htmlspecialchars(preg_replace('/\s+/', '', getFooterText('telefone', '351933169009')), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(getFooterText('telefone', '(+351) 933 169 009'), ENT_QUOTES, 'UTF-8'); ?></a>
                 </li>
                 <li class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="email">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                    <a href="mailto:<?php echo getFooterText('email', 'toptopclothingstore@gmail.com'); ?>"><?php echo getFooterText('email', 'toptopclothingstore@gmail.com'); ?></a>
+                    <a href="mailto:<?php echo htmlspecialchars(getFooterText('email', 'toptopclothingstore@gmail.com'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(getFooterText('email', 'toptopclothingstore@gmail.com'), ENT_QUOTES, 'UTF-8'); ?></a>
                 </li>
             </ul>
             <div class="footer-social <?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="redes_sociais" 
-                 data-wa="<?php echo getFooterText('link_whatsapp', 'https://chat.whatsapp.com/K7IhtBOBJNtHRGysYttqnY?fbclid=PAZXh0bgNhZW0CMTEAAafGr0PtcF54B-Xs-3vTdfud9IjlLX7_8aIYPl4AbcuzcyR6YggHigJmb1gQ0g_aem_FI_fPyaedJRcm1Ctl243uA'); ?>"
-                 data-ig="<?php echo getFooterText('link_instagram', 'https://www.instagram.com/toptop_clothingstore'); ?>"
-                 data-fb="<?php echo getFooterText('link_facebook', 'https://www.facebook.com/share/1AqqQZ8YmL/'); ?>">
-                <a href="<?php echo getFooterText('link_whatsapp', 'https://chat.whatsapp.com/K7IhtBOBJNtHRGysYttqnY?fbclid=PAZXh0bgNhZW0CMTEAAafGr0PtcF54B-Xs-3vTdfud9IjlLX7_8aIYPl4AbcuzcyR6YggHigJmb1gQ0g_aem_FI_fPyaedJRcm1Ctl243uA'); ?>" target="_blank" title="WhatsApp" class="footer-social-link wa"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></a>
-                <a href="<?php echo getFooterText('link_instagram', 'https://www.instagram.com/toptop_clothingstore'); ?>" target="_blank" title="Instagram" class="footer-social-link ig"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
-                <a href="<?php echo getFooterText('link_facebook', 'https://www.facebook.com/share/1AqqQZ8YmL/'); ?>" target="_blank" title="Facebook" class="footer-social-link fb"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
+                 data-wa="<?php echo htmlspecialchars(getFooterText('link_whatsapp', 'https://chat.whatsapp.com/K7IhtBOBJNtHRGysYttqnY?fbclid=PAZXh0bgNhZW0CMTEAAafGr0PtcF54B-Xs-3vTdfud9IjlLX7_8aIYPl4AbcuzcyR6YggHigJmb1gQ0g_aem_FI_fPyaedJRcm1Ctl243uA'), ENT_QUOTES, 'UTF-8'); ?>"
+                 data-ig="<?php echo htmlspecialchars(getFooterText('link_instagram', 'https://www.instagram.com/toptop_clothingstore'), ENT_QUOTES, 'UTF-8'); ?>"
+                 data-fb="<?php echo htmlspecialchars(getFooterText('link_facebook', 'https://www.facebook.com/share/1AqqQZ8YmL/'), ENT_QUOTES, 'UTF-8'); ?>">
+                <a href="<?php echo htmlspecialchars(getFooterText('link_whatsapp', 'https://chat.whatsapp.com/K7IhtBOBJNtHRGysYttqnY?fbclid=PAZXh0bgNhZW0CMTEAAafGr0PtcF54B-Xs-3vTdfud9IjlLX7_8aIYPl4AbcuzcyR6YggHigJmb1gQ0g_aem_FI_fPyaedJRcm1Ctl243uA'), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" title="WhatsApp" class="footer-social-link wa"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></a>
+                <a href="<?php echo htmlspecialchars(getFooterText('link_instagram', 'https://www.instagram.com/toptop_clothingstore'), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" title="Instagram" class="footer-social-link ig"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
+                <a href="<?php echo htmlspecialchars(getFooterText('link_facebook', 'https://www.facebook.com/share/1AqqQZ8YmL/'), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" title="Facebook" class="footer-social-link fb"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
             </div>
         </div>
         <div class="footer-coluna">
-            <h4 class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="titulo_pagamento"><?php echo getFooterText('titulo_pagamento', 'Pagamento Seguro'); ?></h4>
+            <h4 class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="titulo_pagamento"><?php echo htmlspecialchars(getFooterText('titulo_pagamento', 'Pagamento Seguro'), ENT_QUOTES, 'UTF-8'); ?></h4>
             <div class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="pagamento_seguro">
-                <p><?php echo getFooterText('pagamento_seguro', $fallback_pagamento); ?></p>
+                <p><?php echo nl2br(htmlspecialchars(getFooterText('pagamento_seguro', $fallback_pagamento), ENT_QUOTES, 'UTF-8')); ?></p>
             </div>
         </div>
     </div>
     <div class="footer-copyright">
         <div class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="copyright">
-            <p><?php echo getFooterText('copyright', $fallback_copyright); ?></p>
+            <p><?php echo htmlspecialchars(getFooterText('copyright', $fallback_copyright), ENT_QUOTES, 'UTF-8'); ?></p>
         </div>
     </div>
 </footer>
@@ -249,7 +249,7 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
 
 
 <script>
-console.log("Footer Admin Mode:", "<?php echo $isAdminFooter ? 'Ativo' : 'Inativo'; ?>", "Role:", "<?php echo $_SESSION['admin_role'] ?? 'Nenhum'; ?>");
+
 let currentFooterElement = null;
 let currentHeaderElement = null;
 
@@ -340,7 +340,7 @@ function fecharEditorHeader() {
 
 async function guardarAlteracaoHeader() {
     const seccao = document.getElementById('header-edit-seccao').value;
-    const csrf_token = '<?php echo $_SESSION['csrf_token']; ?>';
+    const csrf_token = <?php echo json_encode($_SESSION['csrf_token'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
     if (seccao === 'logo_src') {
         const input = document.getElementById('header-edit-logo');
@@ -676,7 +676,7 @@ function fecharEditorFooter() {
 
 async function guardarAlteracaoFooter() {
     const seccao = document.getElementById('footer-edit-seccao').value;
-    const csrf_token = '<?php echo $_SESSION['csrf_token']; ?>';
+    const csrf_token = <?php echo json_encode($_SESSION['csrf_token'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
     let promessas = [];
 
     if (seccao === 'contactos_info') {
@@ -735,7 +735,7 @@ async function guardarAlteracaoFooter() {
 
     } else {
         const conteudo = document.getElementById('footer-edit-conteudo').value;
-        let conteudoFormatado = conteudo.replace(/\n/g, '<br>');
+        let conteudoFormatado = escapeHtml(conteudo).replace(/\n/g, '<br>');
         
         const data = await gravarCampo(seccao, conteudo, csrf_token);
 
@@ -743,9 +743,9 @@ async function guardarAlteracaoFooter() {
             let conteudoFinal = conteudoFormatado;
             
             if (seccao === 'telefone') {
-                conteudoFinal = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> <a href="tel:${conteudo.replace(/\s+/g, '')}">${conteudo}</a>`;
+                conteudoFinal = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> <a href="tel:${escapeHtml(conteudo.replace(/\s+/g, ''))}">${escapeHtml(conteudo)}</a>`;
             } else if (seccao === 'email') {
-                conteudoFinal = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> <a href="mailto:${conteudo}">${conteudo}</a>`;
+                conteudoFinal = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> <a href="mailto:${escapeHtml(conteudo)}">${escapeHtml(conteudo)}</a>`;
             } else if (seccao.startsWith('link_label_')) {
                 // Manter o link intacto na atualização visual em tempo real
                 let href = "/";
@@ -786,7 +786,7 @@ function gravarCampo(seccao, conteudo, csrf_token) {
    Os elementos que SÃO links/imagens/multi-campo continuam com modal.
    ============================================================ */
 (function () {
-    const CSRF = '<?php echo $_SESSION['csrf_token'] ?? ''; ?>';
+    const CSRF = <?php echo json_encode($_SESSION['csrf_token'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
     // Secções/chaves que TÊM de continuar a abrir modal (imagem ou multi-campo).
     const MODAL_ONLY = ['logo_src', 'home_hero_bg', 'contactos_info', 'redes_sociais', 'horario_funcionamento'];
@@ -932,7 +932,7 @@ document.getElementById('header-edit-logo')?.addEventListener('change', function
 <script src="/public/js/search.js?v=<?php echo $versao_global; ?>"></script>
 <script src="/public/js/backToTop.js?v=<?php echo $versao_global; ?>"></script>
 
-<?php if (strpos($_SERVER['REQUEST_URI'], '/admin/') !== false): ?>
+<?php if (strpos((string)(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? ''), '/admin/') === 0): ?>
     <script src="/public/js/admin-ui.js?v=<?php echo $versao_global; ?>"></script>
 <?php endif; ?>
 
@@ -1006,7 +1006,7 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch('/dev/ajax_limpar_cache_global.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ csrf_token: '<?php echo $_SESSION['csrf_token'] ?? ''; ?>' })
+                body: new URLSearchParams({ csrf_token: <?php echo json_encode($_SESSION['csrf_token'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?> })
             })
                 .then(r => r.json())
                 .then(data => {

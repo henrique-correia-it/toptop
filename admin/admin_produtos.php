@@ -89,7 +89,7 @@ function gerarPaginacao($pagina_atual, $total_paginas, $ordenar_key = 'id_desc',
     <?php if (isset($_SESSION['flash_message'])): ?>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                mostrarPopup("<?php echo addslashes($_SESSION['flash_message']['texto']); ?>", "<?php echo addslashes($_SESSION['flash_message']['tipo']); ?>");
+                mostrarPopup(<?php echo json_encode($_SESSION['flash_message']['texto'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>, <?php echo json_encode($_SESSION['flash_message']['tipo'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>);
             });
         </script>
         <?php unset($_SESSION['flash_message']); ?>
@@ -382,6 +382,10 @@ document.addEventListener('DOMContentLoaded', function () {
         updateUI();
     });
 
+    function escapeHtmlAdmin(str) {
+        return String(str ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+
     // Operações AJAX e Confirmações
     function submitDelete(ids) {
         formIds.innerHTML = '';
@@ -406,7 +410,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Apagar
         if (e.target.closest('.btn-del-single')) {
-            mostrarModalConfirmacao('Apagar Produto', `Apagar permanentemente ${tr.dataset.nome}?`, () => submitDelete([tr.dataset.id]));
+            mostrarModalConfirmacao('Apagar Produto', `Apagar permanentemente ${escapeHtmlAdmin(tr.dataset.nome)}?`, () => submitDelete([tr.dataset.id]));
         }
 
         // Duplicar
@@ -463,7 +467,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Apagar via menu
         menu.querySelector('#ctx-delete').onclick = () => {
-            mostrarModalConfirmacao('Apagar Produto', `Apagar permanentemente ${row.dataset.nome}?`, () => submitDelete([row.dataset.id]));
+            mostrarModalConfirmacao('Apagar Produto', `Apagar permanentemente ${escapeHtmlAdmin(row.dataset.nome)}?`, () => submitDelete([row.dataset.id]));
         };
     });
 
@@ -475,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btnSave.disabled = true; btnSave.textContent = 'A guardar...';
 
         const fd = new FormData(form);
-        fd.append('id', form.querySelector('#qe-id').value);
+        fd.set('id', form.querySelector('#qe-id').value);
         fd.append('csrf_token', CSRF);
 
         fetch('ajax_quick_edit_product.php', { method: 'POST', body: fd })
@@ -490,12 +494,22 @@ document.addEventListener('DOMContentLoaded', function () {
                         tr.querySelector('td:nth-child(3)').textContent = data.referencia;
                         renderStockCell(tr);
                         tr.querySelector('.preco-tabela').textContent = '€' + data.preco.toFixed(2).replace('.', ',');
+                        const promoTd = tr.querySelector('td:nth-child(7)');
+                        if (promoTd) {
+                            promoTd.innerHTML = (data.preco_promocional && data.preco_promocional > 0)
+                                ? `<span class="promo-tabela">€${data.preco_promocional.toFixed(2).replace('.', ',')}</span>`
+                                : '—';
+                        }
                     }
                     document.getElementById('qe-modal').style.display = 'none';
                     mostrarPopup('Produto atualizado!', 'sucesso');
                 } else {
                     mostrarPopup('Erro: ' + (data.mensagem || 'Ocorreu um erro desconhecido.'), 'erro');
                 }
+            }).catch(() => {
+                mostrarPopup('Erro de comunicação ao guardar o produto.', 'erro');
+            }).finally(() => {
+                btnSave.disabled = false; btnSave.textContent = 'Guardar Alterações';
             });
     });
 });

@@ -9,7 +9,7 @@ if (!function_exists('json_response')) {
             header('Content-Type: application/json; charset=utf-8');
         }
 
-        echo json_encode($payload, $flags);
+        echo json_encode($payload, $flags | JSON_INVALID_UTF8_SUBSTITUTE);
         exit;
     }
 }
@@ -35,7 +35,11 @@ if (!function_exists('json_error')) {
 if (!function_exists('json_input')) {
     function json_input(): array
     {
-        $data = json_decode(file_get_contents('php://input'), true);
+        $raw = file_get_contents('php://input');
+        if (!is_string($raw) || $raw === '') {
+            return [];
+        }
+        $data = json_decode($raw, true);
         return is_array($data) ? $data : [];
     }
 }

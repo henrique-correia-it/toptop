@@ -4,25 +4,26 @@
  */
 function getFooterText($seccao, $fallback = '') {
     global $conn;
+    static $cache = null;
     
     if (!$conn) {
         return $fallback;
     }
 
-    $stmt = $conn->prepare("SELECT conteudo FROM footer_config WHERE seccao = ? LIMIT 1");
-    if (!$stmt) return $fallback;
-    
-    $stmt->bind_param("s", $seccao);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        $stmt->close();
-        return $row['conteudo'];
+    if ($cache === null) {
+        $cache = [];
+        $res = $conn->query("SELECT seccao, conteudo FROM footer_config");
+        if ($res) {
+            while ($row = $res->fetch_assoc()) {
+                $cache[$row['seccao']] = $row['conteudo'];
+            }
+        }
     }
-    
-    $stmt->close();
+
+    if (array_key_exists($seccao, $cache)) {
+        return $cache[$seccao];
+    }
+
     return $fallback;
 }
 

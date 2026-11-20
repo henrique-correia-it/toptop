@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $data = json_input();
 
-if (!csrf_from_array($data)) {
+if (!is_array($data) || !csrf_from_array($data)) {
     json_error('Erro de seguranca. Recarregue a pagina e tente novamente.', 403);
 }
 
@@ -71,7 +71,20 @@ try {
         }
     }
 
-    release_incomplete_order_reservation($conn, $orderId, $token);
+    try {
+        release_incomplete_order_reservation($conn, $orderId, $token);
+    } catch (Throwable $eRel) {
+        // Se o webhook payment_intent.canceled já cancelou a encomenda entretanto, considera sucesso
+        $stmtCheck = $conn->prepare("SELECT estado FROM encomendas WHERE id = ? AND token = ? LIMIT 1");
+        $stmtCheck->bind_param('is', $orderId, $token);
+        $stmtCheck->execute();
+        $rowCheck = $stmtCheck->get_result()->fetch_assoc();
+        $stmtCheck->close();
+        if (!$rowCheck || ($rowCheck['estado'] ?? '') === 'cancelada') {
+            json_success(['mensagem' => 'Reserva libertada.']);
+        }
+        throw $eRel;
+    }
     json_success(['mensagem' => 'Reserva libertada.']);
 } catch (Throwable $e) {
     log_app($e->getMessage(), 'ERROR', 'ajax_libertar_reserva_checkout.php enc#' . $orderId);

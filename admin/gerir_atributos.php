@@ -349,13 +349,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 newItem.innerHTML = `
                     <div class="value-drag-handle">☰</div>
                     <div class="value-name">
-                        <span class="nome-display">${data.valor}</span>
+                        <span class="nome-display"></span>
                     </div>
                     <div class="value-actions">
                         <button type="button" class="btn-edit-single btn-editar" title="Editar"></button>
                         <button type="button" class="btn-del-single btn-apagar" title="Eliminar Valor"></button>
                     </div>
                 `;
+                newItem.querySelector('.nome-display').textContent = data.valor ?? '';
                 listContainer.appendChild(newItem);
                 form.reset();
             });
@@ -404,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function () {
             wrapper.className = 'editable-container-wrapper';
             wrapper.innerHTML = `
                 <div class="editable-container">
-                    <input type="text" class="edit-input" value="${nomeOriginal}" maxlength="50">
+                    <input type="text" class="edit-input" maxlength="50">
                     <button type="button" class="save-btn" title="Guardar">✓</button>
                     <button type="button" class="cancel-btn" title="Cancelar">×</button>
                 </div>
@@ -414,6 +415,7 @@ document.addEventListener('DOMContentLoaded', function () {
             nomeSpan.parentNode.insertBefore(wrapper, nomeSpan);
             
             const input = wrapper.querySelector('.edit-input');
+            input.value = nomeOriginal;
             input.select();
             input.focus();
 
@@ -455,7 +457,8 @@ document.addEventListener('DOMContentLoaded', function () {
             checkData.append('tipo', tipo);
 
             handleAjaxRequest('gerir_atributos.php', checkData, (data) => {
-                let msg = `Tem a certeza que quer eliminar ${tipo === 'grupo' ? 'o grupo' : 'o valor'} "${nome}"?`;
+                const escNome = String(nome).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+                let msg = `Tem a certeza que quer eliminar ${tipo === 'grupo' ? 'o grupo' : 'o valor'} "${escNome}"?`;
                 if (data.em_uso) {
                     msg = `ATENÇÃO: Este ${tipo} está a ser usado em ${data.contagem} produto(s). Eliminar irá remover esta informação de todos eles. Continuar?`;
                 }

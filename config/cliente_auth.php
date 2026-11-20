@@ -87,7 +87,11 @@ if (!function_exists('require_cliente')) {
         }
 
         $next = $_SERVER['REQUEST_URI'] ?? '/minha-conta';
-        header('Location: ' . $redirect . '?next=' . urlencode($next));
+        if (!is_string($next) || !str_starts_with($next, '/') || str_starts_with($next, '//') || str_starts_with($next, '/\\') || preg_match('/[\r\n]/', $next)) {
+            $next = '/minha-conta';
+        }
+        $sep = (strpos($redirect, '?') !== false) ? '&' : '?';
+        header('Location: ' . $redirect . $sep . 'next=' . urlencode($next));
         exit;
     }
 }

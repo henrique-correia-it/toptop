@@ -400,7 +400,7 @@ function ligarEventosUpload(input) {
             const fd = new FormData();
             fd.append('acao', 'upload_capa');
             fd.append('id', id);
-            fd.append('foto', compressedFile, 'upload.jpg');
+            fd.append('foto', compressedFile, compressedFile.name || 'upload.jpg');
             fd.append('csrf_token', CSRF);
 
             const res = await fetch('ajax_categoria.php', { method: 'POST', body: fd });

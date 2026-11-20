@@ -244,21 +244,29 @@ document.addEventListener('DOMContentLoaded', function() {
         const nome = form.querySelector('#modal-template-nome').value;
         const descricao = form.querySelector('#modal-template-descricao').value;
         
+        const item = document.querySelector(`[data-template-key="${CSS.escape(key)}"]`);
         const fd = new FormData();
         fd.append('template_key', key); fd.append('nome', nome); fd.append('descricao', descricao);
-        fd.append('csrf_token', '<?php echo $_SESSION['csrf_token']; ?>');
+        if (item) {
+            fd.append('assunto', item.querySelector('input[type="text"], input')?.value || '');
+            fd.append('corpo', item.querySelector('textarea')?.value || '');
+        }
+        fd.append('csrf_token', <?php echo json_encode($_SESSION['csrf_token'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>);
 
         fetch('ajax_salvar_template.php', { method: 'POST', body: fd })
             .then(r => r.json()).then(data => {
                 if (data.sucesso) {
-                    const item = document.querySelector(`[data-template-key="${key}"]`);
-                    item.dataset.nome = nome; item.dataset.descricao = descricao;
-                    item.querySelector('h3').textContent = nome;
-                    item.querySelector('.template-descricao-inline').textContent = descricao;
+                    if (item) {
+                        item.dataset.nome = nome; item.dataset.descricao = descricao;
+                        item.querySelector('h3').textContent = nome;
+                        item.querySelector('.template-descricao-inline').textContent = descricao;
+                    }
                     document.getElementById('modal-editar-template').style.display = 'none';
                     mostrarPopup('Template atualizado!', 'sucesso');
+                } else {
+                    mostrarPopup(data.mensagem || 'Erro ao atualizar template.', 'erro');
                 }
-            });
+            }).catch(() => mostrarPopup('Erro de ligação ao guardar template.', 'erro'));
     }
 
     // --- GUARDAR ASSUNTO/CORPO ---
@@ -278,16 +286,21 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch('ajax_salvar_template.php', { method: 'POST', body: fd })
                 .then(r => r.json()).then(data => {
                     if (data.sucesso) mostrarPopup('Template guardado!', 'sucesso');
-                });
+                    else mostrarPopup(data.mensagem || 'Erro ao guardar template.', 'erro');
+                }).catch(() => mostrarPopup('Erro de ligação ao guardar template.', 'erro'));
         });
     });
 
     // --- CLICK TO COPY ---
     document.querySelectorAll('.coluna-placeholders code').forEach(code => {
+        code.dataset.orig = code.textContent;
         code.onclick = function() {
-            navigator.clipboard.writeText(this.textContent).then(() => {
-                const old = this.textContent; this.textContent = 'Copiado!';
-                setTimeout(() => this.textContent = old, 1000);
+            const orig = this.dataset.orig;
+            if (!navigator.clipboard) return;
+            navigator.clipboard.writeText(orig).then(() => {
+                clearTimeout(this._copyTimer);
+                this.textContent = 'Copiado!';
+                this._copyTimer = setTimeout(() => { this.textContent = orig; }, 1000);
             });
         };
     });

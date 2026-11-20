@@ -156,10 +156,10 @@ $portes_por_pais = $portes_js ?? [];
             </div>
 
             <?php if ($erro): ?>
-                <script>document.addEventListener('DOMContentLoaded', () => mostrarPopup("<?php echo addslashes($erro); ?>", "erro"));</script>
+                <script>document.addEventListener('DOMContentLoaded', () => mostrarPopup(<?php echo json_encode($erro, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>, "erro"));</script>
             <?php endif; ?>
             <?php if ($sucesso): ?>
-                <script>document.addEventListener('DOMContentLoaded', () => mostrarPopup("<?php echo addslashes($sucesso); ?>", "sucesso"));</script>
+                <script>document.addEventListener('DOMContentLoaded', () => mostrarPopup(<?php echo json_encode($sucesso, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>, "sucesso"));</script>
             <?php endif; ?>
 
             <div class="cliente-panel">

@@ -4,9 +4,9 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require __DIR__ . '/../../phpmailer/src/Exception.php';
-require __DIR__ . '/../../phpmailer/src/PHPMailer.php';
-require __DIR__ . '/../../phpmailer/src/SMTP.php';
+require_once __DIR__ . '/../../phpmailer/src/Exception.php';
+require_once __DIR__ . '/../../phpmailer/src/PHPMailer.php';
+require_once __DIR__ . '/../../phpmailer/src/SMTP.php';
 require_once __DIR__ . '/../../config/formatters.php';
 require_once __DIR__ . '/../../config/header_functions.php';
 
@@ -14,21 +14,43 @@ require_once __DIR__ . '/../../config/header_functions.php';
 // SMTPKeepAlive mantém a ligação aberta entre envios, evitando
 // que o servidor interprete múltiplas ligações rápidas como spam.
 $_smtp_mailer_instance = null;
+$_smtp_shutdown_registered = false;
+
+function _resetSmtpMailer() {
+    global $_smtp_mailer_instance;
+    if ($_smtp_mailer_instance !== null) {
+        try {
+            $_smtp_mailer_instance->smtpClose();
+        } catch (\Throwable $e) {
+            // Ignora erro ao fechar ligação caída
+        }
+        $_smtp_mailer_instance = null;
+    }
+}
 
 function _getSmtpMailer() {
-    global $_smtp_mailer_instance;
+    global $_smtp_mailer_instance, $_smtp_shutdown_registered;
 
     $env_path = __DIR__ . '/../../.env';
-    $env_vars = file_exists($env_path) ? parse_ini_file($env_path) : [];
+    $env_vars = file_exists($env_path) ? parse_ini_file($env_path, false, INI_SCANNER_RAW) : [];
+    if (!is_array($env_vars)) {
+        $env_vars = [];
+    }
 
     if ($_smtp_mailer_instance !== null) {
-        // Limpa destinatários e anexos do envio anterior
+        // Limpa destinatários, cabeçalhos personalizados e anexos do envio anterior
         $_smtp_mailer_instance->clearAddresses();
         $_smtp_mailer_instance->clearCCs();
         $_smtp_mailer_instance->clearBCCs();
         $_smtp_mailer_instance->clearReplyTos();
         $_smtp_mailer_instance->clearAttachments();
+        $_smtp_mailer_instance->clearCustomHeaders();
         return [$_smtp_mailer_instance, $env_vars];
+    }
+
+    if (!$_smtp_shutdown_registered) {
+        register_shutdown_function('_resetSmtpMailer');
+        $_smtp_shutdown_registered = true;
     }
 
     $mail = new PHPMailer(true);
@@ -77,8 +99,8 @@ function enviarEmailEncomenda($tipo, $dados) {
         $corpo_email_bruto = '';
 
         if ($tipo === 'personalizado' || !empty($dados['corpo_editado'])) {
-            $assunto          = $dados['assunto_email'];
-            $corpo_email_bruto = $dados['mensagem_para_cliente'];
+            $assunto           = str_replace(["\r", "\n"], ' ', (string)($dados['assunto_email'] ?? ''));
+            $corpo_email_bruto = htmlspecialchars((string)($dados['mensagem_para_cliente'] ?? ''), ENT_QUOTES, 'UTF-8', false);
         } else {
             // Buscar template na base de dados
             $template_key = str_replace(' ', '_', $tipo);
@@ -99,11 +121,11 @@ function enviarEmailEncomenda($tipo, $dados) {
         }
 
         $base_url = rtrim($env_vars['APP_URL'] ?? 'https://toptop.pt', '/');
-        $link_encomenda = $base_url . '/estado_encomenda.php?id=' . $dados['id'] . '&token=' . $dados['token'];
+        $link_encomenda = $base_url . '/estado_encomenda.php?id=' . (int)($dados['id'] ?? 0) . '&token=' . urlencode((string)($dados['token'] ?? ''));
 
         $total_produtos = (float)($dados['total'] ?? 0);
         $metodo_entrega = $dados['metodo_entrega'] ?? 'envio';
-        $portes         = ($metodo_entrega === 'levantamento') ? 0.0 : (float)($dados['portes_envio'] ?? 0);
+        $portes         = ($metodo_entrega === 'recolha' || $metodo_entrega === 'levantamento') ? 0.0 : (float)($dados['portes_envio'] ?? 0);
         $total_final    = $total_produtos + $portes;
 
         $lista_produtos_html = '';
@@ -202,7 +224,8 @@ function enviarEmailEncomenda($tipo, $dados) {
     } catch (Exception $e) {
         log_email("PHPMailer falhou (tipo:{$tipo}): {$mail->ErrorInfo}", 'email_handler.php');
         error_log("PHPMailer (tipo:{$tipo}) falhou: {$mail->ErrorInfo}");
-        throw new Exception("Envio de email falhou: {$mail->ErrorInfo}");
+        _resetSmtpMailer();
+        throw new Exception("Envio de email falhou.");
     }
 }
 
@@ -211,11 +234,12 @@ function enviarEmailNotificacaoLoja($tipo, $dados) {
     [$mail, $env_vars] = _getSmtpMailer();
 
     try {
-        $from_address = $env_vars['MAIL_FROM_ADDRESS'] ?? 'noreply@toptop.pt';
-        $from_name    = $env_vars['MAIL_FROM_NAME']    ?? 'TopTop';
+        $from_address  = $env_vars['MAIL_FROM_ADDRESS'] ?? 'noreply@toptop.pt';
+        $from_name     = $env_vars['MAIL_FROM_NAME']    ?? 'TopTop';
+        $store_address = $env_vars['MAIL_STORE_ADDRESS'] ?? ($env_vars['MAIL_REPLY_TO_ADDRESS'] ?? 'toptopclothingstore@gmail.com');
 
         $mail->setFrom($from_address, $from_name);
-        $mail->addAddress('toptopclothingstore@gmail.com', 'TopTop Loja');
+        $mail->addAddress($store_address, 'TopTop Loja');
         $mail->isHTML(true);
 
         // Buscar template na base de dados
@@ -280,6 +304,7 @@ function enviarEmailNotificacaoLoja($tipo, $dados) {
     } catch (Exception $e) {
         log_email("Notificação loja falhou (tipo:{$tipo}): {$mail->ErrorInfo}", 'email_handler.php');
         error_log("Notificação loja (tipo:{$tipo}) falhou: {$mail->ErrorInfo}");
+        _resetSmtpMailer();
     }
 }
 function enviarEmailTemplate($template_key, $to_email, $to_name, $placeholders = []) {
@@ -312,9 +337,17 @@ function enviarEmailTemplate($template_key, $to_email, $to_name, $placeholders =
         $corpo   = $tpl['body'];
         $stmt->close();
 
-        // Substituir placeholders
-        $assunto_final = str_replace(array_keys($placeholders), array_values($placeholders), $assunto);
-        $corpo_processado = str_replace(array_keys($placeholders), array_values($placeholders), $corpo);
+        // Substituir placeholders (texto limpo no Subject; escapado com ENT_QUOTES sem double-encode no corpo HTML)
+        $placeholders_subject = [];
+        $placeholders_html = [];
+        foreach ($placeholders as $k => $v) {
+            $strVal = (string)$v;
+            $placeholders_subject[$k] = str_replace(["\r", "\n"], ' ', strip_tags($strVal));
+            $placeholders_html[$k]    = htmlspecialchars($strVal, ENT_QUOTES, 'UTF-8', false);
+        }
+
+        $assunto_final    = str_replace(array_keys($placeholders_subject), array_values($placeholders_subject), $assunto);
+        $corpo_processado = str_replace(array_keys($placeholders_html), array_values($placeholders_html), $corpo);
         $corpo_html_inner = nl2br($corpo_processado);
 
         $mail->Subject = $assunto_final;
@@ -342,7 +375,9 @@ function enviarEmailTemplate($template_key, $to_email, $to_name, $placeholders =
         $mail->send();
         return true;
     } catch (Exception $e) {
+        log_email("enviarEmailTemplate ({$template_key}) falhou: " . $mail->ErrorInfo, 'email_handler.php');
         error_log("enviarEmailTemplate ({$template_key}) falhou: " . $mail->ErrorInfo);
+        _resetSmtpMailer();
         return false;
     }
 }

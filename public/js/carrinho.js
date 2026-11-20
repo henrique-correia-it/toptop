@@ -1,7 +1,30 @@
 // public/js/carrinho.js
 
 document.addEventListener("DOMContentLoaded", () => {
-  let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+  const escapeHtml = (str) =>
+    String(str ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  const safeImageUrl = (url) => {
+    const val = String(url ?? "").trim();
+    if (/^(\/|https?:\/\/)/i.test(val)) return escapeHtml(val);
+    return "/public/images/default.jpg";
+  };
+
+  const lerCarrinhoStorage = () => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem("carrinho") || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  };
+
+  let carrinho = lerCarrinhoStorage();
 
   const sideCart = document.getElementById("side-cart");
   const sideCartOverlay = document.getElementById("side-cart-overlay");
@@ -43,11 +66,14 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const fecharSideCart = () => {
+    const estavaAberto = sideCart && sideCart.classList.contains("ativo");
     if (sideCart) sideCart.classList.remove("ativo");
     if (sideCartOverlay) sideCartOverlay.classList.remove("ativo");
     atualizarEstadoIconeCarrinho(false);
-    document.body.classList.remove("app-panel-open");
-    document.body.style.overflow = "";
+    if (estavaAberto) {
+      document.body.classList.remove("app-panel-open");
+      document.body.style.overflow = "";
+    }
   };
   
   const getDadosEntregaEstimados = () => {
@@ -131,6 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let totalPreco = 0;
     let totalPeso = 0;
 
+    let sideCartItemsHTML = "";
     carrinho.forEach((item, index) => {
       totalPreco += parseFloat(item.preco) * item.quantidade;
       totalPeso += (parseInt(item.peso_gramas) || 0) * item.quantidade;
@@ -140,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
         selecoesHTML = Object.entries(item.selecoes)
           .map(
             ([nome, valor]) =>
-              `<p class="side-cart-item-atributo">${nome}: <strong>${valor}</strong></p>`,
+              `<p class="side-cart-item-atributo">${escapeHtml(nome)}: <strong>${escapeHtml(valor)}</strong></p>`,
           )
           .join("");
       }
@@ -150,16 +177,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const quantidadeHTML = `
                 <div class="cart-qty-editor">
                     <button class="qty-btn" onclick="diminuirQuantidade(${index})" ${isMinStock ? "disabled" : ""}>-</button>
-                    <span class="cart-qty-val">${item.quantidade}</span>
+                    <span class="cart-qty-val">${parseInt(item.quantidade, 10) || 1}</span>
                     <button class="qty-btn" onclick="aumentarQuantidade(${index})" ${isMaxStock ? "disabled" : ""}>+</button>
                 </div>
             `;
 
-      const itemHTML = `
+      const nomeSeguro = escapeHtml(item.nome);
+      sideCartItemsHTML += `
                 <div class="side-cart-item">
-                    <img src="${item.foto}" alt="${item.nome}">
+                    <img src="${safeImageUrl(item.foto)}" alt="${nomeSeguro}">
                     <div class="side-cart-item-info">
-                        <h5>${item.nome}</h5>
+                        <h5>${nomeSeguro}</h5>
                         ${selecoesHTML}
                         <p class="side-cart-item-preco"><strong>€${number_format(item.preco, 2, ",", ".")}</strong></p>
                     </div>
@@ -169,8 +197,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                 </div>
             `;
-      sideCartItemsContainer.innerHTML += itemHTML;
     });
+    sideCartItemsContainer.innerHTML = sideCartItemsHTML;
     
     const valorPortes = getPortesEstimados(totalPeso, totalPreco);
     const portesGratis = temPortesGratisEstimados(totalPreco);
@@ -194,8 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Sincronização em tempo real (mesma aba e abas diferentes)
   const syncCarrinho = () => {
-    const data = localStorage.getItem("carrinho");
-    carrinho = data ? JSON.parse(data) : [];
+    carrinho = lerCarrinhoStorage();
     atualizarIconeCarrinho();
     if (isPaginaCarrinho) carregarItensCarrinho();
     if (sideCart && sideCart.classList.contains("ativo")) renderSideCart();
@@ -389,18 +416,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let totalPreco = 0;
     let totalPeso = 0;
+    let itensHTML = "";
     carrinho.forEach((item, index) => {
       totalPreco += parseFloat(item.preco) * item.quantidade;
       totalPeso += (parseInt(item.peso_gramas) || 0) * item.quantidade;
-      
+
       let precoHTML = item.emPromocao
         ? `<strong>€${number_format(item.preco, 2, ",", ".")} <del style="font-weight:400; color:#94a3b8; font-size:0.85rem; margin-left:5px;">€${number_format(item.precoOriginal, 2, ",", ".")}</del></strong>`
         : `<strong>€${number_format(item.preco, 2, ",", ".")}</strong>`;
-      
+
       let selecoesHTML = "";
       if (item.selecoes) {
         for (const nomeAtributo in item.selecoes) {
-          selecoesHTML += `<p class="side-cart-item-atributo">${nomeAtributo}: <strong>${item.selecoes[nomeAtributo]}</strong></p>`;
+          selecoesHTML += `<p class="side-cart-item-atributo">${escapeHtml(nomeAtributo)}: <strong>${escapeHtml(item.selecoes[nomeAtributo])}</strong></p>`;
         }
       }
 
@@ -410,16 +438,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const quantidadeHTML = `
         <div class="cart-qty-editor">
             <button class="qty-btn" onclick="diminuirQuantidade(${index})" ${isMinStock ? "disabled" : ""}>-</button>
-            <span class="cart-qty-val">${item.quantidade}</span>
+            <span class="cart-qty-val">${parseInt(item.quantidade, 10) || 1}</span>
             <button class="qty-btn" onclick="aumentarQuantidade(${index})" ${isMaxStock ? "disabled" : ""}>+</button>
         </div>
       `;
 
-      container.innerHTML += `
+      const nomeSeguro = escapeHtml(item.nome);
+      itensHTML += `
         <div class="item-carrinho side-cart-item">
-            <img src="${item.foto}" alt="${item.nome}">
+            <img src="${safeImageUrl(item.foto)}" alt="${nomeSeguro}">
             <div class="side-cart-item-info">
-                <h5>${item.nome}</h5>
+                <h5>${nomeSeguro}</h5>
                 ${selecoesHTML}
                 <p class="side-cart-item-preco">${precoHTML}</p>
             </div>
@@ -429,6 +458,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
         </div>`;
     });
+    container.innerHTML = itensHTML;
 
     if (totalContainer) {
       const valorPortes = getPortesEstimados(totalPeso, totalPreco);

@@ -17,6 +17,7 @@ function validarProduto($conn, $nome, $referencia, $id_a_ignorar = 0) {
         $stmt_nome->bind_param("si", $nome, $id_a_ignorar);
         $stmt_nome->execute();
         if ($stmt_nome->get_result()->num_rows > 0) {
+            $stmt_nome->close();
             return ['valido' => false, 'mensagem' => 'Este nome de produto já está a ser utilizado.', 'campo' => 'nome'];
         }
         $stmt_nome->close();
@@ -28,6 +29,7 @@ function validarProduto($conn, $nome, $referencia, $id_a_ignorar = 0) {
         $stmt_ref->bind_param("si", $referencia, $id_a_ignorar);
         $stmt_ref->execute();
         if ($stmt_ref->get_result()->num_rows > 0) {
+            $stmt_ref->close();
             return ['valido' => false, 'mensagem' => 'Esta referência (SKU) já está a ser utilizada.', 'campo' => 'referencia'];
         }
         $stmt_ref->close();

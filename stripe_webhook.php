@@ -72,6 +72,14 @@ switch ($event_type) {
     // ── Pagamento confirmado ─────────────────────────────────────────────────
     case 'payment_intent.succeeded':
         if ($encomenda['estado'] !== 'pago') {
+            // Valida o montante recebido contra o total esperado da encomenda (tolerância de 1 cêntimo)
+            $total_esperado = (float)$encomenda['total'] + (($encomenda['metodo_entrega'] === 'recolha') ? 0.0 : (float)$encomenda['portes_envio']);
+            $cents_esperados = (int)round($total_esperado * 100);
+            $cents_recebidos = (int)($payment_intent['amount_received'] ?? $payment_intent['amount'] ?? 0);
+            if ($cents_esperados > 0 && $cents_recebidos < ($cents_esperados - 1)) {
+                log_wh("ALERTA: Montante recebido ({$cents_recebidos}c) inferior ao esperado ({$cents_esperados}c) para Enc #{$encomenda['id']}.", 'ERROR');
+                break;
+            }
 
             // Detectar método de pagamento real (Cartão vs MB WAY)
             $metodo_real = 'Stripe';

@@ -43,9 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($perfil === 'cliente' && $customer && (int)$customer['ativo'] === 1) {
                     try {
                         $token = customer_create_reset_token($conn, (int)$customer['id']);
-                        $url = rtrim($base_url ?? ('https://' . ($_SERVER['HTTP_HOST'] ?? '')), '/') . '/redefinir-conta?token=' . urlencode($token);
+                        $url = rtrim($base_url, '/') . '/redefinir-conta?token=' . urlencode($token);
                         enviarEmailTemplate('recuperacao_cliente', $customer['email'], $customer['nome'], [
-                            '{nome_cliente}' => $customer['nome'],
+                            '{nome_cliente}' => htmlspecialchars($customer['nome'], ENT_QUOTES, 'UTF-8'),
                             '{link_recuperacao}' => $url
                         ]);
                     } catch (Throwable $e) {
@@ -67,10 +67,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt_token->execute();
                         $stmt_token->close();
 
-                        $link_recuperacao = rtrim($base_url ?? ('https://' . ($_SERVER['HTTP_HOST'] ?? '')), '/') . "/redefinir-conta?token=" . $token;
-                        
+                        $link_recuperacao = rtrim($base_url, '/') . '/redefinir-conta?token=' . urlencode($token);
+
                         enviarEmailTemplate('recuperacao_admin', $email, $admin['username'], [
-                            '{nome_admin}' => $admin['username'],
+                            '{nome_admin}' => htmlspecialchars($admin['username'], ENT_QUOTES, 'UTF-8'),
                             '{link_recuperacao}' => $link_recuperacao
                         ]);
                     } catch (Throwable $e) {

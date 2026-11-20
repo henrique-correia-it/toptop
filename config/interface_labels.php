@@ -5,39 +5,56 @@
 
 require_once __DIR__ . '/database.php';
 
-function getInterfaceString($key, $defaultTitle = '', $defaultDesc = '') {
-    global $conn;
+function &_interfaceStringsCache(): array {
     static $strings_cache = null;
-
-    // Load all strings into cache on first call to minimize queries
     if ($strings_cache === null) {
+        global $conn;
         $strings_cache = [];
-        $res = $conn->query("SELECT string_key, title, description FROM admin_interface_strings");
-        if ($res) {
-            while ($row = $res->fetch_assoc()) {
-                $strings_cache[$row['string_key']] = [
-                    'title' => $row['title'],
-                    'description' => $row['description']
-                ];
+        if (isset($conn) && $conn) {
+            try {
+                $res = $conn->query("SELECT string_key, title, description FROM admin_interface_strings");
+                if ($res) {
+                    while ($row = $res->fetch_assoc()) {
+                        $strings_cache[$row['string_key']] = [
+                            'title' => $row['title'],
+                            'description' => $row['description'],
+                        ];
+                    }
+                }
+            } catch (Throwable $e) {
+                // Mantém cache vazio para fallback seguro
             }
         }
     }
+    return $strings_cache;
+}
+
+function getInterfaceString($key, $defaultTitle = '', $defaultDesc = '') {
+    $strings_cache = &_interfaceStringsCache();
 
     if (isset($strings_cache[$key])) {
         return $strings_cache[$key];
     }
 
-    // Fallback to default if not found
     return [
         'title' => $defaultTitle,
-        'description' => $defaultDesc
+        'description' => $defaultDesc,
     ];
 }
 
 function saveInterfaceString($key, $title, $description) {
     global $conn;
+    if (!isset($conn) || !$conn) return false;
+
     $stmt = $conn->prepare("INSERT INTO admin_interface_strings (string_key, title, description) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description)");
+    if (!$stmt) return false;
     $stmt->bind_param("sss", $key, $title, $description);
-    return $stmt->execute();
+    $ok = $stmt->execute();
+    $stmt->close();
+
+    if ($ok) {
+        $strings_cache = &_interfaceStringsCache();
+        $strings_cache[$key] = ['title' => $title, 'description' => $description];
+    }
+    return $ok;
 }
-?>

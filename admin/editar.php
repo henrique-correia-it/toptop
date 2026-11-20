@@ -49,8 +49,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // --- FIM DA CORREÇÃO DE VALIDAÇÃO ---
 
             $preco = (float)$preco_post;
+            if ($preco <= 0) { throw new Exception("O preço deve ser superior a zero."); }
             $preco_promocional = !empty($_POST['preco_promocional']) ? (float)$_POST['preco_promocional'] : NULL;
-            if ($preco_promocional !== NULL && $preco_promocional >= $preco) {
+            if ($preco_promocional !== NULL && ($preco_promocional <= 0 || $preco_promocional >= $preco)) {
                 throw new Exception("O preço promocional não pode ser maior ou igual ao preço normal.");
             }
             
@@ -79,7 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (!empty($ids_para_apagar)) {
                 foreach ($ids_para_apagar as $img_id) {
                     if (isset($mapa_id_para_nome_antigo[$img_id])) {
-                        $ficheiros_para_unlink[] = __DIR__ . '/../public/images/' . $mapa_id_para_nome_antigo[$img_id];
+                        $ficheiros_para_unlink[] = basename($mapa_id_para_nome_antigo[$img_id]);
                         unset($mapa_id_para_nome_antigo[$img_id]);
                     }
                 }
@@ -95,7 +96,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $base64_raw     = preg_replace('#^data:image/\w+;base64,#i', '', $img_info['dados'] ?? '');
                 $dados_binarios = base64_decode($base64_raw, true);
 
-                if ($dados_binarios === false || strlen($dados_binarios) < 12) {
+                if ($dados_binarios === false || strlen($dados_binarios) < 12 || strlen($dados_binarios) > 5 * 1024 * 1024) {
                     throw new Exception("Dados de imagem inválidos ou corrompidos.");
                 }
 
@@ -105,7 +106,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     throw new Exception("O ficheiro enviado não é uma imagem válida (JPEG, PNG, WEBP ou GIF).");
                 }
 
-                $nome_ficheiro_novo = uniqid('img_', true) . ".jpg";
+                $ext_map = [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_WEBP => 'webp', IMAGETYPE_GIF => 'gif'];
+                $ext_real = $ext_map[$info_imagem[2]] ?? 'jpg';
+                $nome_ficheiro_novo = uniqid('img_', true) . "." . $ext_real;
                 $caminho_absoluto   = __DIR__ . '/../public/images/' . $nome_ficheiro_novo;
 
                 if (file_put_contents($caminho_absoluto, $dados_binarios) === false) {
@@ -131,7 +134,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
 
-            // 5. Sincronizar a tabela `produto_imagens`
+            // 5. Garantir pelo menos 1 imagem e no máximo 5, e sincronizar `produto_imagens`
+            if (empty($nomes_ficheiros_finais_ordenados)) {
+                throw new Exception("O produto deve ter pelo menos uma imagem.");
+            }
+            if (count($nomes_ficheiros_finais_ordenados) > 5) {
+                throw new Exception("O produto pode ter no máximo 5 imagens.");
+            }
             $stmt_del_img = $conn->prepare("DELETE FROM produto_imagens WHERE produto_id = ?");
             $stmt_del_img->bind_param("i", $id);
             $stmt_del_img->execute();
@@ -212,10 +221,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             $conn->commit();
 
-            // Apagar ficheiros antigos só DEPOIS do commit bem-sucedido
-            foreach ($ficheiros_para_unlink as $caminho) {
-                if (file_exists($caminho)) @unlink($caminho);
+            // Apagar ficheiros antigos só DEPOIS do commit bem-sucedido e apenas se não referenciados noutras tabelas
+            $stmt_ref_prod = $conn->prepare("SELECT COUNT(*) FROM produtos WHERE foto_principal = ?");
+            $stmt_ref_imgs = $conn->prepare("SELECT COUNT(*) FROM produto_imagens WHERE nome_ficheiro = ?");
+            $stmt_ref_snap = $conn->prepare("SELECT COUNT(*) FROM encomenda_itens WHERE foto_snapshot = ?");
+            foreach ($ficheiros_para_unlink as $nome_arq) {
+                $em_uso = false;
+                foreach ([$stmt_ref_prod, $stmt_ref_imgs, $stmt_ref_snap] as $st_ref) {
+                    if ($st_ref) {
+                        $st_ref->bind_param("s", $nome_arq);
+                        $st_ref->execute();
+                        $cnt = (int)$st_ref->get_result()->fetch_row()[0];
+                        if ($cnt > 0) { $em_uso = true; break; }
+                    }
+                }
+                if (!$em_uso) {
+                    $caminho = __DIR__ . '/../public/images/' . basename($nome_arq);
+                    if (file_exists($caminho) && is_file($caminho)) @unlink($caminho);
+                }
             }
+            if ($stmt_ref_prod) $stmt_ref_prod->close();
+            if ($stmt_ref_imgs) $stmt_ref_imgs->close();
+            if ($stmt_ref_snap) $stmt_ref_snap->close();
 
             $_SESSION['flash_message'] = ['tipo' => 'sucesso', 'texto' => 'Produto atualizado com sucesso!'];
             header("Location: " . $return_url);

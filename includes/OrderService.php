@@ -36,34 +36,36 @@ if (!function_exists('insert_order_items_and_decrement_stock')) {
             throw new RuntimeException("Erro interno de base de dados (prepare itens): " . $conn->error);
         }
 
-        foreach ($items as $item) {
-            $stmtItem->bind_param(
-                'iiisssid',
-                $orderId,
-                $item['produto_id'],
-                $item['variacao_id_db'],
-                $item['nome_produto'],
-                $item['foto_snapshot'],
-                $item['selecoes_atributos'],
-                $item['quantidade'],
-                $item['preco_unitario']
-            );
-            $stmtItem->execute();
-
-            $stmtStock->bind_param('iii', $item['quantidade'], $item['variacao_id_db'], $item['quantidade']);
-            $stmtStock->execute();
-
-            if ($stmtStock->affected_rows === 0) {
-                throw new Exception(
-                    "Lamentamos, mas o stock do produto '" .
-                    htmlspecialchars($item['nome_produto']) .
-                    "' esgotou-se enquanto finalizava a compra. Por favor, atualize o carrinho."
+        try {
+            foreach ($items as $item) {
+                $stmtItem->bind_param(
+                    'iiisssid',
+                    $orderId,
+                    $item['produto_id'],
+                    $item['variacao_id_db'],
+                    $item['nome_produto'],
+                    $item['foto_snapshot'],
+                    $item['selecoes_atributos'],
+                    $item['quantidade'],
+                    $item['preco_unitario']
                 );
-            }
-        }
+                $stmtItem->execute();
 
-        $stmtItem->close();
-        $stmtStock->close();
+                $stmtStock->bind_param('iii', $item['quantidade'], $item['variacao_id_db'], $item['quantidade']);
+                $stmtStock->execute();
+
+                if ($stmtStock->affected_rows === 0) {
+                    throw new Exception(
+                        "Lamentamos, mas o stock do produto '" .
+                        htmlspecialchars($item['nome_produto']) .
+                        "' esgotou-se enquanto finalizava a compra. Por favor, atualize o carrinho."
+                    );
+                }
+            }
+        } finally {
+            $stmtItem->close();
+            $stmtStock->close();
+        }
     }
 }
 

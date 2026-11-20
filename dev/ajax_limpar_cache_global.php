@@ -1,5 +1,5 @@
 <?php
-// admin/ajax_limpar_cache_global.php
+// dev/ajax_limpar_cache_global.php
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/http.php';
 require_once __DIR__ . '/../config/logger.php';
@@ -15,22 +15,24 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_from_post()) {
 }
 
 try {
-    // Gera um novo timestamp (a hora atual em segundos)
     $nova_versao = time();
-    
-    // Cria o conteúdo do ficheiro PHP
-    $conteudo = "<?php\nreturn '" . $nova_versao . "';\n?>";
-    
-    // Guarda na pasta config
+    $conteudo = "<?php\nreturn '" . $nova_versao . "';\n";
     $caminho = __DIR__ . '/../config/versao_site.php';
-    
-    if (file_put_contents($caminho, $conteudo)) {
-        json_success(['nova_versao' => $nova_versao]);
-    } else {
-        throw new Exception("Não foi possível escrever no ficheiro de versão.");
+    $tmp = $caminho . '.tmp.' . bin2hex(random_bytes(4));
+
+    if (file_put_contents($tmp, $conteudo, LOCK_EX) === false) {
+        throw new Exception("Não foi possível escrever no ficheiro temporário de versão.");
     }
-} catch (Exception $e) {
+    if (!rename($tmp, $caminho)) {
+        @unlink($tmp);
+        throw new Exception("Não foi possível atualizar atomicamente o ficheiro de versão.");
+    }
+    if (function_exists('opcache_invalidate')) {
+        @opcache_invalidate($caminho, true);
+    }
+
+    json_success(['nova_versao' => $nova_versao]);
+} catch (\Throwable $e) {
     log_app($e->getMessage(), 'ERROR', 'ajax_limpar_cache_global.php');
-    json_error('Nao foi possivel limpar o cache.', 500);
+    json_error('Não foi possível limpar o cache.', 500);
 }
-?>

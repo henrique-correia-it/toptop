@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let matchedPairs = 0;
     let attempts = 0;
     let isLocked = false;
+    let mismatchTimer = null;
+    let winTimer = null;
+    let confettiInterval = null;
 
     function shuffle(array) {
         for (let i = array.length - 1; i > 0; i--) {
@@ -64,10 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
             isLocked = false;
 
             if (matchedPairs === emojis.length) {
-                setTimeout(showWinModal, 500);
+                winTimer = setTimeout(showWinModal, 500);
             }
         } else {
-            setTimeout(() => {
+            mismatchTimer = setTimeout(() => {
                 card1.classList.remove('flipped');
                 card2.classList.remove('flipped');
                 flippedCards = [];
@@ -80,7 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
         finalAttemptsSpan.textContent = attempts;
         winModal.classList.add('active');
         
-        // Disparar Confetis!
+        // Disparar Confetis (se biblioteca disponível)
+        if (typeof confetti !== 'function') return;
         const duration = 3 * 1000;
         const animationEnd = Date.now() + duration;
         const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
@@ -89,11 +93,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return Math.random() * (max - min) + min;
         }
 
-        const interval = setInterval(function() {
+        clearInterval(confettiInterval);
+        confettiInterval = setInterval(function() {
             const timeLeft = animationEnd - Date.now();
 
             if (timeLeft <= 0) {
-                return clearInterval(interval);
+                clearInterval(confettiInterval);
+                confettiInterval = null;
+                return;
             }
 
             const particleCount = 50 * (timeLeft / duration);
@@ -108,6 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function initGame() {
+        clearTimeout(mismatchTimer);
+        clearTimeout(winTimer);
+        clearInterval(confettiInterval);
         gameGrid.innerHTML = '';
         const shuffledCards = shuffle([...cards]);
         shuffledCards.forEach((emoji, index) => {

@@ -4,18 +4,19 @@ ob_start();
 include __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/http.php';
 
-$categoria = htmlspecialchars($_GET['categoria'] ?? '', ENT_QUOTES, 'UTF-8');
+$categoria = trim((string)($_GET['categoria'] ?? ''));
 $id_atual = filter_input(INPUT_GET, 'id_atual', FILTER_VALIDATE_INT);
 
 $produtos_relacionados = [];
 
 try {
-    if (!empty($categoria) && $id_atual > 0) {
+    if ($categoria !== '' && $id_atual > 0) {
         $stmt = $conn->prepare(
-            "SELECT id, nome, preco, preco_promocional, foto_principal
-            FROM produtos
-            WHERE categoria = ? AND id != ? AND ativo = 1
-            ORDER BY id DESC
+            "SELECT p.id, p.nome, p.preco, p.preco_promocional, p.foto_principal
+            FROM produtos p
+            WHERE p.categoria = ? AND p.id != ? AND p.ativo = 1
+              AND EXISTS (SELECT 1 FROM produto_variacoes pv WHERE pv.produto_id = p.id AND pv.quantidade > 0)
+            ORDER BY p.id DESC
             LIMIT 4"
         );
         $stmt->bind_param("si", $categoria, $id_atual);

@@ -104,10 +104,13 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const closeSearch = () => {
+    const estavaAberto = searchOverlay && searchOverlay.classList.contains("ativo");
     if (searchOverlay) searchOverlay.classList.remove("ativo");
     atualizarEstadoBotaoPesquisa(false);
-    document.body.classList.remove("app-panel-open");
-    document.body.style.overflow = "";
+    if (estavaAberto) {
+      document.body.classList.remove("app-panel-open");
+      document.body.style.overflow = "";
+    }
 
     document.querySelectorAll(".search-results-container").forEach((container) => {
       container.style.display = "none";

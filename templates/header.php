@@ -3,7 +3,8 @@
 require_once __DIR__ . '/../config/session.php';
 require_once __DIR__ . '/../config/limpar_abandonadas.php';
 // --- CARREGAMENTO DE COMPONENTES ---
-if (strpos($_SERVER['REQUEST_URI'], '/admin/') !== false || strpos($_SERVER['REQUEST_URI'], '/dev/') !== false) {
+$requestPathHeader = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+if (str_starts_with($requestPathHeader, '/admin') || str_starts_with($requestPathHeader, '/dev')) {
     require_once __DIR__ . '/../admin/components/back_button.php';
     require_once __DIR__ . '/../admin/components/context_menu.php';
     require_once __DIR__ . '/../admin/components/quick_edit_modal.php';
@@ -13,7 +14,17 @@ require_once __DIR__ . '/../config/cliente_auth.php';
 require_once __DIR__ . '/../config/csrf.php';
 
 // --- BLOCO ANTI-CACHE ---
-header("Cache-Control: no-cache, must-revalidate");
+if (
+    str_starts_with($requestPathHeader, '/admin')
+    || str_starts_with($requestPathHeader, '/dev')
+    || str_starts_with($requestPathHeader, '/minha-conta')
+    || !empty($_SESSION['admin_logado'])
+    || !empty($_SESSION['cliente_logado'])
+) {
+    header("Cache-Control: private, no-store, no-cache, must-revalidate");
+} else {
+    header("Cache-Control: no-cache, must-revalidate");
+}
 // -----------------------
 
 // --- BLOCO 2: Versão do Site (Cache Busting) ---

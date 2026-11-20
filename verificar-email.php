@@ -33,19 +33,25 @@ if ($token_raw === '') {
 
         $conn->begin_transaction();
         try {
-            $stmt = $conn->prepare("UPDATE clientes SET ativo = 1 WHERE id = ?");
-            $stmt->bind_param('i', $cliente_id);
-            $stmt->execute();
-            $stmt->close();
-
             $stmt = $conn->prepare("DELETE FROM cliente_email_verifications WHERE id = ?");
             $stmt->bind_param('i', $row['id']);
+            $stmt->execute();
+            $consumido = $stmt->affected_rows === 1;
+            $stmt->close();
+
+            if (!$consumido) {
+                throw new RuntimeException('Token de verificação já utilizado.');
+            }
+
+            $stmt = $conn->prepare("UPDATE clientes SET ativo = 1 WHERE id = ?");
+            $stmt->bind_param('i', $cliente_id);
             $stmt->execute();
             $stmt->close();
 
             $conn->commit();
         } catch (Throwable $e) {
             $conn->rollback();
+            log_app($e->getMessage(), 'ERROR', 'verificar-email.php');
             $erro = 'Erro interno. Tenta novamente mais tarde.';
         }
 

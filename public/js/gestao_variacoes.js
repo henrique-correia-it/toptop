@@ -55,6 +55,14 @@ document.addEventListener('DOMContentLoaded', () => {
         renderizarControlosDeVariacao();
     }
     
+    const escapeHtml = (str) =>
+        String(str ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
     function renderizarControlosDeVariacao() {
         const todosOsGrupos = new Set([...Object.keys(estado.atributos), ...Array.from(estado.gruposParaVariacao)]);
 
@@ -66,7 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let html = '<div class="variacoes-controlos"><h4>Gerar Variações de Stock com Base em:</h4>';
         todosOsGrupos.forEach(nome => {
             const isChecked = estado.gruposParaVariacao.has(nome) ? 'checked' : '';
-            html += `<label class="filtro-checkbox"><input type="checkbox" class="variacao-control-checkbox" data-grupo-nome="${nome}" ${isChecked}> ${nome}</label>`;
+            const nomeSeguro = escapeHtml(nome);
+            html += `<label class="filtro-checkbox"><input type="checkbox" class="variacao-control-checkbox" data-grupo-nome="${nomeSeguro}" ${isChecked}> ${nomeSeguro}</label>`;
         });
         html += '</div><div class="variacoes-table-wrapper"></div>';
         
@@ -122,17 +131,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const radioGroupName = `variacao-imagem-${variacaoIndex}`;
         
         let thumbnailsHtml = imagensGaleria.map((img, imgIndex) => {
-            const imageId = (img.tipo === 'existente') ? String(img.id) : img.placeholder;
+            const imageId = (img.tipo === 'existente') ? String(img.id) : String(img.placeholder ?? '');
             const isChecked = imagensAssociadas.length > 0 && imagensAssociadas[0] === imageId;
+            const imgSrcSeguro = escapeHtml(img.url || img.dados || '');
 
             return `
                 <label class="variacao-imagem-thumbnail ${isChecked ? 'selecionada' : ''}">
-                    <input type="radio" 
+                    <input type="radio"
                            name="${radioGroupName}"
-                           data-variacao-index="${variacaoIndex}" 
-                           data-image-id="${imageId}" 
+                           data-variacao-index="${variacaoIndex}"
+                           data-image-id="${escapeHtml(imageId)}"
                            ${isChecked ? 'checked' : ''}>
-                    <img src="${img.url || img.dados}" alt="Imagem ${imgIndex + 1}">
+                    <img src="${imgSrcSeguro}" alt="Imagem ${imgIndex + 1}">
                 </label>
             `;
         }).join('');
@@ -150,23 +160,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const headers = Object.keys(estado.variacoesParaExibir[0].atributos);
-        const headHtml = headers.map(h => `<th class="col-atributo">${h}</th>`).join('') + 
-                         '<th class="col-stock">Stock</th>' + 
-                         '<th class="col-sku">Referência (SKU)</th>' + 
+        const headHtml = headers.map(h => `<th class="col-atributo">${escapeHtml(h)}</th>`).join('') +
+                         '<th class="col-stock">Stock</th>' +
+                         '<th class="col-sku">Referência (SKU)</th>' +
                          '<th class="col-images">Imagem da Variação</th>';
 
         const bodyHtml = estado.variacoesParaExibir.map((variacao, index) => {
-            const rowHtml = headers.map(header => `<td class="col-atributo" data-label="${header}">${variacao.atributos[header]}</td>`).join('');
+            const rowHtml = headers.map(header => `<td class="col-atributo" data-label="${escapeHtml(header)}">${escapeHtml(variacao.atributos[header])}</td>`).join('');
             const seletorImagensHtml = criarSeletorDeImagens(index, variacao.imagens_associadas);
             return `<tr data-variacao-index="${index}">
                 ${rowHtml}
                 <td class="col-stock">
                     <div class="input-with-icon">
-                        <input type="number" class="variacao-input" data-field="quantidade" value="${variacao.quantidade}" placeholder="0" min="0">
+                        <input type="number" class="variacao-input" data-field="quantidade" value="${escapeHtml(variacao.quantidade)}" placeholder="0" min="0">
                     </div>
                 </td>
                 <td class="col-sku">
-                    <input type="text" class="variacao-input" data-field="referencia" value="${variacao.referencia}" placeholder="SKU">
+                    <input type="text" class="variacao-input" data-field="referencia" value="${escapeHtml(variacao.referencia)}" placeholder="SKU">
                 </td>
                 <td class="col-images">${seletorImagensHtml}</td>
             </tr>`;

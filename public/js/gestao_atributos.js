@@ -11,6 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let atributosAdicionados = new Set();
 
+    const escapeHtml = (str) =>
+        String(str ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
     const criarBlocoStandard = (grupoId, grupoNome, valores) => {
         if (atributosAdicionados.has(grupoNome)) {
             mostrarPopup(`O atributo padrão "${grupoNome}" já foi adicionado.`, 'erro');
@@ -19,12 +27,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const fieldset = document.createElement('fieldset');
         fieldset.classList.add('atributo-bloco');
         fieldset.dataset.nomeAtributo = grupoNome;
-        let valoresHtml = valores.map(v => `
-            <label><input type="checkbox" name="attr_std_${grupoId}[]" value="${v.valor}"> ${v.valor}</label>
-        `).join('');
+        const grupoIdSeguro = escapeHtml(grupoId);
+        let valoresHtml = valores.map(v => {
+            const valSeguro = escapeHtml(v.valor);
+            return `<label><input type="checkbox" name="attr_std_${grupoIdSeguro}[]" value="${valSeguro}"> ${valSeguro}</label>`;
+        }).join('');
         fieldset.innerHTML = `
             <div class="atributo-bloco-header">
-                <legend>${grupoNome}</legend>
+                <legend>${escapeHtml(grupoNome)}</legend>
             <button type="button" class="btn-del-single" title="Remover Atributo"></button>
             </div>
             <div class="atributo-bloco-valores">${valoresHtml}</div>
@@ -37,8 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const div = document.createElement('div');
         div.classList.add('atributo-bloco', 'atributo-personalizado-item');
         div.innerHTML = `
-            <input type="text" class="input-nome-personalizado" placeholder="Nome do Atributo (ex: Material)" value="${nome}" autocomplete="off">
-            <input type="text" class="input-valores-personalizado" placeholder="Valores (ex: Algodão, Seda)" value="${valores}" autocomplete="off">
+            <input type="text" class="input-nome-personalizado" placeholder="Nome do Atributo (ex: Material)" value="${escapeHtml(nome)}" autocomplete="off">
+            <input type="text" class="input-valores-personalizado" placeholder="Valores (ex: Algodão, Seda)" value="${escapeHtml(valores)}" autocomplete="off">
             <button type="button" class="btn-remover-atributo" title="Remover Atributo">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
             </button>
@@ -53,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const grupoNome = standardGroupSelect.options[standardGroupSelect.selectedIndex].text;
-        fetch(`ajax_get_valores.php?grupo_id=${grupoId}`)
+        fetch(`ajax_get_valores.php?grupo_id=${encodeURIComponent(grupoId)}`)
             .then(response => response.json())
             .then(valores => criarBlocoStandard(grupoId, grupoNome, valores))
             .catch(error => console.error('Erro ao buscar valores:', error));
@@ -105,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const valoresGuardados = objAtributos[nomeAtributo];
             if (todosOsGruposPadrao[nomeAtributo]) {
                 const grupoId = todosOsGruposPadrao[nomeAtributo];
-                return fetch(`ajax_get_valores.php?grupo_id=${grupoId}`)
+                return fetch(`ajax_get_valores.php?grupo_id=${encodeURIComponent(grupoId)}`)
                     .then(response => response.json())
                     .then(valoresPossiveis => {
                         criarBlocoStandard(grupoId, nomeAtributo, valoresPossiveis);
@@ -123,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        Promise.all(promises).then(() => {
+        Promise.allSettled(promises).then(() => {
             document.dispatchEvent(new CustomEvent('atributosProntos'));
         });
     };

@@ -37,57 +37,68 @@ if ($id_a_apagar == $_SESSION['admin_id']) {
     exit;
 }
 
-// 4. Impede que o último super-admin seja apagado
-$stmt_count = $conn->prepare("SELECT role FROM administradores WHERE id = ?");
-$stmt_count->bind_param("i", $id_a_apagar);
-$stmt_count->execute();
-$result_role = $stmt_count->get_result()->fetch_assoc();
-$stmt_count->close();
+// 4. Verificação atómica (transação + FOR UPDATE) para proteger o último superadmin/desenvolvedor
+$conn->begin_transaction();
+try {
+    $stmt_count = $conn->prepare("SELECT role FROM administradores WHERE id = ? FOR UPDATE");
+    $stmt_count->bind_param("i", $id_a_apagar);
+    $stmt_count->execute();
+    $result_role = $stmt_count->get_result()->fetch_assoc();
+    $stmt_count->close();
 
-if ($result_role) {
-    if ($result_role['role'] === 'desenvolvedor') {
-        // Proteção: Apenas desenvolvedores podem apagar desenvolvedores
-        if ($_SESSION['admin_role'] !== 'desenvolvedor') {
-            header("Location: listar_admins.php?erro=protecao_dev");
-            exit;
-        }
-        
-        // Não permitir apagar o último desenvolvedor
-        $stmt_total = $conn->prepare("SELECT COUNT(id) AS total FROM administradores WHERE role = 'desenvolvedor'");
-        $stmt_total->execute();
-        $total_devs = $stmt_total->get_result()->fetch_assoc()['total'];
-        $stmt_total->close();
-        if ($total_devs <= 1) {
-            header("Location: listar_admins.php?erro=ultimo_dev");
-            exit;
-        }
-    } elseif ($result_role['role'] === 'superadmin') {
-        $stmt_total = $conn->prepare("SELECT COUNT(id) AS total FROM administradores WHERE role = 'superadmin'");
-        $stmt_total->execute();
-        $total_superadmins = $stmt_total->get_result()->fetch_assoc()['total'];
-        $stmt_total->close();
-        
-        if ($total_superadmins <= 1) {
-            header("Location: listar_admins.php?erro=3"); // Erro: Não pode apagar o último super-admin
-            exit;
+    if ($result_role) {
+        if ($result_role['role'] === 'desenvolvedor') {
+            // Proteção: Apenas desenvolvedores podem apagar desenvolvedores
+            if ($_SESSION['admin_role'] !== 'desenvolvedor') {
+                $conn->rollback();
+                header("Location: listar_admins.php?erro=protecao_dev");
+                exit;
+            }
+            
+            // Não permitir apagar o último desenvolvedor
+            $stmt_total = $conn->prepare("SELECT id FROM administradores WHERE role = 'desenvolvedor' FOR UPDATE");
+            $stmt_total->execute();
+            $total_devs = $stmt_total->get_result()->num_rows;
+            $stmt_total->close();
+            if ($total_devs <= 1) {
+                $conn->rollback();
+                header("Location: listar_admins.php?erro=ultimo_dev");
+                exit;
+            }
+        } elseif ($result_role['role'] === 'superadmin') {
+            $stmt_total = $conn->prepare("SELECT id FROM administradores WHERE role = 'superadmin' FOR UPDATE");
+            $stmt_total->execute();
+            $total_superadmins = $stmt_total->get_result()->num_rows;
+            $stmt_total->close();
+            
+            if ($total_superadmins <= 1) {
+                $conn->rollback();
+                header("Location: listar_admins.php?erro=3"); // Erro: Não pode apagar o último super-admin
+                exit;
+            }
         }
     }
-}
 
+    // --- EXECUÇÃO DA ELIMINAÇÃO ---
+    $stmt_delete = $conn->prepare("DELETE FROM administradores WHERE id = ?");
+    $stmt_delete->bind_param("i", $id_a_apagar);
+    $ok = $stmt_delete->execute();
+    $stmt_delete->close();
 
-// --- EXECUÇÃO DA ELIMINAÇÃO ---
+    if ($ok) {
+        $conn->commit();
+        header("Location: listar_admins.php?sucesso=3"); // Sucesso: Utilizador apagado
+        exit;
+    }
 
-// Se todas as verificações de segurança passarem, apaga o utilizador
-$stmt_delete = $conn->prepare("DELETE FROM administradores WHERE id = ?");
-$stmt_delete->bind_param("i", $id_a_apagar);
-
-if ($stmt_delete->execute()) {
-    header("Location: listar_admins.php?sucesso=3"); // Sucesso: Utilizador apagado
-    exit;
-} else {
+    $conn->rollback();
     header("Location: listar_admins.php?erro=4"); // Erro: Falha na base de dados
     exit;
+} catch (\Throwable $e) {
+    $conn->rollback();
+    error_log('Erro em apagar_admin.php: ' . $e->getMessage());
+    header("Location: listar_admins.php?erro=4");
+    exit;
 }
-$stmt_delete->close();
 
 ?>

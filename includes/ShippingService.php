@@ -92,6 +92,17 @@ if (!function_exists('get_shipping_rates_for_country')) {
 if (!function_exists('calculate_shipping_from_rates')) {
     function calculate_shipping_from_rates(int $weightGrams, array $rates): float
     {
+        if (empty($rates)) {
+            if (function_exists('log_app')) {
+                log_app('Tabela shipping_rates vazia ou indisponivel no calculo de portes.', 'WARNING', 'ShippingService.php');
+            }
+            return 0.0;
+        }
+
+        if ($weightGrams < (float)($rates[0]['min'] ?? 0)) {
+            return (float)($rates[0]['preco'] ?? 0);
+        }
+
         foreach ($rates as $rate) {
             $min = (float)($rate['min'] ?? 0);
             $max = (float)($rate['max'] ?? 0);
@@ -101,7 +112,7 @@ if (!function_exists('calculate_shipping_from_rates')) {
             }
         }
 
-        return empty($rates) ? 0.0 : (float)(end($rates)['preco'] ?? 0);
+        return (float)(end($rates)['preco'] ?? 0);
     }
 }
 

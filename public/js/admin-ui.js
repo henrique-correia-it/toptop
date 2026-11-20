@@ -42,6 +42,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Ajuste de colisão com as bordas
         if (x + ctxMenu.offsetWidth > window.innerWidth) x -= ctxMenu.offsetWidth;
         if (y + ctxMenu.offsetHeight > window.innerHeight) y -= ctxMenu.offsetHeight;
+        x = Math.max(8, x);
+        y = Math.max(8, y);
         
         ctxMenu.style.left = x + 'px';
         ctxMenu.style.top = y + 'px';
@@ -139,7 +141,8 @@ window.mostrarPopup = function(mensagem, tipo = 'sucesso') {
             if (texto) texto.textContent = mensagem;
             popup.classList.remove('sucesso', 'erro');
             popup.classList.add(tipo, 'ativo');
-            setTimeout(() => popup.classList.remove('ativo'), 5000);
+            clearTimeout(popup._fallbackTimer);
+            popup._fallbackTimer = setTimeout(() => popup.classList.remove('ativo'), 5000);
         } else {
             console.log(`[${tipo.toUpperCase()}] ${mensagem}`);
         }

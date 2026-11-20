@@ -621,8 +621,8 @@ document.getElementById('btn-continuar').addEventListener('click', async () => {
     loading.style.display = 'flex';
     btnContinuar.disabled = true;
 
-    // Validação extra para números de Portugal (essencial para MB WAY)
-    if (selectPais.value === 'PT' && !/^[92]\d{8}$/.test(d.telefone)) {
+    // Validação extra para números de Portugal (apenas em envio para PT)
+    if (metodoEnt.value === 'envio' && selectPais.value === 'PT' && !/^[92]\d{8}$/.test(d.telefone)) {
         loading.style.display = 'none';
         btnContinuar.disabled = false;
         mostrarPopup("Por favor, insira um número de telefone válido (9 dígitos começados por 9 ou 2).", "erro");
@@ -759,7 +759,7 @@ document.getElementById('btn-pagar').addEventListener('click', async () => {
         mostrarPopup(friendlyMsg, 'erro');
         
         btn.disabled = false;
-        btn.textContent = 'Pagar agora';
+        renderSum();
     } else {
         localStorage.removeItem('carrinho');
         const pi = result.paymentIntent;

@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let larguraTexto = 0;
 
         const medidor = document.createElement('span');
+        medidor.dataset.customSelectMeasure = '1';
         const estiloTrigger = window.getComputedStyle(trigger);
         medidor.style.position = 'fixed';
         medidor.style.left = '-9999px';
@@ -175,22 +176,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     inicializarTodos(document);
 
+    let resizeTimer;
     window.addEventListener('resize', function() {
-        document.querySelectorAll('.select-wrapper.custom-select-wrapper select').forEach(function(select) {
-            const wrapper = select.closest('.select-wrapper');
-            if (!wrapper) return;
-            ajustarLarguraCustomSelect(
-                select,
-                wrapper.querySelector('.custom-select-trigger'),
-                wrapper.querySelector('.custom-select-options')
-            );
-        });
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            document.querySelectorAll('.select-wrapper.custom-select-wrapper select').forEach(function(select) {
+                const wrapper = select.closest('.select-wrapper');
+                if (!wrapper) return;
+                ajustarLarguraCustomSelect(
+                    select,
+                    wrapper.querySelector('.custom-select-trigger'),
+                    wrapper.querySelector('.custom-select-options')
+                );
+            });
+        }, 120);
     });
 
     new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             mutation.addedNodes.forEach(function(node) {
-                if (node.nodeType !== 1) return;
+                if (node.nodeType !== 1 || (node.dataset && node.dataset.customSelectMeasure === '1')) return;
                 if (node.matches && node.matches('.select-wrapper select')) {
                     inicializarCustomSelect(node);
                 }

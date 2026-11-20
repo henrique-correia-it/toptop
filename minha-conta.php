@@ -102,7 +102,10 @@ include __DIR__ . '/templates/header.php';
                         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                         <p>Ainda não tens encomendas associadas a esta conta.</p>
                     </div>
-                <?php endif; ?>
+<?php endif; ?>
+<?php if (isset($_GET['verificado']) && $_GET['verificado'] === '1'): ?>
+<script>document.addEventListener('DOMContentLoaded', () => { if (typeof mostrarPopup === 'function') mostrarPopup('Email verificado com sucesso! Bem-vindo à tua conta.', 'sucesso'); });</script>
+<?php endif; ?>
             </div>
         </section>
     </div>

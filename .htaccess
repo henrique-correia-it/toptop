@@ -23,7 +23,7 @@ ErrorDocument 404 /404.php
 <Files "webhook_debug.log">
     Require all denied
 </Files>
-<FilesMatch "\.(log|ini|bak|sql|sh|bat)$">
+<FilesMatch "(?i)\.(log|ini|bak|sql|sh|bat|md)$">
     Require all denied
 </FilesMatch>
 

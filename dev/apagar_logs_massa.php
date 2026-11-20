@@ -20,7 +20,11 @@ if (isset($_POST['tudo']) && $_POST['tudo'] == '1') {
     $_SESSION['flash_message'] = ['texto' => 'Todos os registos foram limpos com sucesso.', 'tipo' => 'sucesso'];
 } elseif (isset($_POST['ids']) && is_array($_POST['ids'])) {
     // Limpar selecionados
-    $ids = array_map('intval', $_POST['ids']);
+    $ids = array_values(array_unique(array_filter(array_map('intval', $_POST['ids']), fn($id) => $id > 0)));
+    if (empty($ids)) {
+        header("Location: login_logs.php");
+        exit;
+    }
     $ids_placeholders = implode(',', array_fill(0, count($ids), '?'));
     
     $stmt = $conn->prepare("DELETE FROM admin_login_logs WHERE id IN ($ids_placeholders)");

@@ -46,7 +46,12 @@ if ($method === 'GET') {
         }
 
         // Lê as últimas N linhas de forma eficiente (sem carregar o ficheiro todo)
-        $fp     = fopen($ficheiro, 'r');
+        $fp = @fopen($ficheiro, 'r');
+        if ($fp === false) {
+            http_response_code(500);
+            echo json_encode(['sucesso' => false, 'mensagem' => 'Não foi possível abrir o ficheiro de log.']);
+            exit;
+        }
         $buffer = [];
         while (($linha = fgets($fp)) !== false) {
             $buffer[] = $linha;
@@ -70,19 +75,26 @@ if ($method === 'POST') {
     $acao  = $dados['acao'] ?? '';
     $log   = $dados['log']  ?? '';
 
-    if (!hash_equals($_SESSION['csrf_token'], $dados['csrf_token'] ?? '')) {
+    require_once __DIR__ . '/../config/csrf.php';
+    if (!is_array($dados) || !csrf_from_array($dados)) {
+        http_response_code(403);
         echo json_encode(['sucesso' => false, 'mensagem' => 'CSRF inválido.']);
         exit;
     }
 
     if (!in_array($log, $logs_permitidos, true)) {
+        http_response_code(400);
         echo json_encode(['sucesso' => false, 'mensagem' => 'Log inválido.']);
         exit;
     }
 
     if ($acao === 'limpar') {
         $ficheiro = LOG_DIR . $log . '.log';
-        @file_put_contents($ficheiro, '');
+        if (@file_put_contents($ficheiro, '', LOCK_EX) === false) {
+            http_response_code(500);
+            echo json_encode(['sucesso' => false, 'mensagem' => 'Não foi possível limpar o ficheiro de log.']);
+            exit;
+        }
         log_app("Log '{$log}' limpo pelo admin '{$_SESSION['admin_username']}'.", 'INFO', 'ajax_ver_logs.php');
         echo json_encode(['sucesso' => true, 'mensagem' => "Log '{$log}' limpo com sucesso."]);
         exit;

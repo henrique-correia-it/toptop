@@ -22,27 +22,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($id && $action) {
         $stmt = null;
+        $flash_texto = '';
         switch ($action) {
             case 'apagar':
                 $stmt = $conn->prepare("DELETE FROM contactos WHERE id = ?");
-                $_SESSION['flash_message'] = ['tipo' => 'sucesso', 'texto' => 'Mensagem apagada com sucesso!'];
+                $flash_texto = 'Mensagem apagada com sucesso!';
                 break;
             case 'responder':
                 $stmt = $conn->prepare("UPDATE contactos SET respondida = 1 WHERE id = ?");
-                $_SESSION['flash_message'] = ['tipo' => 'sucesso', 'texto' => 'Mensagem marcada como respondida!'];
+                $flash_texto = 'Mensagem marcada como respondida!';
                 break;
             case 'desmarcar':
                 $stmt = $conn->prepare("UPDATE contactos SET respondida = 0 WHERE id = ?");
-                $_SESSION['flash_message'] = ['tipo' => 'sucesso', 'texto' => 'Mensagem movida para recebidas!'];
+                $flash_texto = 'Mensagem movida para recebidas!';
                 break;
         }
         if ($stmt) {
             $stmt->bind_param("i", $id);
-            $stmt->execute();
+            if ($stmt->execute()) {
+                $_SESSION['flash_message'] = ['tipo' => 'sucesso', 'texto' => $flash_texto];
+            } else {
+                $_SESSION['flash_message'] = ['tipo' => 'erro', 'texto' => 'Erro ao atualizar a mensagem.'];
+            }
             $stmt->close();
         }
         $return_to = $_POST['return_to'] ?? 'mensagens.php';
-        header("Location: " . $return_to);
+        $return_safe = in_array($return_to, ['mensagens.php', 'admin.php', '/admin'], true) ? $return_to : 'mensagens.php';
+        header("Location: " . $return_safe);
         exit;
     }
 }
@@ -76,7 +82,7 @@ include '../templates/header.php';
     <?php if (isset($_SESSION['flash_message'])): ?>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                mostrarPopup("<?php echo addslashes($_SESSION['flash_message']['texto']); ?>", "<?php echo addslashes($_SESSION['flash_message']['tipo']); ?>");
+                mostrarPopup(<?php echo json_encode($_SESSION['flash_message']['texto'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>, <?php echo json_encode($_SESSION['flash_message']['tipo'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>);
             });
         </script>
         <?php unset($_SESSION['flash_message']); ?>

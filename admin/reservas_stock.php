@@ -63,7 +63,7 @@ include '../templates/header.php';
     </div>
 
     <?php if (isset($_SESSION['flash_message'])): ?>
-        <script>document.addEventListener('DOMContentLoaded',function(){mostrarPopup("<?= addslashes($_SESSION['flash_message']['texto']) ?>","<?= addslashes($_SESSION['flash_message']['tipo']) ?>");});</script>
+        <script>document.addEventListener('DOMContentLoaded',function(){mostrarPopup(<?= json_encode($_SESSION['flash_message']['texto'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,<?= json_encode($_SESSION['flash_message']['tipo'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>);});</script>
         <?php unset($_SESSION['flash_message']); ?>
     <?php endif; ?>
 

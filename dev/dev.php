@@ -35,7 +35,7 @@ if (isset($_SESSION['admin_id'])) {
 }
 
 // Ação de login como cliente
-if (isset($_GET['login_as_customer']) && $_GET['login_as_customer'] == 1 && $linked_customer) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_as_customer']) && $_POST['login_as_customer'] == 1 && csrf_from_post() && $linked_customer) {
     login_cliente_session($linked_customer);
     header("Location: /minha-conta");
     exit;
@@ -109,7 +109,18 @@ function getRecentAppLogs($limit = 3) {
     if (!file_exists($file)) return [];
     
     // Ler as linhas ignorando vazias
-    $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $fp = @fopen($file, 'rb');
+    if ($fp === false) return [];
+    $size = filesize($file);
+    $readBytes = min($size ?: 0, 16384);
+    if ($readBytes <= 0) { fclose($fp); return []; }
+    fseek($fp, -$readBytes, SEEK_END);
+    $chunk = fread($fp, $readBytes);
+    fclose($fp);
+    if (!is_string($chunk) || $chunk === '') return [];
+    $lines = preg_split('/\r\n|\r|\n/', $chunk);
+    if ($size > $readBytes && count($lines) > 1) array_shift($lines);
+    $lines = array_values(array_filter($lines, fn($l) => trim($l) !== ''));
     if (!$lines) return [];
     
     // Inverter para processar do mais recente para o mais antigo

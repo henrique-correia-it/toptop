@@ -26,6 +26,19 @@ document.addEventListener("DOMContentLoaded", function () {
   const metaReferencia = escopo.querySelector("#meta-referencia");
   const metaStock = escopo.querySelector("#meta-stock");
 
+  if (
+    !modalImagemPrincipal ||
+    !modalThumbnails ||
+    !adicionarCarrinhoBtn ||
+    !seletorQuantidadeWrapper
+  ) {
+    return;
+  }
+
+  let isZoomed = false;
+  let lastPan = { x: 0, y: 0 };
+  let currentPan = { x: 0, y: 0 };
+
   function obterElementosGuia() {
     const modalGuia = document.getElementById("modalGuiaTamanhos");
     const guiaTitulo = document.getElementById("guia-titulo");
@@ -382,7 +395,7 @@ document.addEventListener("DOMContentLoaded", function () {
         estado.selecaoAtual = filtrosParaPreencher;
         for (const attr in estado.selecaoAtual) {
           const select = variacoesContainer.querySelector(
-            `select[data-nome-atributo="${attr}"]`,
+            `select[data-nome-atributo="${CSS.escape(attr)}"]`,
           );
           if (select) {
             select.value = estado.selecaoAtual[attr];
@@ -843,7 +856,7 @@ document.addEventListener("DOMContentLoaded", function () {
       precoOriginal: precoBase,
       emPromocao: precoFinal < precoBase,
       foto: fotoParaCarrinho,
-      selecoes: estado.selecaoAtual,
+      selecoes: { ...estado.selecaoAtual },
       quantidade: parseInt(inputQuantidade.value, 10),
       stock: v.quantidade,
       peso_gramas: parseInt(estado.produtoAtual.dataset.peso, 10) || 0
@@ -946,11 +959,11 @@ document.addEventListener("DOMContentLoaded", function () {
         modalImagemPrincipal.style.transformOrigin = "center center";
       });
     } else {
-      let isZoomed = false;
+      isZoomed = false;
       let isDragging = false;
       let startX, startY;
-      let lastPan = { x: 0, y: 0 };
-      let currentPan = { x: 0, y: 0 };
+      lastPan = { x: 0, y: 0 };
+      currentPan = { x: 0, y: 0 };
 
       const applyTransform = () => {
         modalImagemPrincipal.style.transform = `translate(${currentPan.x}px, ${currentPan.y}px) scale(${isZoomed ? 2 : 1})`;
@@ -1059,6 +1072,10 @@ document.addEventListener("DOMContentLoaded", function () {
       };
 
       const copiarLinkComoFallback = () => {
+        if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") {
+          mostrarPopup("Não foi possível copiar o link neste navegador.", "erro");
+          return;
+        }
         navigator.clipboard
           .writeText(urlParaPartilhar)
           .then(() => {
@@ -1074,6 +1091,7 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
           await navigator.share(dadosPartilha);
         } catch (err) {
+          if (err && err.name === "AbortError") return;
           console.error("Erro na Web Share API, a usar fallback:", err);
           copiarLinkComoFallback();
         }
@@ -1139,7 +1157,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const slugNoUrl = window.location.hash.substring(1);
     if (slugNoUrl && !window.matchMedia("(max-width: 768px)").matches) {
       const produtoParaAbrir = document.querySelector(
-        `.produto[data-slug='${slugNoUrl}']`,
+        `.produto[data-slug="${CSS.escape(slugNoUrl)}"]`,
       );
       if (
         produtoParaAbrir &&

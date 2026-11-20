@@ -67,7 +67,7 @@ fwrite($output, "SET FOREIGN_KEY_CHECKS=0;\n\n");
 
 // Obter todas as tabelas
 $tables = [];
-$result = $conn->query("SHOW TABLES");
+$result = $conn->query("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'");
 while ($row = $result->fetch_row()) {
     $tables[] = $row[0];
 }
@@ -89,9 +89,9 @@ foreach ($tables as $table) {
         $insert = "INSERT INTO `$table` VALUES(";
         for ($j = 0; $j < $num_fields; $j++) {
             if (isset($row_data[$j])) {
-                // Escapar strings
+                // Escapar strings com aspas simples (compatível com ANSI_QUOTES)
                 $val = $conn->real_escape_string($row_data[$j]);
-                $insert .= '"' . $val . '"';
+                $insert .= "'" . $val . "'";
             } else {
                 $insert .= 'NULL';
             }

@@ -77,13 +77,6 @@ if (!function_exists('customer_addresses')) {
 if (!function_exists('customer_save_address')) {
     function customer_save_address(mysqli $conn, int $customerId, array $data, bool $principal = false): int
     {
-        if ($principal) {
-            $stmtReset = $conn->prepare("UPDATE cliente_moradas SET principal = 0 WHERE cliente_id = ?");
-            $stmtReset->bind_param('i', $customerId);
-            $stmtReset->execute();
-            $stmtReset->close();
-        }
-
         $now = date('Y-m-d H:i:s');
         $name = trim($data['nome_morada'] ?? $data['nome'] ?? '');
         $phone = trim($data['telefone'] ?? '');
@@ -97,6 +90,16 @@ if (!function_exists('customer_save_address')) {
 
         if ($street === '' || $postal === '' || $city === '') {
             throw new InvalidArgumentException('Preencha a rua, codigo postal e localidade da morada.');
+        }
+
+        if ($principal) {
+            $stmtReset = $conn->prepare("UPDATE cliente_moradas SET principal = 0 WHERE cliente_id = ?");
+            if (!$stmtReset) {
+                throw new RuntimeException('Erro interno ao atualizar morada principal: ' . $conn->error);
+            }
+            $stmtReset->bind_param('i', $customerId);
+            $stmtReset->execute();
+            $stmtReset->close();
         }
 
         $stmt = $conn->prepare(

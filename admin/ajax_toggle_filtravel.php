@@ -4,49 +4,46 @@ require_once __DIR__ . '/../config/csrf.php';
 include '../config/database.php';
 
 if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true || !in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor'])) {
-    header('Content-Type: application/json');
+    http_response_code(403);
+    header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['sucesso' => false, 'mensagem' => 'Acesso negado.']);
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_from_post()) {
     http_response_code(403);
-    header('Content-Type: application/json');
-    echo json_encode(['sucesso' => false, 'mensagem' => 'Erro de validacao CSRF.']);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['sucesso' => false, 'mensagem' => 'Erro de validação CSRF.']);
     exit;
 }
 
-$response = ['sucesso' => false, 'mensagem' => 'Acesso negado.'];
+$response = ['sucesso' => false, 'mensagem' => 'ID do grupo inválido.'];
+$id_grupo = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
 
-if (isset($_SESSION['admin_logado']) && in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor'])) {
-    $id_grupo = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+if ($id_grupo && $id_grupo > 0) {
+    try {
+        $stmt_update = $conn->prepare("UPDATE atributos_grupos SET e_filtravel = 1 - e_filtravel WHERE id = ?");
+        $stmt_update->bind_param("i", $id_grupo);
+        $stmt_update->execute();
+        $afetadas = $stmt_update->affected_rows;
+        $stmt_update->close();
 
-    if ($id_grupo) {
-        try {
+        if ($afetadas === 0) {
+            $response['mensagem'] = 'Grupo de atributos não encontrado.';
+        } else {
             $stmt_get = $conn->prepare("SELECT e_filtravel FROM atributos_grupos WHERE id = ?");
             $stmt_get->bind_param("i", $id_grupo);
             $stmt_get->execute();
-            $estado_atual = $stmt_get->get_result()->fetch_assoc()['e_filtravel'];
+            $row = $stmt_get->get_result()->fetch_assoc();
             $stmt_get->close();
-
-            $novo_estado = 1 - $estado_atual;
-
-            $stmt_update = $conn->prepare("UPDATE atributos_grupos SET e_filtravel = ? WHERE id = ?");
-            $stmt_update->bind_param("ii", $novo_estado, $id_grupo);
-            $stmt_update->execute();
-            $stmt_update->close();
-
-            $response = ['sucesso' => true, 'novo_estado' => $novo_estado];
-
-        } catch (Exception $e) {
-            log_app($e->getMessage(), 'ERROR', 'ajax_toggle_filtravel.php');
-            $response['mensagem'] = 'Erro ao atualizar na base de dados.';
+            $response = ['sucesso' => true, 'novo_estado' => (int)($row['e_filtravel'] ?? 0)];
         }
-    } else {
-        $response['mensagem'] = 'ID do grupo inválido.';
+    } catch (\Throwable $e) {
+        log_app($e->getMessage(), 'ERROR', 'ajax_toggle_filtravel.php');
+        $response['mensagem'] = 'Erro ao atualizar na base de dados.';
     }
 }
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 echo json_encode($response);
 exit;

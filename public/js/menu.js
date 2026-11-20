@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const fecharMenu = () => {
+            if (!menuNav.classList.contains('ativo')) return;
             menuNav.classList.remove('ativo');
             menuOverlay.classList.remove('ativo');
             hamburgerBtn.classList.remove('ativo');

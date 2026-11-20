@@ -70,28 +70,36 @@ if ($encomenda['estado'] === 'pendente' && !empty($encomenda['stripe_payment_int
                 $metodo_real = 'Cartão';
             } elseif ($tipo_pm === 'mb_way') {
                 $metodo_real = 'MB WAY';
+            } elseif ($tipo_pm === 'klarna') {
+                $metodo_real = 'Klarna';
             }
 
-            $stmt_up = $conn->prepare("UPDATE encomendas SET estado = 'pago', metodo_pagamento = ? WHERE id = ?");
+            $stmt_up = $conn->prepare("UPDATE encomendas SET estado = 'pago', metodo_pagamento = ? WHERE id = ? AND estado = 'pendente'");
             $stmt_up->bind_param("si", $metodo_real, $encomenda['id']);
             $stmt_up->execute();
+            $foi_primeiro = $stmt_up->affected_rows === 1;
             $stmt_up->close();
 
             $encomenda['estado'] = 'pago';
             $encomenda['metodo_pagamento'] = $metodo_real;
 
-            try {
-                $template_email = ($encomenda['metodo_entrega'] === 'recolha') ? 'recolha_paga' : 'confirmacao_stripe';
-                enviarEmailEncomenda($template_email, [
-                    'id'               => $encomenda['id'],
-                    'token'            => $encomenda['token'],
-                    'cliente_nome'     => $encomenda['cliente_nome'],
-                    'cliente_email'    => $encomenda['cliente_email'],
-                    'total'            => (float)$encomenda['total'] + (($encomenda['metodo_entrega'] === 'recolha') ? 0 : (float)$encomenda['portes_envio']),
-                    'metodo_entrega'   => $encomenda['metodo_entrega'],
-                    'metodo_pagamento' => $metodo_real,
-                ]);
-            } catch (Exception $e) { }
+            if ($foi_primeiro) {
+                try {
+                    $template_email = ($encomenda['metodo_entrega'] === 'recolha') ? 'recolha_paga' : 'confirmacao_stripe';
+                    enviarEmailEncomenda($template_email, [
+                        'id'               => $encomenda['id'],
+                        'token'            => $encomenda['token'],
+                        'cliente_nome'     => $encomenda['cliente_nome'],
+                        'cliente_email'    => $encomenda['cliente_email'],
+                        'total'            => (float)$encomenda['total'],
+                        'portes_envio'     => (float)$encomenda['portes_envio'],
+                        'metodo_entrega'   => $encomenda['metodo_entrega'],
+                        'metodo_pagamento' => $metodo_real,
+                    ]);
+                } catch (\Throwable $e) {
+                    error_log("detalhes_encomenda: falha no email enc #{$encomenda['id']}: " . $e->getMessage());
+                }
+            }
 
             // Recarregar a encomenda da base de dados para garantir que temos o histórico de mensagens atualizado
             $stmt_refresh = $conn->prepare("SELECT * FROM encomendas WHERE id = ?");

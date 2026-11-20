@@ -282,7 +282,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Toggle ativo
     document.querySelectorAll('.badge-ativo-toggle').forEach(function (badge) {
-        badge.addEventListener('click', function () {
+        badge.addEventListener('click', function (e) {
+            if (selMode) return;
+            e.stopPropagation();
             const id        = this.dataset.id;
             const novoAtivo = parseInt(this.dataset.ativo) ? 0 : 1;
             fetch('/admin/ajax_toggle_cliente_ativo.php', {

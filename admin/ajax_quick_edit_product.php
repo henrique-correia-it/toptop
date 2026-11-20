@@ -8,19 +8,23 @@ if (!is_admin_logged_in()) {
     json_error('Não autorizado.', 403);
 }
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    json_error('Método não permitido.', 405);
+}
+
 $id                = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-$nome              = trim($_POST['nome'] ?? '');
-$referencia        = trim($_POST['referencia'] ?? '');
+$nome              = trim((string)($_POST['nome'] ?? ''));
+$referencia        = trim((string)($_POST['referencia'] ?? ''));
 $stock             = filter_input(INPUT_POST, 'stock', FILTER_VALIDATE_INT);
 $preco             = filter_input(INPUT_POST, 'preco', FILTER_VALIDATE_FLOAT);
 $preco_promocional = (!empty($_POST['preco_promocional']) && (float)$_POST['preco_promocional'] > 0) ? (float)$_POST['preco_promocional'] : NULL;
-$csrf_token        = $_POST['csrf_token'] ?? '';
+$csrf_token        = is_string($_POST['csrf_token'] ?? null) ? $_POST['csrf_token'] : '';
 
 if (!csrf_verify($csrf_token)) {
     json_error('Erro de segurança (CSRF).', 403);
 }
 
-if (!$id || empty($nome) || empty($referencia) || $preco === false) {
+if ($id === false || $id <= 0 || $nome === '' || $referencia === '' || $preco === false || $preco <= 0 || $stock === false || $stock === null || $stock < 0) {
     json_error('Dados inválidos ou incompletos.', 400);
 }
 
@@ -37,10 +41,12 @@ try {
     $stmt->execute();
     $stmt->close();
 
-    // 2. Atualizar Stock
-    // Verificamos quantas variações o produto tem
-    $res_vars = $conn->query("SELECT id, atributos FROM produto_variacoes WHERE produto_id = $id");
-    $variacoes = $res_vars->fetch_all(MYSQLI_ASSOC);
+    // 2. Atualizar Stock com prepared statement + FOR UPDATE
+    $stmt_vars = $conn->prepare("SELECT id, atributos FROM produto_variacoes WHERE produto_id = ? FOR UPDATE");
+    $stmt_vars->bind_param("i", $id);
+    $stmt_vars->execute();
+    $variacoes = $stmt_vars->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt_vars->close();
 
     if (count($variacoes) === 1) {
         // Produto simples: atualizamos a única variação

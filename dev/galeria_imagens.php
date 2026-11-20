@@ -155,16 +155,16 @@ include '../templates/header.php';
                 if ($img['tipo'] === 'categoria') $src_path = '/public/assets/img_categorias/';
                 if ($img['tipo'] === 'logo') $src_path = '/public/assets/header/';
                 ?>
-                <img src="<?php echo $src_path . htmlspecialchars($img['nome']); ?>" alt="" loading="lazy">
+                <img src="<?php echo $src_path . rawurlencode($img['nome']); ?>" alt="" loading="lazy">
 
                 <div class="gal-overlay">
-                    <div class="gal-overlay-nome"><?php echo htmlspecialchars($img['nome']); ?></div>
+                    <div class="gal-overlay-nome"><?php echo htmlspecialchars($img['nome'], ENT_QUOTES, 'UTF-8'); ?></div>
                     <div class="gal-overlay-size"><?php echo format_bytes($img['tamanho'], 1, 'B'); ?></div>
                 </div>
 
                 <div class="gal-ghost-overlay">
                     <span class="gal-ghost-label">Fantasma</span>
-                    <button class="gal-ghost-del" onclick="event.stopPropagation(); apagarFoto(this, '<?php echo htmlspecialchars($img['nome']); ?>')">
+                    <button class="gal-ghost-del" onclick="event.stopPropagation(); apagarFoto(this)">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                         Apagar
                     </button>
@@ -350,11 +350,18 @@ document.getElementById('btn-del-all').addEventListener('click', () => {
     );
 });
 
+function escapeGalHtml(s) {
+    return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
 // ── Delete single ─────────────────────────────────────────────────────────
-async function apagarFoto(btn, nome) {
+async function apagarFoto(btn) {
+    const card = btn.closest('.gal-card');
+    const nome = card ? card.dataset.nome : '';
+    if (!nome) return;
     mostrarModalConfirmacao(
         'Apagar imagem',
-        'Apagar permanentemente <strong>' + nome + '</strong>?',
+        'Apagar permanentemente <strong>' + escapeGalHtml(nome) + '</strong>?',
         async () => {
             const orig = btn.innerHTML;
             btn.disabled = true;

@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             menu.querySelector('#ctx-activity-delete').onclick = () => {
-                const nome = row.dataset.nome;
+                const nome = String(row.dataset.nome || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
                 window.mostrarModalConfirmacao('Confirmar Eliminação', `Eliminar permanentemente <strong>${nome}</strong>?`, () => {
                     const form = document.getElementById('form-delete-activity');
                     document.getElementById('delete-activity-id').value = id;

@@ -1,41 +1,37 @@
 <?php
 /**
- * Obtem o conteudo de uma seccao do cabecalho com fallback.
+ * Obtém o conteúdo de uma secção do cabeçalho com cache estático (evita N+1) e fallback.
  */
 function getHeaderText($seccao, $fallback = '') {
     global $conn;
+    static $cache = null;
 
     if (!$conn) {
         return $fallback;
     }
 
-    try {
-        $stmt = $conn->prepare("SELECT conteudo FROM header_config WHERE seccao = ? LIMIT 1");
-    } catch (Throwable $e) {
-        return $fallback;
+    if ($cache === null) {
+        $cache = [];
+        try {
+            $res = $conn->query("SELECT seccao, conteudo FROM header_config");
+            if ($res) {
+                while ($row = $res->fetch_assoc()) {
+                    $cache[$row['seccao']] = $row['conteudo'];
+                }
+            }
+        } catch (Throwable $e) {
+            $cache = null;
+            return $fallback;
+        }
     }
 
-    if (!$stmt) return $fallback;
-
-    $stmt->bind_param("s", $seccao);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        $stmt->close();
-        return $row['conteudo'];
-    }
-
-    $stmt->close();
-    return $fallback;
+    return array_key_exists($seccao, $cache) ? $cache[$seccao] : $fallback;
 }
 
 function getHeaderLogo($fallback = '/public/assets/logo1.jpg') {
-    $logo = getHeaderText('logo_src', $fallback);
-    $logo = trim($logo);
+    $logo = trim((string)getHeaderText('logo_src', $fallback));
 
-    if ($logo === '') {
+    if ($logo === '' || !preg_match('#^(/|https?://)#i', $logo)) {
         return $fallback;
     }
 

@@ -7,6 +7,7 @@ function inicializarMultiCropper(inputId, previewContainerId, formId, maxFiles, 
     const modal = document.getElementById('cropperModal');
     const imagemParaCortar = document.getElementById('imagemParaCortar');
     const guardarCorteBtn = document.getElementById('guardarCorteBtn');
+    if (!inputFicheiros || !previewContainer || !form || !modal || !imagemParaCortar || !guardarCorteBtn) return;
 
     let cropper;
     let ficheirosParaProcessar = [];
@@ -36,8 +37,12 @@ function inicializarMultiCropper(inputId, previewContainerId, formId, maxFiles, 
     }
 
     inputFicheiros.addEventListener('change', (event) => {
-        const files = Array.from(event.target.files);
-        if (files.length === 0) return;
+        const files = Array.from(event.target.files).filter(f => f.type && f.type.startsWith('image/'));
+        if (files.length === 0) {
+            mostrarPopup('Selecione apenas ficheiros de imagem válidos.', 'erro');
+            inputFicheiros.value = '';
+            return;
+        }
 
         if ((imagensGaleria.length + files.length) > maxFiles) {
             mostrarPopup(`Pode ter no máximo ${maxFiles} imagens no total.`, 'erro');
@@ -56,6 +61,7 @@ function inicializarMultiCropper(inputId, previewContainerId, formId, maxFiles, 
             reader.onload = (e) => abrirModalDeCorte(e.target.result);
             reader.readAsDataURL(ficheirosParaProcessar[ficheiroAtualIndex]);
         } else {
+            inputFicheiros.value = '';
             // Dispara um evento para notificar outros scripts que a galeria foi atualizada
             document.dispatchEvent(new CustomEvent('galeriaAtualizada'));
         }

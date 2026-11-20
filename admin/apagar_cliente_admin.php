@@ -36,7 +36,16 @@ try {
     $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close();
 
     $stmt = $conn->prepare("DELETE FROM clientes WHERE id = ?");
-    $stmt->bind_param('i', $id); $stmt->execute(); $stmt->close();
+    $stmt->bind_param('i', $id);
+    $stmt->execute();
+    $removidos = $stmt->affected_rows;
+    $stmt->close();
+
+    if ($removidos === 0) {
+        $conn->rollback();
+        header("Location: clientes.php?erro=1");
+        exit;
+    }
 
     $conn->commit();
 } catch (Throwable $e) {

@@ -45,8 +45,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // --- FIM DA CORREÇÃO DE VALIDAÇÃO ---
 
             $preco_float = (float)$preco;
+            if ($preco_float <= 0) { throw new Exception("O preço deve ser superior a zero."); }
             $preco_promocional_db = !empty($_POST['preco_promocional']) ? (float)$_POST['preco_promocional'] : NULL;
-            if ($preco_promocional_db !== NULL && $preco_promocional_db >= $preco_float) {
+            if ($preco_promocional_db !== NULL && ($preco_promocional_db <= 0 || $preco_promocional_db >= $preco_float)) {
                 throw new Exception("O preço promocional não pode ser maior ou igual ao preço normal.");
             }
             
@@ -59,8 +60,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $ordem_completa = json_decode($_POST['ordem_imagens_json'] ?? '[]', true);
             $novas_imagens_cortadas_info = json_decode($_POST['imagens_cortadas_json'] ?? '[]', true);
 
-            if (empty($ordem_completa) || empty($novas_imagens_cortadas_info)) {
+            if (empty($ordem_completa) || empty($novas_imagens_cortadas_info) || !is_array($novas_imagens_cortadas_info)) {
                 throw new Exception("Deve enviar pelo menos uma imagem.");
+            }
+            if (count($novas_imagens_cortadas_info) > 5) {
+                throw new Exception("Pode enviar no máximo 5 imagens por produto.");
             }
             
             $tipos_imagem_permitidos = [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP, IMAGETYPE_GIF];
@@ -70,7 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $base64_raw  = preg_replace('#^data:image/\w+;base64,#i', '', $img_info['dados'] ?? '');
                 $dados_binarios = base64_decode($base64_raw, true);
 
-                if ($dados_binarios === false || strlen($dados_binarios) < 12) {
+                if ($dados_binarios === false || strlen($dados_binarios) < 12 || strlen($dados_binarios) > 5 * 1024 * 1024) {
                     throw new Exception("Dados de imagem inválidos ou corrompidos.");
                 }
 
@@ -79,7 +83,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     throw new Exception("O ficheiro enviado não é uma imagem válida (JPEG, PNG, WEBP ou GIF).");
                 }
 
-                $nome_ficheiro    = uniqid('img_', true) . ".jpg";
+                $ext_map = [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_WEBP => 'webp', IMAGETYPE_GIF => 'gif'];
+                $ext_real = $ext_map[$info_imagem[2]] ?? 'jpg';
+                $nome_ficheiro    = uniqid('img_', true) . "." . $ext_real;
                 $caminho_absoluto = __DIR__ . '/../public/images/' . $nome_ficheiro;
 
                 if (file_put_contents($caminho_absoluto, $dados_binarios) === false) {
@@ -100,7 +106,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // --- INÍCIO DA ALTERAÇÃO ---
             $guia_tamanho_id = !empty($_POST['guia_tamanho_id']) ? (int)$_POST['guia_tamanho_id'] : NULL;
-            $peso_gramas = (int)($_POST['peso_gramas'] ?? 0);
+            $peso_gramas = max(0, (int)($_POST['peso_gramas'] ?? 0));
 
             // Inserir produto
             $stmt_prod = $conn->prepare("INSERT INTO produtos (nome, referencia, ativo, preco, preco_promocional, categoria, descricao, atributos, foto_principal, guia_tamanho_id, peso_gramas) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");

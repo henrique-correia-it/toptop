@@ -30,9 +30,11 @@ function _tt_log(string $ficheiro, string $nivel, string $mensagem, string $cont
         return;
     }
     $timestamp    = date('Y-m-d H:i:s');
-    $contexto_str = $contexto ? " [{$contexto}]" : '';
+    $msg_limpa    = str_replace(["\r", "\n"], ['\\r', '\\n'], $mensagem);
+    $ctx_limpo    = str_replace(["\r", "\n"], ['\\r', '\\n'], $contexto);
+    $contexto_str = $ctx_limpo ? " [{$ctx_limpo}]" : '';
     $ip           = $_SERVER['REMOTE_ADDR'] ?? 'cli';
-    $linha        = "[{$timestamp}] [{$nivel}]{$contexto_str} {$mensagem} (IP:{$ip})" . PHP_EOL;
+    $linha        = "[{$timestamp}] [{$nivel}]{$contexto_str} {$msg_limpa} (IP:{$ip})" . PHP_EOL;
     if (@file_put_contents($dir . $ficheiro, $linha, FILE_APPEND | LOCK_EX) === false) {
         error_log("[{$nivel}] {$mensagem}");
     }
@@ -83,7 +85,7 @@ set_error_handler(function (int $errno, string $errstr, string $errfile, int $er
     else                                        $nivel = 'PHP-ERROR';
 
     _tt_log('app.log', $nivel, "{$errstr} em " . basename($errfile) . ":{$errline}");
-    return false;
+    return true;
 });
 
 register_shutdown_function(function (): void {

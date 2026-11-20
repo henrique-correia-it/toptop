@@ -111,13 +111,14 @@ if ($action === 'apagar') {
 
     // Verificar que ainda não está referenciada em lado nenhum (segurança extra)
     $queries_check = [
-        "SELECT COUNT(*) as n FROM produtos        WHERE foto_principal LIKE ?",
-        "SELECT COUNT(*) as n FROM produto_imagens WHERE nome_ficheiro  LIKE ?",
-        "SELECT COUNT(*) as n FROM encomenda_itens WHERE foto_snapshot  LIKE ?",
-        "SELECT COUNT(*) as n FROM categorias      WHERE foto_capa       LIKE ?",
-        "SELECT COUNT(*) as n FROM header_config   WHERE seccao = 'logo_src' AND conteudo LIKE ?",
+        "SELECT COUNT(*) as n FROM produtos        WHERE foto_principal LIKE ? ESCAPE '\\\\'",
+        "SELECT COUNT(*) as n FROM produto_imagens WHERE nome_ficheiro  LIKE ? ESCAPE '\\\\'",
+        "SELECT COUNT(*) as n FROM encomenda_itens WHERE foto_snapshot  LIKE ? ESCAPE '\\\\'",
+        "SELECT COUNT(*) as n FROM categorias      WHERE foto_capa       LIKE ? ESCAPE '\\\\'",
+        "SELECT COUNT(*) as n FROM header_config   WHERE seccao = 'logo_src' AND conteudo LIKE ? ESCAPE '\\\\'",
     ];
-    $search_term = "%$ficheiro%";
+    $escaped_ficheiro = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $ficheiro);
+    $search_term = "%{$escaped_ficheiro}%";
     foreach ($queries_check as $sql) {
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $search_term);
@@ -130,20 +131,23 @@ if ($action === 'apagar') {
         }
     }
 
-    // Tentar apagar de todas as pastas (seguro pois $ficheiro é basename)
+    // Tentar apagar da pasta indicada (se fornecida) ou de todas as pastas (seguro pois $ficheiro é basename)
+    $tipo = (string)($dados['tipo'] ?? '');
+    $dirs_map = [
+        'produto'   => $images_dir,
+        'categoria' => $cats_dir,
+        'logo'      => $logos_dir,
+    ];
+    $pastas_alvo = isset($dirs_map[$tipo]) ? [$dirs_map[$tipo]] : [$images_dir, $cats_dir, $logos_dir];
     $apagado = false;
-    $caminho_prod = $images_dir . $ficheiro;
-    $caminho_cat  = $cats_dir . $ficheiro;
-    $caminho_logo = $logos_dir . $ficheiro;
-
-    if (file_exists($caminho_prod) && is_file($caminho_prod)) {
-        if (unlink($caminho_prod)) $apagado = true;
-    }
-    if (!$apagado && file_exists($caminho_cat) && is_file($caminho_cat)) {
-        if (unlink($caminho_cat)) $apagado = true;
-    }
-    if (!$apagado && file_exists($caminho_logo) && is_file($caminho_logo)) {
-        if (unlink($caminho_logo)) $apagado = true;
+    foreach ($pastas_alvo as $dir) {
+        $caminho = $dir . $ficheiro;
+        if (file_exists($caminho) && is_file($caminho)) {
+            if (unlink($caminho)) {
+                $apagado = true;
+                break;
+            }
+        }
     }
 
     if (!$apagado) {

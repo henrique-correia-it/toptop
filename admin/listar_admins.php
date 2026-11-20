@@ -49,6 +49,16 @@ if ($codigo_erro == '1') {
 }
 
 
+// Flash message de ações em massa
+if (isset($_SESSION['flash_message']) && is_array($_SESSION['flash_message'])) {
+    if (($_SESSION['flash_message']['tipo'] ?? '') === 'sucesso') {
+        $mensagem_sucesso = (string)($_SESSION['flash_message']['texto'] ?? '');
+    } else {
+        $mensagem_erro = (string)($_SESSION['flash_message']['texto'] ?? '');
+    }
+    unset($_SESSION['flash_message']);
+}
+
 // Pesquisa
 $filtro_q = trim($_GET['q'] ?? '');
 
@@ -213,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let selected = new Set();
 
     function getRows() {
-        return [...document.querySelectorAll('.admin-table tbody tr[data-id]')];
+        return [...document.querySelectorAll('.admin-table tbody tr[data-id]')].filter(r => !r.querySelector('.protected-badge'));
     }
 
     function updateUI() {
@@ -242,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelector('.admin-table tbody')?.addEventListener('click', function (e) {
         if (!selMode) return;
         const tr = e.target.closest('tr[data-id]');
-        if (!tr) return;
+        if (!tr || tr.querySelector('.protected-badge')) return;
         const id = tr.dataset.id;
         if (selected.has(id)) { selected.delete(id); tr.classList.remove('selecionado'); }
         else                   { selected.add(id);    tr.classList.add('selecionado'); }

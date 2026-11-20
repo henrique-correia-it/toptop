@@ -1,3 +1,1 @@
-<?php
-return '1795117600';
-?>
+<?php $versao_global = '1795204000'; ?>

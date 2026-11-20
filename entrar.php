@@ -62,7 +62,7 @@ function cliente_esta_bloqueado(array $customer, int $lockout): bool
         && strtotime($customer['last_login_attempt']) > time() - $lockout;
 }
 
-if (isset($_SESSION['admin_logado']) && $_SESSION['admin_logado'] === true) {
+if (isset($_SESSION['admin_logado']) && $_SESSION['admin_logado'] === true && !isset($_GET['dev_preview'])) {
     header('Location: /admin');
     exit;
 }

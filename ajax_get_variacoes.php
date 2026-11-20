@@ -21,8 +21,8 @@ $response = [
 ];
 
 try {
-    // 2. Ir buscar todas as variações
-    $stmt_variacoes = $conn->prepare("SELECT id, atributos, quantidade, preco, referencia FROM produto_variacoes WHERE produto_id = ?");
+    // 2. Ir buscar todas as variações apenas de produtos ativos
+    $stmt_variacoes = $conn->prepare("SELECT pv.id, pv.atributos, pv.quantidade, pv.preco, pv.referencia FROM produto_variacoes pv JOIN produtos p ON p.id = pv.produto_id WHERE pv.produto_id = ? AND p.ativo = 1");
     $stmt_variacoes->bind_param("i", $produto_id);
     $stmt_variacoes->execute();
     $result_variacoes = $stmt_variacoes->get_result();

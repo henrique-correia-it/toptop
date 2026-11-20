@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
     );
     
     <?php if (!empty($popupMensagem)): ?>
-        mostrarPopup("<?php echo addslashes($popupMensagem); ?>", "<?php echo $popupTipo; ?>");
+        mostrarPopup(<?php echo json_encode($popupMensagem, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>, <?php echo json_encode($popupTipo, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>);
     <?php endif; ?>
 
     const form = document.getElementById('formProduto');

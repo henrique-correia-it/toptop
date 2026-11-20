@@ -174,7 +174,7 @@ include '../templates/header.php';
     <?php if (isset($_SESSION['flash_message'])): ?>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                mostrarPopup("<?php echo addslashes($_SESSION['flash_message']['texto']); ?>", "<?php echo addslashes($_SESSION['flash_message']['tipo']); ?>");
+                mostrarPopup(<?php echo json_encode($_SESSION['flash_message']['texto'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>, <?php echo json_encode($_SESSION['flash_message']['tipo'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>);
             });
         </script>
         <?php unset($_SESSION['flash_message']); ?>

@@ -29,9 +29,13 @@ if (!function_exists('format_bytes')) {
 if (!function_exists('format_time_ago')) {
     function format_time_ago(string $datetime, string $style = 'long'): string
     {
-        $timezone = new DateTimeZone('Europe/Lisbon');
-        $agora = new DateTime('now', $timezone);
-        $data = new DateTime($datetime, $timezone);
+        try {
+            $timezone = new DateTimeZone('Europe/Lisbon');
+            $agora = new DateTime('now', $timezone);
+            $data = new DateTime($datetime, $timezone);
+        } catch (Throwable $e) {
+            return $datetime;
+        }
         $diff = $agora->getTimestamp() - $data->getTimestamp();
 
         if ($style === 'short') {
@@ -39,7 +43,7 @@ if (!function_exists('format_time_ago')) {
             if ($diff < 3600) return 'Há ' . floor($diff / 60) . ' min';
             if ($diff < 86400) return 'Há ' . floor($diff / 3600) . 'h';
             if ($diff < 604800) return 'Há ' . floor($diff / 86400) . 'd';
-            return date('d/m/Y H:i', strtotime($datetime));
+            return $data->format('d/m/Y H:i');
         }
 
         if ($diff < 60) return 'Agora mesmo';
