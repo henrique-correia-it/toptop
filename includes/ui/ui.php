@@ -1,0 +1,548 @@
+<?php
+/**
+ * includes/ui/ui.php — Biblioteca Mínima de Componentes TopTop (DESIGN.md)
+ *
+ * 9 primitivos componíveis que cobrem toda a loja, área de cliente e backoffice:
+ *  1. ui_button()        — Botões e links CTA (.ui-btn)
+ *  2. ui_icon_button()   — Botões compactos só com ícone (.btn-*-single)
+ *  3. ui_card()          — Cartões/superfícies elevadas (.ui-card)
+ *  4. ui_badge()         — Etiquetas de estado (.ui-badge)
+ *  5. ui_field() / ui_switch() — Campos de formulário e interruptores
+ *  6. ui_alert() / ui_empty_state() — Mensagens inline e estados vazios
+ *  7. ui_page_header() / ui_back_button() — Cabeçalhos de página e navegação
+ *  8. ui_modal()         — Contentor modal unificado (.qe-modal / .ui-modal)
+ *  9. ui_product_card()  — Cartão canónico de produto da loja (.produto)
+ */
+
+if (!function_exists('ui_e')) {
+    function ui_e($value): string
+    {
+        return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+    }
+}
+
+if (!function_exists('ui_attrs')) {
+    function ui_attrs(array $attrs): string
+    {
+        $parts = [];
+        foreach ($attrs as $k => $v) {
+            if ($v === null || $v === false) {
+                continue;
+            }
+            $key = preg_replace('/[^a-zA-Z0-9_:-]/', '', (string)$k);
+            if ($key === '') {
+                continue;
+            }
+            if ($v === true) {
+                $parts[] = $key;
+            } else {
+                $parts[] = $key . '="' . ui_e($v) . '"';
+            }
+        }
+        return $parts ? ' ' . implode(' ', $parts) : '';
+    }
+}
+
+/** 1. Button / Link CTA */
+if (!function_exists('ui_button')) {
+    function ui_button(string $label, array $opts = []): string
+    {
+        $variant = $opts['variant'] ?? 'default';
+        $size    = $opts['size'] ?? 'md';
+        $classes = ['ui-btn'];
+        if ($variant !== 'default') {
+            $classes[] = 'ui-btn--' . preg_replace('/[^a-z0-9_-]/i', '', $variant);
+        }
+        if ($size === 'sm') {
+            $classes[] = 'ui-btn--sm';
+        }
+        if (!empty($opts['full'])) {
+            $classes[] = 'ui-btn--full';
+        }
+        if (!empty($opts['plus'])) {
+            $classes[] = 'ui-btn--plus';
+        }
+        if (!empty($opts['class'])) {
+            $classes[] = (string)$opts['class'];
+        }
+
+        $attrs = is_array($opts['attrs'] ?? null) ? $opts['attrs'] : [];
+        if (!empty($opts['id'])) {
+            $attrs['id'] = $opts['id'];
+        }
+        if (!empty($opts['title'])) {
+            $attrs['title'] = $opts['title'];
+        }
+        $attrs['class'] = implode(' ', $classes);
+
+        $iconHtml = !empty($opts['icon']) ? (string)$opts['icon'] : '';
+        $inner    = $iconHtml . ui_e($label);
+
+        if (!empty($opts['href'])) {
+            $attrs['href'] = $opts['href'];
+            if (!empty($opts['target'])) {
+                $attrs['target'] = $opts['target'];
+                if ($opts['target'] === '_blank' && empty($attrs['rel'])) {
+                    $attrs['rel'] = 'noopener noreferrer';
+                }
+            }
+            return '<a' . ui_attrs($attrs) . '>' . $inner . '</a>';
+        }
+
+        $attrs['type'] = $opts['type'] ?? 'button';
+        if (!empty($opts['name'])) {
+            $attrs['name'] = $opts['name'];
+        }
+        if (isset($opts['value'])) {
+            $attrs['value'] = $opts['value'];
+        }
+        if (!empty($opts['disabled'])) {
+            $attrs['disabled'] = true;
+        }
+        return '<button' . ui_attrs($attrs) . '>' . $inner . '</button>';
+    }
+}
+
+/** 2. Icon-only Action Button (.btn-*-single) */
+if (!function_exists('ui_icon_button')) {
+    function ui_icon_button(string $action, array $opts = []): string
+    {
+        $map = [
+            'view'      => 'btn-view-single',
+            'edit'      => 'btn-edit-single',
+            'delete'    => 'btn-del-single',
+            'duplicate' => 'btn-duplicate-single',
+            'cancel'    => 'btn-cancel-single',
+            'archive'   => 'btn-archive-single',
+            'reply'     => 'btn-reply-single',
+            'check'     => 'btn-check-single',
+        ];
+        $baseClass = $map[$action] ?? 'btn-view-single';
+        $classes   = [$baseClass];
+        if (!empty($opts['class'])) {
+            $classes[] = (string)$opts['class'];
+        }
+
+        $attrs = is_array($opts['attrs'] ?? null) ? $opts['attrs'] : [];
+        $attrs['class'] = implode(' ', $classes);
+        if (!empty($opts['title'])) {
+            $attrs['title'] = $opts['title'];
+            $attrs['aria-label'] = $attrs['aria-label'] ?? $opts['title'];
+        }
+
+        if (!empty($opts['href'])) {
+            $attrs['href'] = $opts['href'];
+            return '<a' . ui_attrs($attrs) . '></a>';
+        }
+        $attrs['type'] = $opts['type'] ?? 'button';
+        return '<button' . ui_attrs($attrs) . '></button>';
+    }
+}
+
+/** 3. Card */
+if (!function_exists('ui_card')) {
+    function ui_card(string $bodyHtml, array $opts = []): string
+    {
+        $classes = ['ui-card'];
+        $hasHeader = !empty($opts['title']) || !empty($opts['header_actions']);
+        $hasFooter = !empty($opts['footer']);
+        if (!$hasHeader && !$hasFooter) {
+            $classes[] = !empty($opts['compact']) ? 'ui-card--compact' : 'ui-card--padded';
+        }
+        if (!empty($opts['interactive']) || !empty($opts['href'])) {
+            $classes[] = 'ui-card--interactive';
+        }
+        if (!empty($opts['class'])) {
+            $classes[] = (string)$opts['class'];
+        }
+
+        $attrs = is_array($opts['attrs'] ?? null) ? $opts['attrs'] : [];
+        $attrs['class'] = implode(' ', $classes);
+        $tag = !empty($opts['href']) ? 'a' : 'div';
+        if ($tag === 'a') {
+            $attrs['href'] = $opts['href'];
+        }
+
+        $html = '<' . $tag . ui_attrs($attrs) . '>';
+        if ($hasHeader) {
+            $html .= '<div class="ui-card__header"><div>';
+            if (!empty($opts['title'])) {
+                $html .= '<h3 class="ui-card__title">' . ui_e($opts['title']) . '</h3>';
+            }
+            if (!empty($opts['subtitle'])) {
+                $html .= '<p class="ui-card__subtitle">' . ui_e($opts['subtitle']) . '</p>';
+            }
+            $html .= '</div>';
+            if (!empty($opts['header_actions'])) {
+                $html .= '<div class="ui-page-header__actions">' . $opts['header_actions'] . '</div>';
+            }
+            $html .= '</div>';
+            $html .= '<div class="ui-card__body">' . $bodyHtml . '</div>';
+        } else {
+            $html .= $bodyHtml;
+        }
+        if ($hasFooter) {
+            $html .= '<div class="ui-card__footer">' . $opts['footer'] . '</div>';
+        }
+        $html .= '</' . $tag . '>';
+        return $html;
+    }
+}
+
+/** 4. Badge */
+if (!function_exists('ui_badge')) {
+    function ui_badge(string $label, string $tone = 'neutral', array $opts = []): string
+    {
+        $allowed = ['neutral', 'success', 'warning', 'danger', 'info', 'accent'];
+        $tone = in_array($tone, $allowed, true) ? $tone : 'neutral';
+        $classes = ['ui-badge', 'ui-badge--' . $tone];
+        if (!empty($opts['class'])) {
+            $classes[] = (string)$opts['class'];
+        }
+        $attrs = is_array($opts['attrs'] ?? null) ? $opts['attrs'] : [];
+        $attrs['class'] = implode(' ', $classes);
+        return '<span' . ui_attrs($attrs) . '>' . ui_e($label) . '</span>';
+    }
+}
+
+/** 5a. Form Field */
+if (!function_exists('ui_field')) {
+    function ui_field(string $name, string $label, array $opts = []): string
+    {
+        $type  = $opts['type'] ?? 'text';
+        $id    = $opts['id'] ?? ('field-' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $name));
+        $value = (string)($opts['value'] ?? '');
+        $error = (string)($opts['error'] ?? '');
+        $hint  = (string)($opts['hint'] ?? '');
+
+        $wrapClass = 'ui-field' . ($error !== '' ? ' ui-field--error' : '');
+        if (!empty($opts['class'])) {
+            $wrapClass .= ' ' . $opts['class'];
+        }
+
+        $ctrlAttrs = is_array($opts['attrs'] ?? null) ? $opts['attrs'] : [];
+        $ctrlAttrs['id'] = $id;
+        $ctrlAttrs['name'] = $name;
+        $ctrlAttrs['class'] = trim('ui-field__control ' . ($ctrlAttrs['class'] ?? ''));
+        if (!empty($opts['placeholder'])) {
+            $ctrlAttrs['placeholder'] = $opts['placeholder'];
+        }
+        if (!empty($opts['required'])) {
+            $ctrlAttrs['required'] = true;
+        }
+        if (!empty($opts['autocomplete'])) {
+            $ctrlAttrs['autocomplete'] = $opts['autocomplete'];
+        }
+
+        $html = '<div class="' . ui_e($wrapClass) . '">';
+        $html .= '<label class="ui-field__label" for="' . ui_e($id) . '">' . ui_e($label) . '</label>';
+
+        if ($type === 'textarea') {
+            $ctrlAttrs['rows'] = $opts['rows'] ?? 4;
+            $html .= '<textarea' . ui_attrs($ctrlAttrs) . '>' . ui_e($value) . '</textarea>';
+        } elseif ($type === 'select') {
+            $options = is_array($opts['options'] ?? null) ? $opts['options'] : [];
+            $html .= '<div class="select-wrapper"><select' . ui_attrs($ctrlAttrs) . '>';
+            foreach ($options as $optVal => $optLabel) {
+                $sel = ((string)$optVal === $value) ? ' selected' : '';
+                $html .= '<option value="' . ui_e($optVal) . '"' . $sel . '>' . ui_e($optLabel) . '</option>';
+            }
+            $html .= '</select></div>';
+        } else {
+            $ctrlAttrs['type'] = $type;
+            $ctrlAttrs['value'] = $value;
+            $html .= '<input' . ui_attrs($ctrlAttrs) . '>';
+        }
+
+        if ($hint !== '' && $error === '') {
+            $html .= '<span class="ui-field__hint">' . ui_e($hint) . '</span>';
+        }
+        if ($error !== '') {
+            $html .= '<span class="ui-field__error" role="alert">' . ui_e($error) . '</span>';
+        }
+        $html .= '</div>';
+        return $html;
+    }
+}
+
+/** 5b. Switch */
+if (!function_exists('ui_switch')) {
+    function ui_switch(string $name, string $label, bool $checked = false, array $opts = []): string
+    {
+        $id = $opts['id'] ?? ('switch-' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $name));
+        $inputAttrs = is_array($opts['attrs'] ?? null) ? $opts['attrs'] : [];
+        $inputAttrs['type'] = 'checkbox';
+        $inputAttrs['id'] = $id;
+        $inputAttrs['name'] = $name;
+        $inputAttrs['value'] = $opts['value'] ?? '1';
+        if ($checked) {
+            $inputAttrs['checked'] = true;
+        }
+        return '<label class="switch-premium" for="' . ui_e($id) . '">'
+            . '<input' . ui_attrs($inputAttrs) . '>'
+            . '<span class="slider"></span>'
+            . '<span>' . ui_e($label) . '</span>'
+            . '</label>';
+    }
+}
+
+/** 6a. Alert */
+if (!function_exists('ui_alert')) {
+    function ui_alert(string $message, string $tone = 'info', array $opts = []): string
+    {
+        $allowed = ['info', 'success', 'warning', 'danger'];
+        $tone = in_array($tone, $allowed, true) ? $tone : 'info';
+        $attrs = is_array($opts['attrs'] ?? null) ? $opts['attrs'] : [];
+        $attrs['class'] = trim('ui-alert ui-alert--' . $tone . ' ' . ($opts['class'] ?? ''));
+        $attrs['role'] = $tone === 'danger' ? 'alert' : 'status';
+        return '<div' . ui_attrs($attrs) . '>' . ui_e($message) . '</div>';
+    }
+}
+
+/** 6b. Empty State */
+if (!function_exists('ui_empty_state')) {
+    function ui_empty_state(string $message, array $opts = []): string
+    {
+        $html = '<div class="ui-empty">';
+        $html .= '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+        $html .= '<p>' . ui_e($message) . '</p>';
+        if (!empty($opts['cta_label']) && !empty($opts['cta_href'])) {
+            $html .= ui_button((string)$opts['cta_label'], ['href' => (string)$opts['cta_href'], 'variant' => 'default']);
+        }
+        $html .= '</div>';
+        return $html;
+    }
+}
+
+/** 7a. Back Button */
+if (!function_exists('ui_back_button')) {
+    function ui_back_button(string $url = '/admin', string $title = 'Voltar'): string
+    {
+        return '<a href="' . ui_e($url) . '" class="btn-back-arrow" title="' . ui_e($title) . '" aria-label="' . ui_e($title) . '">'
+            . '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            . '<line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline>'
+            . '</svg></a>';
+    }
+}
+
+/** 7b. Page Header */
+if (!function_exists('ui_page_header')) {
+    function ui_page_header(string $title, array $opts = []): string
+    {
+        $center = !empty($opts['center']);
+        $cls = 'ui-page-header' . ($center ? ' ui-page-header--center' : '');
+        if (!empty($opts['class'])) {
+            $cls .= ' ' . $opts['class'];
+        }
+        $html = '<div class="' . ui_e($cls) . '"><div class="ui-page-header__left">';
+        if (!empty($opts['back_url'])) {
+            $html .= ui_back_button((string)$opts['back_url'], (string)($opts['back_title'] ?? 'Voltar'));
+        }
+        $html .= '<div>';
+        if (!empty($opts['kicker'])) {
+            $html .= '<span class="ui-page-header__kicker">' . ui_e($opts['kicker']) . '</span>';
+        }
+        $tag = $opts['heading_tag'] ?? 'h2';
+        if (!in_array($tag, ['h1', 'h2', 'h3'], true)) {
+            $tag = 'h2';
+        }
+        $html .= '<' . $tag . ' class="ui-page-header__title">' . ui_e($title) . '</' . $tag . '>';
+        if (!empty($opts['subtitle'])) {
+            $html .= '<p class="ui-page-header__subtitle">' . ui_e($opts['subtitle']) . '</p>';
+        }
+        $html .= '</div></div>';
+        if (!empty($opts['actions'])) {
+            $html .= '<div class="ui-page-header__actions">' . $opts['actions'] . '</div>';
+        }
+        $html .= '</div>';
+        return $html;
+    }
+}
+
+/** 8. Modal Shell */
+if (!function_exists('ui_modal')) {
+    function ui_modal(string $id, string $title, string $bodyHtml, array $opts = []): string
+    {
+        $cls = trim('qe-modal ' . ($opts['class'] ?? ''));
+        $html = '<div class="' . ui_e($cls) . '" id="' . ui_e($id) . '" role="dialog" aria-modal="true" aria-labelledby="' . ui_e($id . '-title') . '">';
+        $html .= '<div class="qe-card">';
+        $html .= '<div class="qe-hd"><h3 id="' . ui_e($id . '-title') . '">' . ui_e($title) . '</h3>';
+        $html .= '<button type="button" class="btn-close-unified qe-close" title="Fechar" aria-label="Fechar">&times;</button></div>';
+        $html .= '<div class="qe-body">' . $bodyHtml . '</div>';
+        if (!empty($opts['footer'])) {
+            $html .= '<div class="qe-btns">' . $opts['footer'] . '</div>';
+        }
+        $html .= '</div></div>';
+        return $html;
+    }
+}
+
+/** 8b. Quick Edit Modal Shell (wrapper compatível para admin/components/quick_edit_modal.php) */
+if (!function_exists('ui_quick_edit_modal')) {
+    function ui_quick_edit_modal(string $id = 'qe-modal', string $title = 'Edição Rápida'): string
+    {
+        return '<div class="qe-modal" id="' . ui_e($id) . '" role="dialog" aria-modal="true">'
+            . '<div class="qe-card">'
+            . '<div class="qe-hd"><h3>' . ui_e($title) . '</h3>'
+            . '<button type="button" class="btn-close-unified qe-close" title="Fechar" aria-label="Fechar">&times;</button></div>'
+            . '<form class="qe-form"><div class="qe-body"></div>'
+            . '<div class="qe-btns">'
+            . '<button type="button" class="qe-btn qe-btn-cancel">Cancelar</button>'
+            . '<button type="submit" class="qe-btn qe-btn-save">Guardar Alterações</button>'
+            . '</div></form></div></div>';
+    }
+}
+
+/** 8c. Context Menu (wrapper compatível para admin/components/context_menu.php) */
+if (!function_exists('ui_context_menu')) {
+    function ui_context_menu(array $items = [], string $id = 'ctx-menu'): string
+    {
+        $html = '<div class="ctx-menu" id="' . ui_e($id) . '">';
+        foreach ($items as $item) {
+            if ($item === 'separator') {
+                $html .= '<div class="ctx-sep"></div>';
+            } elseif (is_array($item)) {
+                $href  = ui_e($item['href'] ?? '#');
+                $elId  = ui_e($item['id'] ?? '');
+                $cls   = ui_e(trim('ctx-item ' . ($item['class'] ?? '')));
+                $icon  = (string)($item['icon'] ?? '');
+                $label = ui_e($item['label'] ?? '');
+                $html .= '<a href="' . $href . '"' . ($elId !== '' ? ' id="' . $elId . '"' : '') . ' class="' . $cls . '">' . $icon . $label . '</a>';
+            }
+        }
+        $html .= '</div>';
+        return $html;
+    }
+}
+
+/** 9. Canonical Storefront Product Card (index.php & produtos.php — 100% compatível com modalProduto.js) */
+if (!function_exists('ui_product_card')) {
+    function ui_product_card(array $produto, array $opts = []): string
+    {
+        $id           = (int)($produto['id'] ?? 0);
+        $nome         = (string)($produto['nome'] ?? '');
+        $slug         = (string)($opts['slug'] ?? ($produto['slug'] ?? ''));
+        $href         = (string)($opts['href'] ?? ($slug !== '' ? '/produto/' . $slug : '/produto.php?id=' . $id));
+        $preco        = (float)($produto['preco'] ?? 0);
+        $promo        = !empty($produto['preco_promocional']) ? (float)$produto['preco_promocional'] : 0.0;
+        $emPromocao   = $promo > 0;
+        $stock        = (int)($produto['stock_total'] ?? 0);
+        $esgotado     = ($stock <= 0);
+        $foto         = (string)($opts['foto_principal'] ?? ($produto['foto_exibicao'] ?? ($produto['foto_principal'] ?? 'default.jpg')));
+        $fotoSec      = (string)($opts['foto_secundaria'] ?? '');
+        $withModal    = !empty($opts['modal_data']);
+        $showQuickAdd = !empty($opts['quick_add']);
+        $imgDims      = !empty($opts['img_dimensions']);
+
+        $tag = $esgotado ? 'div' : 'a';
+        $attrs = [
+            'class' => trim('produto ' . ($esgotado ? 'esgotado' : '') . ' ' . ($opts['class'] ?? '')),
+        ];
+        if (!$esgotado) {
+            $attrs['href'] = $href;
+        }
+        if ($withModal) {
+            $attrs['data-id']                = $id;
+            $attrs['data-slug']              = $slug;
+            $attrs['data-categoria']         = (string)($produto['categoria'] ?? '');
+            $attrs['data-referencia']        = (string)($produto['referencia'] ?? '');
+            $attrs['data-nome']              = $nome;
+            $attrs['data-preco']             = $produto['preco'] ?? 0;
+            $attrs['data-descricao']         = (string)($produto['descricao'] ?? '');
+            $attrs['data-fotos']             = json_encode($opts['fotos'] ?? []);
+            $attrs['data-preco-promocional'] = $produto['preco_promocional'] ?? '';
+            $attrs['data-atributos']         = (string)($produto['atributos'] ?? '{}');
+            $attrs['data-quantidade']        = $stock;
+            $attrs['data-base-variacao-id']  = $produto['base_variacao_id'] ?? '';
+            $attrs['data-guia-tamanho-id']   = $produto['guia_tamanho_id'] ?? '';
+            $attrs['data-peso']              = $produto['peso_gramas'] ?? 0;
+            $attrs['data-filtros-ativos']    = !empty($opts['filtros_ativos']) ? 'true' : 'false';
+        }
+
+        $fmtMoney = function_exists('format_money')
+            ? 'format_money'
+            : static fn($v) => '€' . number_format((float)$v, 2, ',', '.');
+
+        $html = '<' . $tag . ui_attrs($attrs) . '>';
+        if ($emPromocao) {
+            $html .= '<span class="badge promocao">Promoção</span>';
+        }
+        $html .= '<div class="produto-imagem-container">';
+        $html .= '<img src="/public/images/' . ui_e($foto) . '" alt="' . ui_e($nome) . '" class="imagem-principal" loading="lazy"' . ($imgDims ? ' width="600" height="800"' : '') . '>';
+        if ($fotoSec !== '' && $fotoSec !== $foto) {
+            $html .= '<img src="/public/images/' . ui_e($fotoSec) . '" alt="' . ui_e($nome) . '" class="imagem-secundaria" loading="lazy">';
+        }
+        if ($esgotado) {
+            $html .= '<div class="badge-esgotado-overlay">Esgotado</div>';
+        } elseif ($showQuickAdd) {
+            $temVar = (!empty($produto['atributos']) && $produto['atributos'] !== '{}');
+            $html .= '<span role="button" class="btn-adicionar-rapido" data-tem-variacoes="' . ($temVar ? '1' : '0') . '">'
+                . ($temVar ? 'Ver Opções' : 'Adicionar Rápido') . '</span>';
+        }
+        $html .= '</div>';
+
+        $html .= '<div class="produto-info">';
+        $html .= '<h4>' . ui_e($nome) . '</h4>';
+        if ($emPromocao) {
+            $html .= '<p class="preco-promocao"><del>' . ui_e($fmtMoney($preco)) . '</del> <strong>' . ui_e($fmtMoney($promo)) . '</strong></p>';
+        } else {
+            $html .= '<p>' . ui_e($fmtMoney($preco)) . '</p>';
+        }
+        $html .= '</div></' . $tag . '>';
+
+        return $html;
+    }
+}
+
+/** 9b. Canonical Customer Orders Table (minha-conta.php & minha-conta-encomendas.php — DRY) */
+if (!function_exists('ui_customer_orders_table')) {
+    function ui_customer_orders_table(array $orders, array $opts = []): string
+    {
+        if (empty($orders)) {
+            return ui_empty_state(
+                (string)($opts['empty_message'] ?? 'Ainda não tens encomendas associadas a esta conta.'),
+                [
+                    'cta_label' => $opts['cta_label'] ?? null,
+                    'cta_href'  => $opts['cta_href'] ?? null,
+                ]
+            );
+        }
+
+        $fmtMoney = function_exists('format_money')
+            ? 'format_money'
+            : static fn($v) => '€' . number_format((float)$v, 2, ',', '.');
+
+        $html = '<div class="cliente-orders-table-wrap"><table class="cliente-orders-table">'
+            . '<thead><tr>'
+            . '<th>Encomenda</th><th>Data</th><th>Entrega</th><th>Estado</th>'
+            . '<th class="is-money">Total</th><th class="is-action">Ações</th>'
+            . '</tr></thead><tbody>';
+
+        foreach ($orders as $order) {
+            $id          = (int)($order['id'] ?? 0);
+            $estado      = (string)($order['estado'] ?? '');
+            $estadoClass = strtolower(str_replace(' ', '-', $estado));
+            $entrega     = (string)($order['metodo_entrega'] ?: 'Envio');
+            $total       = (float)($order['total'] ?? 0) + (float)($order['portes_envio'] ?? 0);
+            $token       = (string)($order['token'] ?? '');
+            $dataFmt     = !empty($order['data_encomenda']) ? date('d/m/Y', strtotime((string)$order['data_encomenda'])) : '—';
+
+            $html .= '<tr>'
+                . '<td data-label="Encomenda"><a href="/minha-conta/encomenda?id=' . $id . '" class="order-id">#' . $id . '</a></td>'
+                . '<td data-label="Data"><span class="order-date">' . ui_e($dataFmt) . '</span></td>'
+                . '<td data-label="Entrega"><span class="order-delivery">' . ui_e($entrega) . '</span></td>'
+                . '<td data-label="Estado"><span class="order-status status-' . ui_e($estadoClass) . '">' . ui_e($estado) . '</span></td>'
+                . '<td data-label="Total" class="is-money"><strong class="order-total">' . ui_e($fmtMoney($total)) . '</strong></td>'
+                . '<td class="is-action"><div class="order-actions-cell">'
+                . '<a href="/estado_encomenda.php?id=' . $id . '&token=' . urlencode($token) . '" class="btn-track-mini" title="Rastrear Encomenda">'
+                . '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'
+                . '<span>Tracking</span></a>'
+                . '<a href="/minha-conta/encomenda?id=' . $id . '" class="order-icon-btn" aria-label="Ver detalhes da encomenda #' . $id . '">'
+                . '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+                . '</a></div></td></tr>';
+        }
+
+        $html .= '</tbody></table></div>';
+        return $html;
+    }
+}

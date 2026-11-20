@@ -88,8 +88,11 @@ include __DIR__ . '/templates/header.php';
         <div class="login-card">
             <h2>Recuperar Conta</h2>
             <?php if ($tipo === 'sucesso'): ?>
-                <p class="cliente-auth-copy" style="text-align:center;">Verifica a tua caixa de entrada (e pasta de spam) para o link de recuperação.</p>
+                <?php echo ui_alert('Verifica a tua caixa de entrada (e pasta de spam) para o link de recuperação.', 'success'); ?>
             <?php else: ?>
+                <?php if ($tipo === 'erro' && $mensagem !== ''): ?>
+                    <?php echo ui_alert($mensagem, 'danger'); ?>
+                <?php endif; ?>
                 <p class="cliente-auth-copy">Insere o email da tua conta para receberes um link de recuperação.</p>
                 <form method="post" action="/recuperar-conta">
                     <?php echo csrf_input(); ?>
@@ -97,7 +100,7 @@ include __DIR__ . '/templates/header.php';
                         <label for="email">Email</label>
                         <input type="email" id="email" name="email" required autocomplete="email" placeholder="O seu email">
                     </div>
-                    <input type="submit" value="Enviar link">
+                    <?php echo ui_button('Enviar link', ['type' => 'submit', 'variant' => 'primary', 'full' => true]); ?>
                 </form>
             <?php endif; ?>
 

@@ -90,17 +90,17 @@ include __DIR__ . '/templates/header.php';
             <h2>Verificação de email</h2>
             <?php if ($token_valido): ?>
                 <?php if (!empty($erro)): ?>
-                    <p class="cliente-auth-copy" style="text-align:center; color:var(--cor-erro);"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
+                    <?php echo ui_alert($erro, 'danger'); ?>
                 <?php else: ?>
                     <p class="cliente-auth-copy" style="text-align:center;">Clica no botão abaixo para confirmar o teu email e ativar a tua conta.</p>
                 <?php endif; ?>
                 <form method="post" action="/verificar-email.php">
                     <?php echo csrf_input(); ?>
                     <input type="hidden" name="token" value="<?php echo htmlspecialchars($token_raw, ENT_QUOTES, 'UTF-8'); ?>">
-                    <input type="submit" value="Confirmar a minha conta">
+                    <?php echo ui_button('Confirmar a minha conta', ['type' => 'submit', 'variant' => 'primary', 'full' => true]); ?>
                 </form>
             <?php else: ?>
-                <p class="cliente-auth-copy" style="text-align:center; color:var(--cor-erro);"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
+                <?php echo ui_alert($erro, 'danger'); ?>
                 <div class="form-actions-footer">
                     <a href="/registar" class="link-recuperar">Criar nova conta</a>
                     <a href="/entrar" class="link-recuperar">Entrar</a>

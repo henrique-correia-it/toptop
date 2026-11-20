@@ -192,13 +192,21 @@ $portes_por_pais = $portes_js ?? [];
                                     <input type="hidden" name="morada_id" value="<?php echo (int)$address['id']; ?>">
 
                                     <div class="address-action-group">
-                                        <button type="button" class="btn-del-single btn-apagar-confirmado"
-                                                data-titulo-confirmacao="Apagar Morada"
-                                                data-mensagem-confirmacao="Tem a certeza que pretende apagar esta morada? Esta ação não pode ser revertida."
-                                                name="acao" value="apagar"
-                                                title="Apagar morada"></button>
-                                        <button type="button" class="btn-edit-single"
-                                                onclick="editarMorada(<?php echo htmlspecialchars(json_encode([
+                                        <?php
+                                        echo ui_icon_button('delete', [
+                                            'class' => 'btn-apagar-confirmado',
+                                            'title' => 'Apagar morada',
+                                            'attrs' => [
+                                                'data-titulo-confirmacao'   => 'Apagar Morada',
+                                                'data-mensagem-confirmacao' => 'Tem a certeza que pretende apagar esta morada? Esta ação não pode ser revertida.',
+                                                'name'                      => 'acao',
+                                                'value'                     => 'apagar',
+                                            ],
+                                        ]);
+                                        echo ui_icon_button('edit', [
+                                            'title' => 'Editar morada',
+                                            'attrs' => [
+                                                'onclick' => 'editarMorada(' . json_encode([
                                                     'id'            => (int)$address['id'],
                                                     'rua'           => $address['rua'],
                                                     'codigo_postal' => $address['codigo_postal'],
@@ -206,22 +214,21 @@ $portes_por_pais = $portes_js ?? [];
                                                     'provincia'     => $address['provincia'] ?? '',
                                                     'pais_regiao'   => $address['pais_regiao'],
                                                     'principal'     => (int)$address['principal'],
-                                                ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES); ?>)"
-                                                title="Editar morada"></button>
+                                                ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ')',
+                                            ],
+                                        ]);
+                                        ?>
                                     </div>
 
                                     <?php if ((int)$address['principal'] !== 1): ?>
-                                        <button type="submit" name="acao" value="principal" class="button btn-set-main">Predefinir</button>
+                                        <?php echo ui_button('Predefinir', ['type' => 'submit', 'name' => 'acao', 'value' => 'principal', 'class' => 'btn-set-main', 'size' => 'sm']); ?>
                                     <?php endif; ?>
                                 </form>
                             </div>
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <div class="cliente-empty">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                        <p>Ainda não tens moradas guardadas.</p>
-                    </div>
+                    <?php echo ui_empty_state('Ainda não tens moradas guardadas.'); ?>
                 <?php endif; ?>
             </div>
 

@@ -43,6 +43,8 @@ $partials = [
     'base/_reset.css',
     'base/_typography.css',
     'base/_utilities.css',
+    // 1.5 Biblioteca Mínima de Componentes (DESIGN.md)
+    'ui/_primitives.css',
     // 2. Layout
     'layout/_main.css',
     'layout/_grid.css',

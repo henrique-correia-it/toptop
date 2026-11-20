@@ -1,0 +1,458 @@
+/* ==========================================================================
+   TOPTOP UI PRIMITIVES — Biblioteca Mínima de Componentes (DESIGN.md)
+   Fonte única de verdade para os 9 primitivos reutilizáveis do site.
+   Zero !important, 100% baseado em tokens de base/_variables.css.
+   ========================================================================== */
+
+/* ── 1. BUTTON (.ui-btn) ── */
+.ui-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: 10px 18px;
+    border: 1px solid var(--button-border);
+    border-radius: var(--radius-pill);
+    background: var(--button-bg);
+    color: var(--button-color);
+    box-shadow: var(--button-shadow);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--button-transition);
+    -webkit-appearance: none;
+    appearance: none;
+    white-space: nowrap;
+}
+
+.ui-btn:hover:not(:disabled) {
+    background: var(--button-hover-bg);
+    border-color: var(--button-hover-border);
+    color: var(--button-hover-color);
+    box-shadow: var(--button-hover-shadow);
+    transform: translateY(-1px);
+}
+
+.ui-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.ui-btn:focus-visible {
+    outline: 2px solid var(--cor-texto);
+    outline-offset: 2px;
+}
+
+.ui-btn:disabled,
+.ui-btn[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.ui-btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.ui-btn--sm {
+    padding: 7px 14px;
+    font-size: var(--text-xs);
+}
+
+.ui-btn--full {
+    width: 100%;
+}
+
+.ui-btn--primary {
+    background: var(--cor-preto-suave);
+    border-color: var(--cor-preto-suave);
+    color: var(--cor-branco);
+}
+
+.ui-btn--primary:hover:not(:disabled) {
+    background: var(--cor-cinza-escuro);
+    border-color: var(--cor-cinza-escuro);
+    color: var(--cor-branco);
+}
+
+.ui-btn--danger {
+    border-color: #fee2e2;
+    color: var(--cor-perigo);
+}
+
+.ui-btn--danger:hover:not(:disabled) {
+    background: var(--cor-perigo-bg);
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+.ui-btn--ghost {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    color: var(--cor-slate-600);
+}
+
+.ui-btn--ghost:hover:not(:disabled) {
+    background: var(--cor-slate-100);
+    border-color: transparent;
+    box-shadow: none;
+    color: var(--cor-texto);
+}
+
+.ui-btn--active {
+    background: #eef2ff;
+    border-color: #818cf8;
+    color: #4338ca;
+}
+
+.ui-btn--plus::before {
+    content: "+";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05em;
+    font-weight: 700;
+    line-height: 1;
+    transition: transform 0.25s ease;
+}
+
+.ui-btn--plus:hover::before {
+    transform: rotate(90deg);
+}
+
+/* ── 2. CARD (.ui-card) ── */
+.ui-card {
+    background: var(--cor-superficie-cartao);
+    border: 1px solid var(--cor-borda-cartao);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--sombra-subtil);
+    color: var(--cor-texto);
+    overflow: hidden;
+}
+
+.ui-card--padded {
+    padding: var(--space-6);
+}
+
+.ui-card--compact {
+    padding: var(--space-4);
+}
+
+a.ui-card--interactive,
+.ui-card--interactive {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+a.ui-card--interactive:hover,
+.ui-card--interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sombra-media);
+    border-color: var(--cor-slate-300);
+}
+
+.ui-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-5) var(--space-6);
+    border-bottom: 1px solid var(--cor-divisor-cartao);
+}
+
+.ui-card__title {
+    margin: 0;
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--cor-texto);
+    text-align: left;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.ui-card__subtitle {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-sm);
+    color: var(--cor-slate-500);
+    text-align: left;
+}
+
+.ui-card__body {
+    padding: var(--space-6);
+}
+
+.ui-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-6);
+    border-top: 1px solid var(--cor-divisor-cartao);
+    background: var(--cor-slate-50);
+}
+
+/* ── 3. BADGE (.ui-badge) ── */
+.ui-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-sans);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.ui-badge--neutral {
+    background: var(--cor-slate-100);
+    color: var(--cor-slate-600);
+}
+
+.ui-badge--success {
+    background: var(--cor-sucesso-bg);
+    color: #15803d;
+}
+
+.ui-badge--warning {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.ui-badge--danger {
+    background: var(--cor-perigo-bg);
+    color: #b91c1c;
+}
+
+.ui-badge--info {
+    background: #eff6ff;
+    color: var(--cor-info);
+}
+
+.ui-badge--accent {
+    background: var(--tema-accent-tinte);
+    color: var(--cor-texto);
+}
+
+/* ── 4. FORM FIELD (.ui-field) ── */
+.ui-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+    text-align: left;
+}
+
+.ui-field__label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--cor-slate-800);
+}
+
+.ui-field__control {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--cor-slate-300);
+    border-radius: var(--radius-md);
+    background: var(--cor-branco);
+    color: var(--cor-texto);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+}
+
+.ui-field__control:focus-visible {
+    outline: none;
+    border-color: var(--cor-texto);
+    box-shadow: 0 0 0 3px rgba(28, 28, 28, 0.08);
+}
+
+.ui-field__hint {
+    font-size: var(--text-xs);
+    color: var(--cor-slate-500);
+}
+
+.ui-field__error {
+    font-size: var(--text-xs);
+    color: var(--cor-perigo);
+    font-weight: 500;
+}
+
+.ui-field--error .ui-field__control {
+    border-color: var(--cor-perigo);
+}
+
+/* ── 5. ALERT & EMPTY STATE (.ui-alert, .ui-empty) ── */
+.ui-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    margin-bottom: var(--space-5);
+    text-align: left;
+}
+
+.ui-alert--info {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1e40af;
+}
+
+.ui-alert--success {
+    background: var(--cor-sucesso-bg);
+    border-color: #bbf7d0;
+    color: #166534;
+}
+
+.ui-alert--warning {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #92400e;
+}
+
+.ui-alert--danger {
+    background: var(--cor-perigo-bg);
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.ui-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    padding: var(--space-10) var(--space-6);
+    text-align: center;
+    color: var(--cor-slate-500);
+}
+
+.ui-empty p {
+    margin: 0;
+    color: var(--cor-slate-500);
+    font-size: var(--text-base);
+}
+
+/* ── 6. PAGE HEADER (.ui-page-header) ── */
+.ui-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-6);
+}
+
+.ui-page-header--center {
+    flex-direction: column;
+    text-align: center;
+}
+
+.ui-page-header__left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.ui-page-header__kicker {
+    display: block;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--cor-accent);
+    margin-bottom: var(--space-1);
+}
+
+.ui-page-header__title {
+    margin: 0;
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--cor-texto-pagina);
+    text-align: inherit;
+    text-transform: none;
+    letter-spacing: -0.01em;
+}
+
+.ui-page-header__subtitle {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-sm);
+    color: var(--cor-texto-pagina-suave);
+}
+
+.ui-page-header__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+/* ── 7. TABLE WRAPPER (.ui-table-wrap) ── */
+.ui-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    background: var(--cor-superficie-cartao);
+    border: 1px solid var(--cor-borda-cartao);
+    border-radius: var(--radius-lg);
+}
+
+.ui-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+    text-align: left;
+}
+
+.ui-table th {
+    padding: var(--space-3) var(--space-4);
+    background: var(--cor-slate-50);
+    color: var(--cor-slate-500);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--cor-slate-200);
+    white-space: nowrap;
+}
+
+.ui-table td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--cor-divisor-cartao);
+    color: var(--cor-texto);
+    vertical-align: middle;
+}
+
+.ui-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.ui-table tbody tr:hover {
+    background: var(--cor-slate-50);
+}
+
+@media (max-width: 768px) {
+    .ui-card__header,
+    .ui-card__body,
+    .ui-card__footer {
+        padding-left: var(--space-4);
+        padding-right: var(--space-4);
+    }
+
+    .ui-page-header {
+        align-items: flex-start;
+    }
+}

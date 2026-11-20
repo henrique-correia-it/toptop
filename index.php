@@ -303,41 +303,14 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
             <h2 class="section-title home-editable" data-chave="home_new_title"><?php echo htmlspecialchars(getLojaConfig('home_new_title', 'Últimas Novidades')); ?></h2>
         </div>
         <div class="produtos-grid">
-            <?php foreach($recentes as $row): 
-                $foto_principal = $row['foto_exibicao'] ?? 'default.jpg';
+            <?php foreach($recentes as $row):
                 $slug = criar_slug($row['nome'] . '-' . $row['id']);
-                $stock_para_js = (int) ($row['stock_total'] ?? 0);
-                $esgotado = ($stock_para_js <= 0);
-                $tag_principal = $esgotado ? 'div' : 'a';
-                $link_atributo = !$esgotado ? 'href="/produto/' . $slug . '"' : '';
-            ?>
-                <<?php echo $tag_principal; ?> <?php echo $link_atributo; ?> class="produto <?php echo $esgotado ? 'esgotado' : ''; ?>">
-                    
-                    <?php if (!empty($row['preco_promocional']) && $row['preco_promocional'] > 0): ?>
-                        <span class="badge promocao">Promoção</span>
-                    <?php endif; ?>
-                    
-                    <div class="produto-imagem-container">
-                        <img src="/public/images/<?php echo htmlspecialchars($foto_principal); ?>" alt="<?php echo htmlspecialchars($row['nome']); ?>" class="imagem-principal" loading="lazy" width="600" height="800">
-                        <?php if ($esgotado): ?>
-                            <div class="badge-esgotado-overlay">Esgotado</div>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <div class="produto-info">
-                        <h4><?php echo htmlspecialchars($row['nome']); ?></h4>
-                        <?php if (!empty($row['preco_promocional']) && $row['preco_promocional'] > 0): ?>
-                            <p class="preco-promocao">
-                                <del><?php echo format_money($row['preco']); ?></del> 
-                                <strong><?php echo format_money($row['preco_promocional']); ?></strong>
-                            </p>
-                        <?php else: ?>
-                            <p><?php echo format_money($row['preco']); ?></p>
-                        <?php endif; ?>
-                    </div>
-
-                </<?php echo $tag_principal; ?>>
-            <?php endforeach; ?>
+                echo ui_product_card($row, [
+                    'slug'           => $slug,
+                    'foto_principal' => $row['foto_exibicao'] ?? 'default.jpg',
+                    'img_dimensions' => true,
+                ]);
+            endforeach; ?>
         </div>
         <div class="btn-ver-mais-container" data-reveal>
             <a href="produtos.php" class="btn-ver-mais">Ver Todos os Produtos</a>

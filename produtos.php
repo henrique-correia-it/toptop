@@ -2,6 +2,7 @@
 include __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/url_helpers.php';
 require_once __DIR__ . '/config/formatters.php';
+require_once __DIR__ . '/includes/ui/ui.php';
 
 $requested_with = strtolower(trim((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')));
 $fetch_destination = strtolower(trim((string) ($_SERVER['HTTP_SEC_FETCH_DEST'] ?? '')));
@@ -349,57 +350,22 @@ ob_start(); // Inicia um novo buffer para o HTML dos produtos
                     $link_produto .= '?' . $query_params;
                 }
 
-                $stock_para_js = (int) ($row['stock_total'] ?? 0);
-                $esgotado = ($stock_para_js <= 0);
-                $tag_principal = $esgotado ? 'div' : 'a';
-                $link_atributo = !$esgotado ? 'href="' . htmlspecialchars($link_produto, ENT_QUOTES, 'UTF-8') . '"' : '';
+                echo ui_product_card($row, [
+                    'slug'            => $slug,
+                    'href'            => $link_produto,
+                    'foto_principal'  => $foto_principal,
+                    'foto_secundaria' => $foto_secundaria,
+                    'fotos'           => $imagens_por_produto[$row['id']] ?? [],
+                    'filtros_ativos'  => $filtros_de_atributos_ativos,
+                    'modal_data'      => true,
+                    'quick_add'       => true,
+                ]);
                 ?>
-                <<?php echo $tag_principal; ?>             <?php echo $link_atributo; ?> class="produto
-                    <?php echo $esgotado ? 'esgotado' : ''; ?>"
-                    data-id="<?php echo $row['id']; ?>"
-                    data-slug="<?php echo $slug; ?>"
-                    data-categoria="<?php echo htmlspecialchars($row['categoria']); ?>"
-                    data-referencia="<?php echo htmlspecialchars($row['referencia']); ?>"
-                    data-nome="<?php echo htmlspecialchars($row['nome']); ?>"
-                    data-preco="<?php echo $row['preco']; ?>"
-                    data-descricao="<?php echo htmlspecialchars($row['descricao']); ?>"
-                    data-fotos='<?php echo htmlspecialchars(json_encode($imagens_por_produto[$row['id']] ?? []), ENT_QUOTES, 'UTF-8'); ?>'
-                    data-preco-promocional="<?php echo $row['preco_promocional']; ?>"
-                    data-atributos='<?php echo htmlspecialchars($row['atributos'] ?? '{}', ENT_QUOTES, 'UTF-8'); ?>'
-                    data-quantidade="<?php echo $stock_para_js; ?>"
-                    data-base-variacao-id="<?php echo $row['base_variacao_id'] ?? ''; ?>"
-                    data-guia-tamanho-id="<?php echo $row['guia_tamanho_id'] ?? ''; ?>"
-                    data-peso="<?php echo $row['peso_gramas'] ?? 0; ?>"
-                    data-filtros-ativos="<?php echo $filtros_de_atributos_ativos ? 'true' : 'false'; ?>">
-
-                    <?php if (!empty($row['preco_promocional']) && $row['preco_promocional'] > 0): ?><span
-                            class="badge promocao">Promoção</span><?php endif; ?>
-                    <div class="produto-imagem-container">
-                        <img src="/public/images/<?php echo htmlspecialchars($foto_principal); ?>"
-                            alt="<?php echo htmlspecialchars($row['nome']); ?>" class="imagem-principal" loading="lazy">
-                        <?php if ($foto_secundaria && $foto_secundaria !== $foto_principal): ?><img
-                                src="/public/images/<?php echo htmlspecialchars($foto_secundaria); ?>"
-                                alt="<?php echo htmlspecialchars($row['nome']); ?>" class="imagem-secundaria"
-                                loading="lazy"><?php endif; ?>
-                        <?php if ($esgotado): ?>
-                            <div class="badge-esgotado-overlay">Esgotado</div>
-                        <?php else: ?><span role="button" class="btn-adicionar-rapido"
-                                data-tem-variacoes="<?php echo (!empty($row['atributos']) && $row['atributos'] !== '{}') ? '1' : '0'; ?>"><?php echo (!empty($row['atributos']) && $row['atributos'] !== '{}') ? 'Ver Opções' : 'Adicionar Rápido'; ?></span><?php endif; ?>
-                    </div>
-                    <div class="produto-info">
-                        <h4><?php echo htmlspecialchars($row['nome']); ?></h4>
-                        <?php if (!empty($row['preco_promocional']) && $row['preco_promocional'] > 0): ?>
-                            <p class="preco-promocao"><del><?php echo format_money($row['preco']); ?></del>
-                                <strong><?php echo format_money($row['preco_promocional']); ?></strong></p>
-                        <?php else: ?>
-                            <p><?php echo format_money($row['preco']); ?></p><?php endif; ?>
-                    </div>
-                </<?php echo $tag_principal; ?>>
             <?php endforeach; endforeach; ?>
     </div>
 <?php else: ?>
-    <p style="text-align:center;width:100%;padding:40px 0;">Não foram encontrados produtos com os critérios selecionados.
-    </p><?php endif; ?>
+    <?php echo ui_empty_state('Não foram encontrados produtos com os critérios selecionados.'); ?>
+<?php endif; ?>
 
 <?php
 $html_produtos = ob_get_clean();

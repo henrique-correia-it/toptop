@@ -93,9 +93,9 @@ $result = $stmt->get_result();
     </div>
 
     <?php if ($mensagem_sucesso): ?>
-        <p class="auth-message success" style="max-width: 1200px; margin: 0 auto 20px;"><?php echo htmlspecialchars($mensagem_sucesso); ?></p>
+        <div style="max-width:1200px; margin:0 auto 20px;"><?php echo ui_alert($mensagem_sucesso, 'success'); ?></div>
     <?php elseif ($mensagem_erro): ?>
-        <p class="auth-message error" style="max-width: 1200px; margin: 0 auto 20px;"><?php echo htmlspecialchars($mensagem_erro); ?></p>
+        <div style="max-width:1200px; margin:0 auto 20px;"><?php echo ui_alert($mensagem_erro, 'danger'); ?></div>
     <?php endif; ?>
 
     <div class="prod-toolbar">

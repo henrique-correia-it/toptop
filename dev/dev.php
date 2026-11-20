@@ -400,6 +400,14 @@ $recent_logs = getRecentAppLogs(3);
                             <p>Visualizar templates com dados simulados.</p>
                         </div>
                     </a>
+
+                    <a href="design_system.php" class="nav-card">
+                        <div class="nav-card-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></div>
+                        <div class="nav-card-body">
+                            <h3>Design System</h3>
+                            <p>Tokens, cores e biblioteca de 9 componentes.</p>
+                        </div>
+                    </a>
                 </div>
             </section>
         </div>

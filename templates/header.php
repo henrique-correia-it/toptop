@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../config/session.php';
 require_once __DIR__ . '/../config/limpar_abandonadas.php';
 // --- CARREGAMENTO DE COMPONENTES ---
+require_once __DIR__ . '/../includes/ui/ui.php';
 $requestPathHeader = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 if (str_starts_with($requestPathHeader, '/admin') || str_starts_with($requestPathHeader, '/dev')) {
     require_once __DIR__ . '/../admin/components/back_button.php';
