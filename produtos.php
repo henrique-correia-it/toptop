@@ -53,10 +53,10 @@ $pagina_atual = filter_input(INPUT_GET, 'pagina', FILTER_VALIDATE_INT, ['options
 $offset = ($pagina_atual - 1) * $resultados_por_pagina;
 
 $termo_pesquisa = trim((string)($_GET['q'] ?? ''));
-$promocao_selecionada = is_string($_GET['promocao'] ?? '') ? $_GET['promocao'] : '';
+$promocao_selecionada = is_string($_GET['promocao'] ?? null) ? $_GET['promocao'] : '';
 $categorias_selecionadas = is_array($_GET['categorias'] ?? null) ? array_values(array_filter($_GET['categorias'], 'is_string')) : [];
 $atributos_selecionados = is_array($_GET['atributos'] ?? null) ? $_GET['atributos'] : [];
-$ordenar_selecionado = is_string($_GET['ordenar'] ?? '') ? $_GET['ordenar'] : '';
+$ordenar_selecionado = is_string($_GET['ordenar'] ?? null) ? $_GET['ordenar'] : '';
 
 // CONSTRUÇÃO DA QUERY OTIMIZADA
 $sql_base = "FROM produtos p";
