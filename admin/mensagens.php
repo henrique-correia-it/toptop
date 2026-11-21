@@ -171,11 +171,11 @@ include '../templates/header.php';
     <div class="qe-body">
         <div class="qe-f">
             <label>Assunto</label>
-            <input type="text" id="resposta-assunto" class="qe-in" required>
+            <?php echo ui_input('', ['id' => 'resposta-assunto', 'class' => 'qe-in', 'required' => true]); ?>
         </div>
         <div class="qe-f">
             <label>Mensagem</label>
-            <textarea id="resposta-mensagem" class="qe-in" rows="8" required></textarea>
+            <?php echo ui_textarea('', '', ['id' => 'resposta-mensagem', 'class' => 'qe-in', 'rows' => 8, 'required' => true]); ?>
         </div>
     </div>
 </template>

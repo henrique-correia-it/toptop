@@ -94,15 +94,9 @@ $stmt->close();
     <div class="prod-toolbar-left"></div>
     <div class="prod-toolbar-right">
         <form method="GET" style="display:flex;align-items:center;gap:10px;">
-            <div class="search-input-wrap">
-                <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="search" name="q" placeholder="Nome, email ou telefone..." value="<?= htmlspecialchars($filtro_q) ?>" class="search-input-toolbar" autocomplete="off">
-            </div>
+            <?= ui_search_input('q', 'Nome, email ou telefone...', ['value' => $filtro_q]) ?>
         </form>
-        <button class="button btn-sel-mode" id="btn-sel-mode" type="button">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="5" width="4" height="4" rx="1"/><rect x="3" y="13" width="4" height="4" rx="1"/><line x1="11" y1="7" x2="21" y2="7"/><line x1="11" y1="15" x2="21" y2="15"/></svg>
-            Selecionar
-        </button>
+        <?= ui_select_mode_button() ?>
     </div>
 </div>
 

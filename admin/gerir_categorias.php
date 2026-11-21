@@ -72,20 +72,22 @@ include '../templates/header.php';
                     </div>
 
                     <div class="gc-info">
-                        <input type="text"
-                               class="gc-nome-input"
-                               id="gc-nome-<?php echo $cat['id']; ?>"
-                               value="<?php echo htmlspecialchars($cat['nome']); ?>"
-                               data-original="<?php echo htmlspecialchars($cat['nome']); ?>"
-                               data-cat-id="<?php echo $cat['id']; ?>">
+                        <?php echo ui_input('', [
+                            'id'    => 'gc-nome-' . $cat['id'],
+                            'class' => 'gc-nome-input',
+                            'value' => $cat['nome'],
+                            'attrs' => [
+                                'data-original' => $cat['nome'],
+                                'data-cat-id'   => $cat['id'],
+                            ],
+                        ]); ?>
                         <div class="gc-meta">
-                            <label class="toggle-visiveis" title="Alternar visibilidade">
-                                <input type="checkbox"
-                                       class="gc-toggle-visivel"
-                                       data-cat-id="<?php echo $cat['id']; ?>"
-                                       <?php echo $cat['visivel'] ? 'checked' : ''; ?>>
-                                <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                            </label>
+                            <?php echo ui_switch('', '', (bool)$cat['visivel'], [
+                                'variant'     => 'compact',
+                                'input_class' => 'gc-toggle-visivel',
+                                'title'       => 'Alternar visibilidade',
+                                'attrs'       => ['data-cat-id' => $cat['id']],
+                            ]); ?>
                             <span class="gc-tag <?php echo $cat['visivel'] ? 'visivel' : 'invisivel'; ?>"
                                   id="gc-tag-<?php echo $cat['id']; ?>">
                                 <?php echo $cat['visivel'] ? 'Pág. Inicial' : 'Oculta Home'; ?>
@@ -94,20 +96,22 @@ include '../templates/header.php';
                     </div>
 
                     <div class="gc-acoes">
-                        <button type="button"
-                                class="gc-btn-guardar"
-                                id="gc-btn-guardar-<?php echo $cat['id']; ?>"
-                                data-cat-id="<?php echo $cat['id']; ?>"
-                                style="display:none;">
-                            Guardar
-                        </button>
-
-                        <button type="button"
-                                class="btn-del-single gc-btn-apagar"
-                                data-cat-id="<?php echo $cat['id']; ?>"
-                                data-nome="<?php echo htmlspecialchars($cat['nome']); ?>"
-                                title="Apagar categoria">
-                        </button>
+                        <?php
+                        echo ui_button('Guardar', [
+                            'id'    => 'gc-btn-guardar-' . $cat['id'],
+                            'class' => 'gc-btn-guardar',
+                            'style' => 'display:none;',
+                            'attrs' => ['data-cat-id' => $cat['id']],
+                        ]);
+                        echo ui_icon_button('delete', [
+                            'class' => 'gc-btn-apagar',
+                            'title' => 'Apagar categoria',
+                            'attrs' => [
+                                'data-cat-id' => $cat['id'],
+                                'data-nome'   => $cat['nome'],
+                            ],
+                        ]);
+                        ?>
                     </div>
                 </div>
                 <?php endforeach; ?>
@@ -121,18 +125,19 @@ include '../templates/header.php';
     <div class="qe-card modal-cat-card">
         <div class="qe-hd">
             <h3>Nova Categoria</h3>
-            <button type="button" class="btn-close-unified qe-close" id="btn-fechar-modal-cat" title="Fechar">&times;</button>
+            <?php echo ui_close_button(['id' => 'btn-fechar-modal-cat', 'class' => 'qe-close']); ?>
         </div>
         <div class="qe-body">
             <div class="qe-f">
                 <label for="nova-cat-nome">Nome da Categoria</label>
-                <input type="text" id="nova-cat-nome" class="qe-in"
-                       placeholder="Ex: Novidades" autocomplete="off">
+                <?php echo ui_input('', ['id' => 'nova-cat-nome', 'class' => 'qe-in', 'placeholder' => 'Ex: Novidades', 'autocomplete' => 'off']); ?>
             </div>
         </div>
         <div class="qe-footer">
-            <button type="button" class="btn-admin-secondary" id="btn-cancelar-modal-cat">Cancelar</button>
-            <button type="button" class="btn-admin-primary" id="btn-criar-categoria">Criar Categoria</button>
+            <?php
+            echo ui_button('Cancelar', ['id' => 'btn-cancelar-modal-cat', 'class' => 'btn-admin-secondary']);
+            echo ui_button('Criar Categoria', ['id' => 'btn-criar-categoria', 'class' => 'btn-admin-primary']);
+            ?>
         </div>
     </div>
 </div>

@@ -583,7 +583,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     return Boolean(
       alvo.closest(
-        'input, textarea, select, [contenteditable="true"], [contenteditable=""]',
+        'input, textarea, select, .select-wrapper, [contenteditable="true"], [contenteditable=""]',
       ),
     );
   }
@@ -650,17 +650,36 @@ document.addEventListener("DOMContentLoaded", function () {
         div.classList.add("selecao-variacao");
         const label = document.createElement("label");
         label.textContent = `${nomeAtributo}:`;
-        const selectWrapper = document.createElement("div");
-        selectWrapper.classList.add("select-wrapper");
-        const select = document.createElement("select");
-        select.classList.add("select-estilizado");
-        select.dataset.nomeAtributo = nomeAtributo;
-        select.innerHTML = `<option value="">Escolha um ${nomeAtributo.toLowerCase()}...</option>`;
-        valores.forEach((valor) => {
-          select.innerHTML += `<option value="${valor}">${valor}</option>`;
-        });
-        select.addEventListener("change", handleSelecaoDeAtributo);
-        selectWrapper.appendChild(select);
+
+        let selectWrapper;
+        if (typeof window.uiCreateSelect === "function") {
+          const created = window.uiCreateSelect({
+            placeholder: `Escolha um ${nomeAtributo.toLowerCase()}...`,
+            options: valores,
+            dataset: { nomeAtributo: nomeAtributo },
+            onChange: handleSelecaoDeAtributo,
+          });
+          selectWrapper = created.wrapper;
+        } else {
+          selectWrapper = document.createElement("div");
+          selectWrapper.classList.add("select-wrapper");
+          const select = document.createElement("select");
+          select.classList.add("select-estilizado");
+          select.dataset.nomeAtributo = nomeAtributo;
+          const ph = document.createElement("option");
+          ph.value = "";
+          ph.textContent = `Escolha um ${nomeAtributo.toLowerCase()}...`;
+          select.appendChild(ph);
+          valores.forEach((valor) => {
+            const opt = document.createElement("option");
+            opt.value = String(valor);
+            opt.textContent = String(valor);
+            select.appendChild(opt);
+          });
+          select.addEventListener("change", handleSelecaoDeAtributo);
+          selectWrapper.appendChild(select);
+        }
+
         div.appendChild(label);
         div.appendChild(selectWrapper);
         variacoesContainer.appendChild(div);
@@ -701,6 +720,10 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         if (!isPossivel) option.disabled = true;
+      }
+
+      if (typeof window.uiRefreshSelect === "function") {
+        window.uiRefreshSelect(select);
       }
     });
   }

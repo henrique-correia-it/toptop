@@ -24,8 +24,10 @@ require_once __DIR__ . '/templates/header.php';
             <p class="texto-404">Parece que este item já saiu da nossa passarela.<br>Explore a nossa coleção atual e encontre o seu próximo favorito.</p>
 
             <div class="acoes-404">
-                <a href="/" class="btn-boutique primary">Ir para a Home</a>
-                <a href="/produtos.php" class="btn-boutique secondary">Ver Coleção</a>
+                <?php
+                echo ui_button('Ir para a Home', ['href' => '/', 'class' => 'btn-boutique primary']);
+                echo ui_button('Ver Coleção', ['href' => '/produtos.php', 'class' => 'btn-boutique secondary']);
+                ?>
             </div>
         </div>
 
@@ -37,7 +39,7 @@ require_once __DIR__ . '/templates/header.php';
             </div>
             <div class="game-info">
                 <span id="game-stats">Tentativas: 0</span>
-                <button id="reset-game" class="btn-reset">Reiniciar Jogo</button>
+                <?php echo ui_button('Reiniciar Jogo', ['id' => 'reset-game', 'class' => 'btn-reset']); ?>
             </div>
         </div>
         <!-- Modal de Vitória -->
@@ -46,7 +48,7 @@ require_once __DIR__ . '/templates/header.php';
                 <span class="win-icon">✨</span>
                 <h2 class="win-title">Estilo Impecável!</h2>
                 <p class="win-text">Encontraste todos os pares em <span id="final-attempts">0</span> tentativas.</p>
-                <button id="close-win-modal" class="btn-boutique primary">Continuar a Compras</button>
+                <?php echo ui_button('Continuar a Compras', ['id' => 'close-win-modal', 'class' => 'btn-boutique primary']); ?>
             </div>
         </div>
     </div>

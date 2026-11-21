@@ -89,27 +89,25 @@ $accentFieldValue = $accentIsCustom ? $currentAccentSetting : $autoAccentPreview
             <div class="palette-fields">
                 <label class="palette-picker-label" for="site-background-picker">
                     <span>Selecionar cor</span>
-                    <input
-                        type="color"
-                        id="site-background-picker"
-                        value="<?php echo htmlspecialchars($currentBackgroundColor, ENT_QUOTES, 'UTF-8'); ?>"
-                        aria-label="Selecionar cor de fundo"
-                    >
+                    <?php echo ui_input('', [
+                        'type'       => 'color',
+                        'id'         => 'site-background-picker',
+                        'value'      => $currentBackgroundColor,
+                        'aria_label' => 'Selecionar cor de fundo',
+                    ]); ?>
                 </label>
 
                 <label class="palette-hex-label" for="site-background-color">
                     <span>Valor hexadecimal</span>
-                    <input
-                        type="text"
-                        id="site-background-color"
-                        name="site_background_color"
-                        value="<?php echo htmlspecialchars($currentBackgroundColor, ENT_QUOTES, 'UTF-8'); ?>"
-                        maxlength="7"
-                        pattern="^#[0-9A-Fa-f]{6}$"
-                        placeholder="#FAF8F4"
-                        spellcheck="false"
-                        required
-                    >
+                    <?php echo ui_input('site_background_color', [
+                        'id'          => 'site-background-color',
+                        'value'       => $currentBackgroundColor,
+                        'maxlength'   => '7',
+                        'pattern'     => '^#[0-9A-Fa-f]{6}$',
+                        'placeholder' => '#FAF8F4',
+                        'required'    => true,
+                        'attrs'       => ['spellcheck' => 'false'],
+                    ]); ?>
                 </label>
             </div>
 
@@ -132,32 +130,32 @@ $accentFieldValue = $accentIsCustom ? $currentAccentSetting : $autoAccentPreview
             <div class="palette-fields" id="accent-fields">
                 <label class="palette-picker-label" for="site-accent-picker">
                     <span>Selecionar cor</span>
-                    <input
-                        type="color"
-                        id="site-accent-picker"
-                        value="<?php echo htmlspecialchars($accentFieldValue, ENT_QUOTES, 'UTF-8'); ?>"
-                        aria-label="Selecionar cor de destaque"
-                    >
+                    <?php echo ui_input('', [
+                        'type'       => 'color',
+                        'id'         => 'site-accent-picker',
+                        'value'      => $accentFieldValue,
+                        'aria_label' => 'Selecionar cor de destaque',
+                    ]); ?>
                 </label>
 
                 <label class="palette-hex-label" for="site-accent-color">
                     <span>Valor hexadecimal</span>
-                    <input
-                        type="text"
-                        id="site-accent-color"
-                        name="site_accent_color"
-                        value="<?php echo htmlspecialchars($accentFieldValue, ENT_QUOTES, 'UTF-8'); ?>"
-                        maxlength="7"
-                        pattern="^#[0-9A-Fa-f]{6}$"
-                        placeholder="#B08968"
-                        spellcheck="false"
-                    >
+                    <?php echo ui_input('site_accent_color', [
+                        'id'          => 'site-accent-color',
+                        'value'       => $accentFieldValue,
+                        'maxlength'   => '7',
+                        'pattern'     => '^#[0-9A-Fa-f]{6}$',
+                        'placeholder' => '#B08968',
+                        'attrs'       => ['spellcheck' => 'false'],
+                    ]); ?>
                 </label>
             </div>
 
             <div class="palette-actions">
-                <button type="submit" class="button btn-admin-primary">Guardar cor</button>
-                <button type="submit" name="action" value="reset" class="button">Repor bege original</button>
+                <?php
+                echo ui_button('Guardar cor', ['type' => 'submit', 'class' => 'button btn-admin-primary']);
+                echo ui_button('Repor bege original', ['type' => 'submit', 'name' => 'action', 'value' => 'reset', 'class' => 'button']);
+                ?>
             </div>
         </form>
 

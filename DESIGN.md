@@ -133,26 +133,30 @@ Depth is expressed through **tonal surface contrast + soft hairline borders** ra
 
 Every UI element on the site MUST be composed from these **16 minimal composable primitives (31 component functions)** defined in `includes/ui/ui.php` and styled in `public/css/ui/_primitives.css`.
 
-### 1. Button (`ui_button` / `.ui-btn`)
+### 1. Button (`ui_button` / `.ui-btn`, `ui_select_mode_button`)
 - **Variants:** `default` (white pill, subtle border), `primary` (solid dark ink `#111111`), `danger` (soft red), `ghost` (transparent), `active` (indigo active filter/mode).
-- **Options:** `size` (`sm`, `md`), `full`, `plus` (rotating `+`), `icon`, `href`, `target`, `type`, `name`, `value`, `disabled`, `attrs`.
+- **Options:** `size` (`sm`, `md`), `full`, `plus` (rotating `+`), `icon`, `html`, `href`, `target`, `type`, `name`, `value`, `disabled`, `onclick`, `style`, `attrs`.
+- `ui_select_mode_button($opts)`: Canonical `#btn-sel-mode` multi-select toggle button used across admin/dev table toolbars.
 
 ### 2. Icon & Close Buttons (`ui_icon_button`, `ui_close_button`)
 - `ui_icon_button($action, $opts)`: Compact `34×34px` rounded-square action buttons (`.btn-*-single`) for `view`, `edit`, `delete`, `duplicate`, `cancel`, `archive`, `reply`, `check`.
 - `ui_close_button($opts)`: Standalone `.btn-close-unified` dismiss button for modals, drawers, and overlays.
 
-### 3. Card (`ui_card` / `.ui-card`)
-- Unified elevated surface (`#FFFFFF`, `1px` border, `16px` radius).
-- **Options:** `eyebrow`, `title`, `subtitle`, `icon`, `header_actions`, `footer`, `compact`, `flush`, `interactive`, `danger`, `href`.
+### 3. Card (`ui_card` / `.ui-card` & `.form-card`)
+- Unified elevated surface (`#FFFFFF`, `1px` border, `16px` radius, `overflow: visible` so inner drop-lists never clip).
+- **Options:** `variant` (`'default'` -> `.ui-card`, `'form'` -> `.form-card`), `eyebrow`, `title`, `title_html`, `header_html`, `subtitle`, `icon`, `header_actions`, `footer`, `compact`, `flush`, `interactive`, `danger`, `href`, `body_style`.
 
 ### 4. Badge (`ui_badge` / `.ui-badge`)
 - Compact pill status indicator (`neutral`, `success`, `warning`, `danger`, `info`, `accent`).
-- **Options:** `dot` (live status dot), `icon`, `interactive` (clickable toggle).
+- **Options:** `dot` (live status dot), `icon`, `interactive` (clickable toggle), `class`.
 
-### 5. Form Controls (`ui_field`, `ui_switch`, `ui_checkbox`, `ui_search_input`)
-- `ui_field($name, $label, $opts)`: Supports `text`, `email`, `password` (with `password_toggle => true`), `number`, `tel`, `select`, `textarea`, `prefix` (e.g., `€`), `label_id`, `disabled`, `hint`, `error`.
-- `ui_switch($name, $label, $checked, $opts)`: Unified toggle switch (`.switch-premium` + `.slider`) with keyboard `:focus-visible`.
-- `ui_checkbox($name, $label, $checked, $opts)`: Accessible custom checkbox (`.ui-checkbox`).
+### 5. Form Controls (`ui_field`, `ui_input`, `ui_textarea`, `ui_select`, `ui_switch`, `ui_checkbox`, `ui_search_input`)
+- `ui_field($name, $label, $opts)`: Composes `<label>` + `ui_input()`, `ui_textarea()`, or `ui_select()` with `hint` and `error` message support.
+- `ui_input($name, $opts)`: Standalone `<input>` primitive (`text`, `email`, `password` with `password_toggle`, `number`, `tel`, `search`, `color`, `prefix`).
+- `ui_textarea($name, $value, $opts)`: Standalone `<textarea>` primitive.
+- `ui_select($name, $options, $selected, $opts)`: Unified pill drop-list (`.select-wrapper > select.select-estilizado`) automatically enhanced by `public/js/utils.js` (`window.uiCreateSelect` / `window.uiRefreshSelect`), supporting `'variant' => 'default'|'toolbar'`.
+- `ui_switch($name, $label, $checked, $opts)`: Unified toggle switch (`.switch-premium` default, or `'variant' => 'compact'` for `.toggle-visiveis`) with keyboard `:focus-visible`.
+- `ui_checkbox($name, $label, $checked, $opts)`: Accessible custom checkbox (`.ui-checkbox`, `'variant' => 'filter'` for `.filtro-checkbox`, `'variant' => 'client'` for `.cliente-check`).
 - `ui_search_input($name, $placeholder, $opts)`: Pill search input with leading magnifying-glass icon.
 
 ### 6. Feedback & Loading (`ui_alert`, `ui_empty_state`, `ui_spinner`)

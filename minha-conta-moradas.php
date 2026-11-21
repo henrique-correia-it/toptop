@@ -173,7 +173,7 @@ $portes_por_pais = $portes_js ?? [];
                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                                     </div>
                                     <?php if ((int)$address['principal'] === 1): ?>
-                                        <span class="badge-principal">Principal</span>
+                                        <?php echo ui_badge('Principal', 'accent', ['class' => 'badge-principal']); ?>
                                     <?php endif; ?>
                                 </div>
                                 <?php
@@ -241,36 +241,32 @@ $portes_por_pais = $portes_js ?? [];
                         <input type="hidden" id="mor-edit-id" name="morada_id" value="">
                         <div class="cliente-form-field">
                             <label for="mor-pais">País</label>
-                            <div class="select-wrapper">
-                                <select id="mor-pais" name="pais_regiao" required></select>
-                            </div>
+                            <?php echo ui_select('pais_regiao', [], '', ['id' => 'mor-pais', 'required' => true]); ?>
                         </div>
                         <label for="mor-rua">
                             <span id="lbl-mor-rua">Rua e número</span>
-                            <input type="text" id="mor-rua" name="rua" required placeholder="Rua das Flores, 12">
+                            <?php echo ui_input('rua', ['id' => 'mor-rua', 'required' => true, 'placeholder' => 'Rua das Flores, 12']); ?>
                         </label>
                         <label for="mor-cp">
                             <span id="lbl-mor-cp">Código Postal</span>
-                            <input type="text" id="mor-cp" name="codigo_postal" required placeholder="0000-000">
+                            <?php echo ui_input('codigo_postal', ['id' => 'mor-cp', 'required' => true, 'placeholder' => '0000-000']); ?>
                         </label>
                         <label for="mor-loc">
                             <span id="lbl-mor-loc">Localidade</span>
-                            <input type="text" id="mor-loc" name="localidade" required placeholder="Porto">
+                            <?php echo ui_input('localidade', ['id' => 'mor-loc', 'required' => true, 'placeholder' => 'Porto']); ?>
                         </label>
                         <div id="bloco-mor-provincia" style="display:none; grid-column: 1 / -1;">
                             <label for="mor-prov">
                                 <span id="lbl-mor-prov">Província/Estado</span>
-                                <input type="text" id="mor-prov" name="provincia">
+                                <?php echo ui_input('provincia', ['id' => 'mor-prov']); ?>
                             </label>
                         </div>
-                        <label class="cliente-check">
-                            <input type="checkbox" id="mor-principal" name="principal" value="1">
-                            <span class="cliente-custom-check"></span>
-                            <span class="cliente-check-text">Definir como principal</span>
-                        </label>
+                        <?php echo ui_checkbox('principal', 'Definir como principal', false, ['id' => 'mor-principal', 'variant' => 'client', 'value' => '1']); ?>
                         <div class="form-morada-actions">
-                            <button type="submit" id="btn-submit-morada" class="button">Guardar morada</button>
-                            <button type="button" id="btn-cancelar-edicao" class="button voltar-btn" style="display:none;" onclick="cancelarEdicao()">Cancelar</button>
+                            <?php
+                            echo ui_button('Guardar morada', ['type' => 'submit', 'id' => 'btn-submit-morada', 'class' => 'button']);
+                            echo ui_button('Cancelar', ['id' => 'btn-cancelar-edicao', 'class' => 'button voltar-btn', 'style' => 'display:none;', 'onclick' => 'cancelarEdicao()']);
+                            ?>
                         </div>
                     </form>
                 </div>

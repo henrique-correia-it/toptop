@@ -32,19 +32,22 @@ include '../templates/header.php';
 
         <div class="guias-container-premium">
             <div class="guias-list-header">
-                <div class="search-filter-wrapper">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <input type="text" id="filtro-guias" placeholder="Procurar guia por título...">
-                </div>
-                <button type="button" id="btn-novo-guia" class="button add-btn btn-with-plus btn-with-plus-text" style="margin:0;">Novo Guia</button>
+                <?php
+                echo ui_search_input('', 'Procurar guia por título...', [
+                    'id'              => 'filtro-guias',
+                    'type'            => 'text',
+                    'class'           => 'search-filter-wrapper',
+                    'raw_wrap_class'  => true,
+                    'raw_input_class' => true,
+                ]);
+                echo ui_button('Novo Guia', ['id' => 'btn-novo-guia', 'class' => 'button add-btn btn-with-plus btn-with-plus-text', 'style' => 'margin:0;']);
+                ?>
             </div>
             
             <div style="padding: 30px;">
                 <div class="guias-grid" id="lista-guias">
             <?php if (empty($guias)): ?>
-                <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 40px; background: #fff; border-radius: 8px; border: 1px dashed #ccc;">
-                    <p>Ainda não foram criados guias de tamanho.</p>
-                </div>
+                <?php echo ui_empty_state('Ainda não foram criados guias de tamanho.', ['style' => 'grid-column: 1/-1;']); ?>
             <?php else: ?>
                 <?php foreach ($guias as $guia): ?>
                     <div class="guia-card" data-id="<?php echo $guia['id']; ?>">
@@ -76,7 +79,7 @@ include '../templates/header.php';
 
 <div id="modal-guia" class="qe-modal">
     <div class="qe-card" style="max-width: 850px;">
-        <button type="button" class="btn-close-unified qe-close" title="Fechar">&times;</button>
+        <?php echo ui_close_button(['class' => 'qe-close']); ?>
         <h3 id="modal-guia-titulo">Adicionar Novo Guia de Tamanhos</h3>
         <form id="form-guia">
             <input type="hidden" name="id" id="guia-id">
@@ -84,7 +87,7 @@ include '../templates/header.php';
             
             <div class="form-group">
                 <label for="guia-titulo-input">Título</label>
-                <input type="text" id="guia-titulo-input" name="titulo" required>
+                <?php echo ui_input('titulo', ['id' => 'guia-titulo-input', 'required' => true]); ?>
             </div>
             
             <div class="tabela-visual-editor">
@@ -93,15 +96,19 @@ include '../templates/header.php';
                         <div class="control-group">
                             <span class="control-label">Linhas</span>
                             <div class="control-buttons">
-                                <button type="button" id="btn-adicionar-linha" class="btn-ctrl add" title="Adicionar Linha">+</button>
-                                <button type="button" id="btn-remover-linha" class="btn-ctrl remove" title="Remover Linha">-</button>
+                                <?php
+                                echo ui_button('+', ['id' => 'btn-adicionar-linha', 'class' => 'btn-ctrl add', 'title' => 'Adicionar Linha']);
+                                echo ui_button('-', ['id' => 'btn-remover-linha', 'class' => 'btn-ctrl remove', 'title' => 'Remover Linha']);
+                                ?>
                             </div>
                         </div>
                         <div class="control-group">
                             <span class="control-label">Colunas</span>
                             <div class="control-buttons">
-                                <button type="button" id="btn-adicionar-coluna" class="btn-ctrl add" title="Adicionar Coluna">+</button>
-                                <button type="button" id="btn-remover-coluna" class="btn-ctrl remove" title="Remover Coluna">-</button>
+                                <?php
+                                echo ui_button('+', ['id' => 'btn-adicionar-coluna', 'class' => 'btn-ctrl add', 'title' => 'Adicionar Coluna']);
+                                echo ui_button('-', ['id' => 'btn-remover-coluna', 'class' => 'btn-ctrl remove', 'title' => 'Remover Coluna']);
+                                ?>
                             </div>
                         </div>
                     </div>
@@ -113,12 +120,14 @@ include '../templates/header.php';
 
             <div class="form-group" style="display: none;">
                 <label for="guia-conteudo-input">Conteúdo (HTML da Tabela)</label>
-                <textarea id="guia-conteudo-input" name="conteudo" rows="10"></textarea>
+                <?php echo ui_textarea('conteudo', '', ['id' => 'guia-conteudo-input', 'rows' => 10]); ?>
             </div>
 
             <div class="qe-footer">
-                <button type="button" class="btn-admin-secondary qe-btn-cancel">Cancelar</button>
-                <button type="submit" class="btn-admin-primary">Guardar Guia</button>
+                <?php
+                echo ui_button('Cancelar', ['class' => 'btn-admin-secondary qe-btn-cancel']);
+                echo ui_button('Guardar Guia', ['type' => 'submit', 'class' => 'btn-admin-primary']);
+                ?>
             </div>
         </form>
     </div>
@@ -126,7 +135,7 @@ include '../templates/header.php';
 
 <div id="modalGuiaTamanhos" class="qe-modal">
     <div class="qe-card" style="max-width: 850px;">
-        <button type="button" class="btn-close-unified qe-close" title="Fechar">&times;</button>
+        <?php echo ui_close_button(['class' => 'qe-close']); ?>
         <h3 id="guia-titulo"></h3>
         <div id="guia-conteudo"></div>
     </div>

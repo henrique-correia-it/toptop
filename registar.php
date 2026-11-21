@@ -96,24 +96,24 @@ include __DIR__ . '/templates/header.php';
                 <?php echo csrf_input(); ?>
                 <div class="form-group">
                     <label for="nome">Nome completo</label>
-                    <input type="text" id="nome" name="nome" required autocomplete="name" value="<?php echo htmlspecialchars($nome, ENT_QUOTES, 'UTF-8'); ?>">
+                    <?php echo ui_input('nome', ['id' => 'nome', 'required' => true, 'autocomplete' => 'name', 'value' => $nome]); ?>
                 </div>
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required autocomplete="email" value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>">
+                    <?php echo ui_input('email', ['type' => 'email', 'id' => 'email', 'required' => true, 'autocomplete' => 'email', 'value' => $email]); ?>
                 </div>
                 <div class="form-group">
                     <label for="telefone">Telefone</label>
-                    <input type="tel" id="telefone" name="telefone" autocomplete="tel" value="<?php echo htmlspecialchars($telefone, ENT_QUOTES, 'UTF-8'); ?>">
+                    <?php echo ui_input('telefone', ['type' => 'tel', 'id' => 'telefone', 'autocomplete' => 'tel', 'value' => $telefone]); ?>
                 </div>
                 <div class="form-group">
                     <label for="nif">NIF</label>
-                    <input type="text" id="nif" name="nif" inputmode="numeric">
+                    <?php echo ui_input('nif', ['id' => 'nif', 'inputmode' => 'numeric']); ?>
                 </div>
                 <div class="form-group">
                     <label for="password">Palavra-passe</label>
                     <div class="password-wrapper">
-                        <input type="password" id="password" name="password" required autocomplete="new-password">
+                        <?php echo ui_input('password', ['type' => 'password', 'id' => 'password', 'required' => true, 'autocomplete' => 'new-password']); ?>
                         <span class="toggle-senha" data-target="password">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </span>
@@ -122,7 +122,7 @@ include __DIR__ . '/templates/header.php';
                 <div class="form-group">
                     <label for="password_confirm">Confirmar palavra-passe</label>
                     <div class="password-wrapper">
-                        <input type="password" id="password_confirm" name="password_confirm" required autocomplete="new-password">
+                        <?php echo ui_input('password_confirm', ['type' => 'password', 'id' => 'password_confirm', 'required' => true, 'autocomplete' => 'new-password']); ?>
                         <span class="toggle-senha" data-target="password_confirm">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </span>
@@ -130,7 +130,7 @@ include __DIR__ . '/templates/header.php';
                 </div>
 
                 <div style="margin-top: 10px;">
-                    <input type="submit" value="Criar conta">
+                    <?php echo ui_button('Criar conta', ['type' => 'submit', 'class' => 'button add-btn']); ?>
                 </div>
             </form>
 

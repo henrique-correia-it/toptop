@@ -149,32 +149,4 @@
 /* Hide single-row actions in select mode */
 .sel-mode .acoes-tabela { pointer-events: none; opacity: .25; }
 
-/* ── Sort Select ── */
-.sort-select-wrapper {
-    width: auto;
-    min-width: 190px;
-}
-
-.sort-select {
-    height: 44px;
-    min-height: 44px;
-    padding: 0 44px 0 16px;
-    border: 1px solid #dfe3ea;
-    border-radius: 999px;
-    background: var(--cor-branco);
-    background-image: none;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
-    font-size: 0.92rem;
-    font-weight: 600;
-    color: var(--cor-texto);
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    transition: border-color .2s, box-shadow .2s;
-    font-family: 'Inter', sans-serif;
-    white-space: nowrap;
-}
-.sort-select:hover { border-color: var(--cor-slate-400); }
-.sort-select:focus { outline: none; border-color: var(--cor-preto-suave); box-shadow: 0 0 0 4px rgba(17,24,39,.06); }
-
 

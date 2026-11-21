@@ -429,7 +429,7 @@ if ($indice_atual >= $total_passos) $progresso = 100;
     <?php endif; ?>
 
     <div style="text-align:center; margin-top:20px;">
-        <a href="/produtos.php" class="btn-voltar-compra">Continuar a comprar</a>
+        <?php echo ui_button('Continuar a comprar', ['href' => '/produtos.php', 'class' => 'btn-voltar-compra']); ?>
     </div>
 
 </div>

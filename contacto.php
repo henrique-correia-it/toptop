@@ -150,18 +150,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <form id="formContacto" action="/contacto.php" method="post">
                 <?php echo csrf_input(); ?>
                 <label for="nome">Nome</label>
-                <input type="text" id="nome" name="nome" required autocomplete="name">
+                <?php echo ui_input('nome', ['id' => 'nome', 'required' => true, 'autocomplete' => 'name']); ?>
 
                 <label for="email">Email</label>
-                <input type="email" id="email" name="email" required autocomplete="email">
+                <?php echo ui_input('email', ['type' => 'email', 'id' => 'email', 'required' => true, 'autocomplete' => 'email']); ?>
 
                 <label for="mensagem">Mensagem</label>
-                <textarea id="mensagem" name="mensagem" rows="6" required maxlength="1000"></textarea>
+                <?php echo ui_textarea('mensagem', '', ['id' => 'mensagem', 'rows' => 6, 'required' => true, 'maxlength' => '1000']); ?>
                 <div class="contador-caracteres">
                     <span id="caracteresAtuais">0</span> / 1000
                 </div>
 
-                <button type="submit" class="contacto-submit">Enviar Mensagem</button>
+                <?php echo ui_button('Enviar Mensagem', ['type' => 'submit', 'class' => 'contacto-submit', 'raw_class' => true]); ?>
             </form>
         </div>
 

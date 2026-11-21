@@ -125,13 +125,9 @@ $filtros_url_json = htmlspecialchars(json_encode($filtros_url), ENT_QUOTES, 'UTF
                 <div class="modal-acoes-principais">
                     <div class="seletor-quantidade" >
                         <label for="modalQuantidade">Quantidade:</label>
-                        <div class="input-wrapper">
-                            <button type="button" class="btn-qty" data-action="minus">-</button>
-                            <input type="number" id="modalQuantidade" value="1" min="1" max="10" readonly>
-                            <button type="button" class="btn-qty" data-action="plus">+</button>
-                        </div>
+                        <?php echo ui_qty_stepper(1, ['variant' => 'product', 'id' => 'modalQuantidade', 'min' => 1, 'max' => 10]); ?>
                     </div>
-                    <button type="button" id="adicionarCarrinhoBtn" class="button add-btn" disabled>A carregar...</button>
+                    <?php echo ui_button('A carregar...', ['id' => 'adicionarCarrinhoBtn', 'class' => 'button add-btn', 'disabled' => true]); ?>
                 </div>
             </div>
         </div>

@@ -58,41 +58,39 @@ foreach ($templates_db as $tpl) {
 
         <div class="coluna-placeholders">
             <p class="placeholder-global-titulo">Placeholders</p>
-            <div class="form-card">
-                <div class="form-card-body" style="font-size: 0.9rem;">
-                    <p class="placeholder-seccao-titulo">Encomendas</p>
-                    <ul>
-                        <li><code title="Copiar">{nome_cliente}</code></li>
-                        <li><code title="Copiar">{id_encomenda}</code></li>
-                        <li><code title="Copiar">{subtotal_produtos}</code></li>
-                        <li><code title="Copiar">{portes_envio}</code></li>
-                        <li><code title="Copiar">{total_final}</code></li>
-                        <li><code title="Copiar">{lista_produtos}</code></li>
-                        <li><code title="Copiar">{metodo_pagamento}</code></li>
-                        <li><code title="Copiar">{link_acompanhamento}</code></li>
-                        <li><code title="Copiar">{codigo_tracking}</code></li>
-                    </ul>
-                    <p class="placeholder-seccao-titulo">Notificações da Loja</p>
-                    <ul>
-                        <li><code title="Copiar">{id_encomenda}</code></li>
-                        <li><code title="Copiar">{nome_cliente}</code></li>
-                        <li><code title="Copiar">{email_cliente}</code></li>
-                        <li><code title="Copiar">{total_final}</code></li>
-                        <li><code title="Copiar">{metodo_pagamento}</code></li>
-                        <li><code title="Copiar">{nome_remetente}</code></li>
-                        <li><code title="Copiar">{email_remetente}</code></li>
-                        <li><code title="Copiar">{mensagem}</code></li>
-                        <li><code title="Copiar">{link_admin}</code></li>
-                    </ul>
-                    <p class="placeholder-seccao-titulo">Autenticação</p>
-                    <ul>
-                        <li><code title="Copiar">{nome_cliente}</code></li>
-                        <li><code title="Copiar">{nome_admin}</code></li>
-                        <li><code title="Copiar">{link_recuperacao}</code></li>
-                        <li><code title="Copiar">{link_verificacao}</code></li>
-                    </ul>
-                </div>
-            </div>
+            <?php ob_start(); ?>
+            <p class="placeholder-seccao-titulo">Encomendas</p>
+            <ul>
+                <li><code title="Copiar">{nome_cliente}</code></li>
+                <li><code title="Copiar">{id_encomenda}</code></li>
+                <li><code title="Copiar">{subtotal_produtos}</code></li>
+                <li><code title="Copiar">{portes_envio}</code></li>
+                <li><code title="Copiar">{total_final}</code></li>
+                <li><code title="Copiar">{lista_produtos}</code></li>
+                <li><code title="Copiar">{metodo_pagamento}</code></li>
+                <li><code title="Copiar">{link_acompanhamento}</code></li>
+                <li><code title="Copiar">{codigo_tracking}</code></li>
+            </ul>
+            <p class="placeholder-seccao-titulo">Notificações da Loja</p>
+            <ul>
+                <li><code title="Copiar">{id_encomenda}</code></li>
+                <li><code title="Copiar">{nome_cliente}</code></li>
+                <li><code title="Copiar">{email_cliente}</code></li>
+                <li><code title="Copiar">{total_final}</code></li>
+                <li><code title="Copiar">{metodo_pagamento}</code></li>
+                <li><code title="Copiar">{nome_remetente}</code></li>
+                <li><code title="Copiar">{email_remetente}</code></li>
+                <li><code title="Copiar">{mensagem}</code></li>
+                <li><code title="Copiar">{link_admin}</code></li>
+            </ul>
+            <p class="placeholder-seccao-titulo">Autenticação</p>
+            <ul>
+                <li><code title="Copiar">{nome_cliente}</code></li>
+                <li><code title="Copiar">{nome_admin}</code></li>
+                <li><code title="Copiar">{link_recuperacao}</code></li>
+                <li><code title="Copiar">{link_verificacao}</code></li>
+            </ul>
+            <?php echo ui_card(ob_get_clean(), ['variant' => 'form', 'body_style' => 'font-size: 0.9rem;']); ?>
         </div>
 
         <div class="coluna-templates">
@@ -126,14 +124,14 @@ foreach ($templates_db as $tpl) {
                             <form class="form-template-email" data-template-key="<?php echo $key; ?>">
                                 <div class="form-group">
                                     <label for="assunto_<?php echo $key; ?>">Assunto do Email:</label>
-                                    <input type="text" id="assunto_<?php echo $key; ?>" value="<?php echo htmlspecialchars($templates_data[$key]['assunto']); ?>" required>
+                                    <?php echo ui_input('', ['id' => 'assunto_' . $key, 'value' => $templates_data[$key]['assunto'], 'required' => true]); ?>
                                 </div>
                                 <div class="form-group">
                                     <label for="corpo_<?php echo $key; ?>">Corpo do Email:</label>
-                                    <textarea id="corpo_<?php echo $key; ?>" rows="8" class="auto-resize-textarea" required><?php echo htmlspecialchars($templates_data[$key]['corpo']); ?></textarea>
+                                    <?php echo ui_textarea('', (string)$templates_data[$key]['corpo'], ['id' => 'corpo_' . $key, 'rows' => 8, 'class' => 'auto-resize-textarea', 'required' => true]); ?>
                                 </div>
                                 <div class="form-actions" style="justify-content: flex-end;">
-                                    <button type="submit" class="button add-btn">Guardar</button>
+                                    <?php echo ui_button('Guardar', ['type' => 'submit', 'class' => 'button add-btn']); ?>
                                 </div>
                             </form>
                         </div>
@@ -167,11 +165,11 @@ renderContextMenu([
     <div class="qe-body">
         <div class="qe-f">
             <label>Nome</label>
-            <input type="text" id="modal-template-nome" class="qe-in" required>
+            <?php echo ui_input('', ['id' => 'modal-template-nome', 'class' => 'qe-in', 'required' => true]); ?>
         </div>
         <div class="qe-f">
             <label>Descrição</label>
-            <textarea id="modal-template-descricao" class="qe-in" rows="3"></textarea>
+            <?php echo ui_textarea('', '', ['id' => 'modal-template-descricao', 'class' => 'qe-in', 'rows' => 3]); ?>
         </div>
     </div>
 </template>

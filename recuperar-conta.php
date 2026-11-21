@@ -98,7 +98,7 @@ include __DIR__ . '/templates/header.php';
                     <?php echo csrf_input(); ?>
                     <div class="form-group">
                         <label for="email">Email</label>
-                        <input type="email" id="email" name="email" required autocomplete="email" placeholder="O seu email">
+                        <?php echo ui_input('email', ['type' => 'email', 'id' => 'email', 'required' => true, 'autocomplete' => 'email', 'placeholder' => 'O seu email']); ?>
                     </div>
                     <?php echo ui_button('Enviar link', ['type' => 'submit', 'variant' => 'primary', 'full' => true]); ?>
                 </form>

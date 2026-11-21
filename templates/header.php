@@ -294,7 +294,7 @@ $_og_image = (isset($produto) && !empty($produto['foto_principal']))
 
     <div class="header-direita">
         <form action="/produtos.php" method="get" class="form-procura">
-            <input type="search" name="q" placeholder="Procurar produtos..." value="<?php echo htmlspecialchars($_GET['q'] ?? ''); ?>" aria-label="Procurar produtos" autocomplete="off">
+            <?php echo ui_input('q', ['type' => 'search', 'placeholder' => 'Procurar produtos...', 'value' => $_GET['q'] ?? '', 'aria_label' => 'Procurar produtos', 'autocomplete' => 'off']); ?>
             <button type="submit" aria-label="Procurar">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </button>
@@ -384,7 +384,7 @@ $_og_image = (isset($produto) && !empty($produto['foto_principal']))
             <small>Produtos, categorias e promoções</small>
         </div>
         <form action="/produtos.php" method="get" class="form-procura-overlay">
-            <input type="search" name="q" placeholder="Procurar produtos..." value="<?php echo htmlspecialchars($_GET['q'] ?? ''); ?>" aria-label="Procurar produtos" autocomplete="off">
+            <?php echo ui_input('q', ['type' => 'search', 'placeholder' => 'Procurar produtos...', 'value' => $_GET['q'] ?? '', 'aria_label' => 'Procurar produtos', 'autocomplete' => 'off']); ?>
             <button type="submit" aria-label="Procurar">
                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </button>

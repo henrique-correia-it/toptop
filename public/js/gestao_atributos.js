@@ -19,6 +19,18 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
 
+    const sincronizarOpcoesSelectStandard = () => {
+        if (!standardGroupSelect) return;
+        Array.from(standardGroupSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            opt.disabled = atributosAdicionados.has(opt.text);
+        });
+        standardGroupSelect.value = '';
+        if (typeof window.uiRefreshSelect === 'function') {
+            window.uiRefreshSelect(standardGroupSelect);
+        }
+    };
+
     const criarBlocoStandard = (grupoId, grupoNome, valores) => {
         if (atributosAdicionados.has(grupoNome)) {
             mostrarPopup(`O atributo padrão "${grupoNome}" já foi adicionado.`, 'erro');
@@ -41,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         standardContainer.appendChild(fieldset);
         atributosAdicionados.add(grupoNome);
+        sincronizarOpcoesSelectStandard();
     };
 
     const criarBlocoPersonalizado = (nome = '', valores = '') => {
@@ -77,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const bloco = removeBtn.closest('.atributo-bloco');
             if (bloco?.dataset.nomeAtributo) {
                 atributosAdicionados.delete(bloco.dataset.nomeAtributo);
+                sincronizarOpcoesSelectStandard();
             }
             bloco?.remove();
         }

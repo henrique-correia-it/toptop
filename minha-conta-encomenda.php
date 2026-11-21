@@ -73,10 +73,11 @@ include __DIR__ . '/templates/header.php';
             <div class="cliente-panel">
                 <div class="cliente-panel-head">
                     <h2>Artigos</h2>
-                    <a href="/estado_encomenda.php?id=<?php echo (int)$encomenda['id']; ?>&token=<?php echo urlencode($encomenda['token']); ?>" class="btn-track-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        Acompanhar Encomenda (Tracking)
-                    </a>
+                    <?php echo ui_button('Acompanhar Encomenda (Tracking)', [
+                        'href'  => '/estado_encomenda.php?id=' . (int)$encomenda['id'] . '&token=' . urlencode($encomenda['token']),
+                        'class' => 'btn-track-primary',
+                        'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> ',
+                    ]); ?>
                 </div>
                 <?php foreach ($itens as $item): ?>
                     <?php $attrs = json_decode($item['selecoes_atributos'] ?? '{}', true) ?: []; ?>

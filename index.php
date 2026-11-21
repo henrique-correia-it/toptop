@@ -184,7 +184,7 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
         <div class="hero-content">
             <h1 class="home-editable" data-chave="home_hero_title"><?php echo htmlspecialchars(getLojaConfig('home_hero_title', 'O Teu Estilo Começa Aqui')); ?></h1>
             <p class="home-editable" data-chave="home_hero_subtitle"><?php echo htmlspecialchars(getLojaConfig('home_hero_subtitle', 'Descubra peças exclusivas para um look inconfundível. Alta qualidade, design moderno e conforto em cada detalhe.')); ?></p>
-            <a href="produtos.php" class="button-hero"><?php echo htmlspecialchars(getLojaConfig('home_hero_btn', 'Ver Nova Coleção')); ?></a>
+            <?php echo ui_button(getLojaConfig('home_hero_btn', 'Ver Nova Coleção'), ['href' => 'produtos.php', 'class' => 'button-hero']); ?>
         </div>
         <div class="hero-scroll" aria-hidden="true">
             <span class="hero-scroll-line"></span>
@@ -274,7 +274,7 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
                     }
                 </style>
                 <?php if ($isGlobalEditMode): ?>
-                    <button type="button" class="btn-edit-framing" data-cat-id="<?php echo (int)$cat['id']; ?>">Ajustar</button>
+                    <?php echo ui_button('Ajustar', ['class' => 'btn-edit-framing', 'attrs' => ['data-cat-id' => (int)$cat['id']]]); ?>
                 <?php endif; ?>
                 <?php if ($cat_foto): ?>
                     <img src="<?php echo $cat_foto; ?>"
@@ -313,7 +313,7 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
             endforeach; ?>
         </div>
         <div class="btn-ver-mais-container" data-reveal>
-            <a href="produtos.php" class="btn-ver-mais">Ver Todos os Produtos</a>
+            <?php echo ui_button('Ver Todos os Produtos', ['href' => 'produtos.php', 'class' => 'btn-ver-mais']); ?>
         </div>
     </section>
     <?php endif; ?>
@@ -346,17 +346,13 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
 <?php if (isset($_SESSION['admin_logado']) && $_SESSION['admin_logado'] === true && in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor']) && isset($_SESSION['global_edit_mode']) && $_SESSION['global_edit_mode'] === true): ?>
     <div id="modalEditorHome" class="qe-modal footer-editor-modal">
         <div class="qe-card">
-            <button type="button" class="btn-close-unified qe-close" onclick="fecharEditorHome()">&times;</button>
-            <div class="form-card-header">
-                <div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div>
-                <h3>Editar Texto Inicial</h3>
-            </div>
-            <div class="form-card-body">
+            <?php echo ui_close_button(['class' => 'qe-close', 'onclick' => 'fecharEditorHome()']); ?>
+            <?php ob_start(); ?>
                 <input type="hidden" id="home-edit-chave">
                 <div id="home-edit-text-fields">
                     <div class="form-group">
                         <label>Conteúdo</label>
-                        <textarea id="home-edit-conteudo" rows="4" class="admin-textarea"></textarea>
+                        <?php echo ui_textarea('', '', ['id' => 'home-edit-conteudo', 'rows' => 4, 'class' => 'admin-textarea']); ?>
                     </div>
                 </div>
 
@@ -374,31 +370,43 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
                 </div>
 
                 <div class="form-footer-actions">
-                    <button type="button" class="button voltar-btn" onclick="fecharEditorHome()">Cancelar</button>
-                    <button type="button" class="button add-btn" onclick="guardarAlteracaoHome()">Guardar Alterações</button>
+                    <?php
+                    echo ui_button('Cancelar', ['class' => 'button voltar-btn', 'onclick' => 'fecharEditorHome()']);
+                    echo ui_button('Guardar Alterações', ['class' => 'button add-btn', 'onclick' => 'guardarAlteracaoHome()']);
+                    ?>
                 </div>
-            </div>
+            <?php
+            echo ui_card(ob_get_clean(), [
+                'variant'     => 'form',
+                'style'       => 'border:0; box-shadow:none; margin:0;',
+                'header_html' => '<div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div><h3>Editar Texto Inicial</h3>',
+            ]);
+            ?>
         </div>
     </div>
 
     <div id="modalEditorCategoriaHome" class="qe-modal footer-editor-modal">
         <div class="qe-card">
-            <button type="button" class="btn-close-unified qe-close" onclick="fecharEditorCategoriaHome()">&times;</button>
-            <div class="form-card-header">
-                <div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div>
-                <h3>Editar Categoria</h3>
-            </div>
-            <div class="form-card-body">
+            <?php echo ui_close_button(['class' => 'qe-close', 'onclick' => 'fecharEditorCategoriaHome()']); ?>
+            <?php ob_start(); ?>
                 <input type="hidden" id="home-category-edit-id">
                 <div class="form-group">
                     <label>Nome da categoria</label>
-                    <input type="text" id="home-category-edit-nome" class="admin-input-style" maxlength="80">
+                    <?php echo ui_input('', ['id' => 'home-category-edit-nome', 'class' => 'admin-input-style', 'maxlength' => '80']); ?>
                 </div>
                 <div class="form-footer-actions">
-                    <button type="button" class="button voltar-btn" onclick="fecharEditorCategoriaHome()">Cancelar</button>
-                    <button type="button" class="button add-btn" onclick="guardarCategoriaHome()">Guardar Alterações</button>
+                    <?php
+                    echo ui_button('Cancelar', ['class' => 'button voltar-btn', 'onclick' => 'fecharEditorCategoriaHome()']);
+                    echo ui_button('Guardar Alterações', ['class' => 'button add-btn', 'onclick' => 'guardarCategoriaHome()']);
+                    ?>
                 </div>
-            </div>
+            <?php
+            echo ui_card(ob_get_clean(), [
+                'variant'     => 'form',
+                'style'       => 'border:0; box-shadow:none; margin:0;',
+                'header_html' => '<div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div><h3>Editar Categoria</h3>',
+            ]);
+            ?>
         </div>
     </div>
 

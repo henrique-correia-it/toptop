@@ -149,27 +149,19 @@ include '../templates/header.php';
     <div class="prod-toolbar">
         <div class="prod-toolbar-right">
             <form method="GET" style="display:flex; align-items:center; gap:10px;">
-                <div class="select-wrapper sort-select-wrapper">
-                    <select name="estado" class="sort-select" onchange="this.form.submit()">
-                        <option value="todos" <?php echo $filtro_estado === 'todos' ? 'selected' : ''; ?>>Todos os estados</option>
-                        <?php foreach($estados_filtro as $estado): ?>
-                            <option value="<?php echo $estado; ?>" <?php echo $filtro_estado === $estado ? 'selected' : ''; ?>>
-                                <?php echo $map_nomes_estados[$estado] ?? ucfirst($estado); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="search-input-wrap">
-                    <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="search" name="q" placeholder="Pesquisar cliente ou ID..."
-                           value="<?php echo htmlspecialchars($termo_pesquisa); ?>"
-                           class="search-input-toolbar" autocomplete="off">
-                </div>
+                <?php
+                $opcoes_estado_filtro = [
+                    'todos'      => 'Todos os estados',
+                    'por_enviar' => 'Por Enviar',
+                ];
+                foreach ($estados_filtro as $estado) {
+                    $opcoes_estado_filtro[$estado] = $map_nomes_estados[$estado] ?? ucfirst($estado);
+                }
+                echo ui_select('estado', $opcoes_estado_filtro, $filtro_estado, ['variant' => 'toolbar', 'onchange' => 'this.form.submit()']);
+                echo ui_search_input('q', 'Pesquisar cliente ou ID...', ['value' => $termo_pesquisa]);
+                ?>
             </form>
-            <button class="button btn-sel-mode" id="btn-sel-mode" type="button">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="5" width="4" height="4" rx="1"/><rect x="3" y="13" width="4" height="4" rx="1"/><line x1="11" y1="7" x2="21" y2="7"/><line x1="11" y1="15" x2="21" y2="15"/></svg>
-                Selecionar
-            </button>
+            <?php echo ui_select_mode_button(); ?>
         </div>
     </div>
 
@@ -205,8 +197,8 @@ include '../templates/header.php';
                 ui_e($enc['cliente_nome']),
                 date('d/m/Y H:i', strtotime($enc['data_encomenda'])),
                 format_money($total_final),
-                '<span class="badge ' . ui_e($map_badge_estados[$enc['estado']] ?? 'badge-cinzento') . '">' . ui_e($map_nomes_estados[$enc['estado']] ?? ucfirst($enc['estado'])) . '</span>',
-                '<span class="badge badge-cinzento">' . ui_e($mp) . '</span>',
+                ui_badge($map_nomes_estados[$enc['estado']] ?? ucfirst($enc['estado']), 'neutral', ['class' => 'badge ' . ($map_badge_estados[$enc['estado']] ?? 'badge-cinzento')]),
+                ui_badge($mp, 'neutral', ['class' => 'badge badge-cinzento']),
                 $acoes,
             ],
         ];

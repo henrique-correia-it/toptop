@@ -96,10 +96,16 @@ $tokensCores = [
         echo '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:var(--space-4);">';
         echo ui_field('demo_nome', 'Nome do Produto', ['placeholder' => 'Ex.: Camisa Linho Bege', 'hint' => 'Texto de ajuda discreto']);
         echo ui_field('demo_email', 'Email (com erro)', ['type' => 'email', 'value' => 'invalido@', 'error' => 'Insira um endereço de email válido.']);
-        echo ui_field('demo_cat', 'Categoria', ['type' => 'select', 'options' => ['vestidos' => 'Vestidos', 'camisas' => 'Camisas', 'calcas' => 'Calças']]);
+        echo ui_field('demo_cat', 'Categoria (via ui_field)', ['type' => 'select', 'options' => ['vestidos' => 'Vestidos', 'camisas' => 'Camisas', 'calcas' => 'Calças']]);
+        echo '<div class="ui-field"><label class="ui-field__label" for="demo_sort">Drop List Direta (ui_select)</label>'
+            . ui_select('demo_sort', ['id_desc' => 'Mais recente', 'preco_asc' => 'Preço (↑)', 'preco_desc' => 'Preço (↓)'], 'id_desc', ['id' => 'demo_sort'])
+            . '</div>';
         echo '</div>';
-        echo ui_switch('demo_visivel', 'Produto visível na loja', true);
-        echo ui_card(ob_get_clean(), ['title' => '4. Campos de Formulário & Switch', 'subtitle' => 'ui_field() e ui_switch() com foco de teclado :focus-visible']);
+        echo '<div style="display:flex; flex-wrap:wrap; gap:var(--space-4); align-items:center;">'
+            . ui_switch('demo_visivel', 'Produto visível na loja', true)
+            . ui_switch('demo_compact', 'Filtro compacto (toggle-visiveis)', true, ['variant' => 'compact'])
+            . '</div>';
+        echo ui_card(ob_get_clean(), ['title' => '4. Campos de Formulário, Drop Lists (ui_select) & Switch', 'subtitle' => 'ui_field(), ui_input(), ui_textarea(), ui_select() e ui_switch() com foco de teclado :focus-visible']);
 
         // 5. Tabela, Paginação & Modal
         ob_start();

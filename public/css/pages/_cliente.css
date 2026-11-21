@@ -1158,8 +1158,7 @@ main.cliente-area-page {
     text-transform: inherit;
 }
 
-.cliente-form-grid input:not([type="checkbox"]),
-.cliente-form-grid select {
+.cliente-form-grid input:not([type="checkbox"]) {
     width: 100%;
     min-height: 44px;
     padding: 0 14px;
@@ -1172,12 +1171,6 @@ main.cliente-area-page {
     letter-spacing: 0;
     text-transform: none;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.cliente-form-grid select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
 }
 
 .cliente-form-grid input:focus {

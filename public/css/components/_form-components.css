@@ -1,84 +1,160 @@
 /* public/css/components/_form-components.css */
 
+/* ==========================================================================
+   1. COMPONENTE UNIFICADO DE DROP-LIST (ui_select / .select-wrapper)
+   ========================================================================== */
+
 .select-wrapper {
     position: relative;
     display: block;
     width: 100%;
 }
 
+.select-wrapper.is-open {
+    z-index: 10030;
+}
+
+.form-group:has(.select-wrapper.is-open),
+.form-card:has(.select-wrapper.is-open),
+.ui-card:has(.select-wrapper.is-open),
+.ui-field:has(.select-wrapper.is-open),
+.selecao-variacao:has(.select-wrapper.is-open),
+.ck-f:has(.select-wrapper.is-open),
+.cliente-form-field:has(.select-wrapper.is-open) {
+    position: relative;
+    z-index: 10030;
+}
+
+.select-wrapper.sort-select-wrapper {
+    display: inline-block;
+    width: auto;
+    min-width: 196px;
+}
+
+/* Seta / Chevron elegante com rotação suave */
 .select-wrapper::after {
     content: '';
     position: absolute;
     top: 50%;
     right: 18px;
     z-index: 2;
-    width: 7px;
-    height: 7px;
-    border-right: 1.8px solid var(--cor-preto-suave);
-    border-bottom: 1.8px solid var(--cor-preto-suave);
-    transform: translateY(-60%) rotate(45deg);
-    transform-origin: 60% 60%;
-    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
+    width: 6.5px;
+    height: 6.5px;
+    border-right: 1.8px solid var(--cor-slate-600, #475569);
+    border-bottom: 1.8px solid var(--cor-slate-600, #475569);
+    transform: translateY(-62%) rotate(45deg);
+    transform-origin: 55% 55%;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease;
     pointer-events: none;
 }
 
-.select-wrapper.is-open::after {
-    transform: translateY(-35%) rotate(225deg);
-}
-
+.select-wrapper:hover::after,
 .select-wrapper:focus-within::after {
-    border-color: var(--cor-preto);
+    border-color: var(--cor-preto-suave, #111111);
 }
 
+.select-wrapper.is-open::after {
+    border-color: var(--cor-preto-suave, #111111);
+    transform: translateY(-32%) rotate(225deg);
+}
+
+/* Select nativo (fallback antes do JS ou sem JS) + Trigger customizado (Pílula unificada em todo o site) */
 .select-estilizado,
-.select-wrapper select {
+.sort-select,
+.select-wrapper select,
+.custom-select-trigger {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
+    box-sizing: border-box;
     width: 100%;
     min-height: 46px;
-    padding: 0 44px 0 16px;
-    border: 1px solid #dfe3ea;
-    border-radius: 10px;
-    background-color: var(--cor-branco);
+    height: 46px;
+    padding: 0 44px 0 18px;
+    border: 1px solid var(--cor-slate-200, #e2e8f0);
+    border-radius: 999px;
+    background-color: var(--cor-branco, #ffffff);
     background-image: none;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
-    color: var(--cor-preto-suave);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    color: var(--cor-preto-suave, #111111);
     font-family: 'Inter', sans-serif;
-    font-size: 0.92rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1.25;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: 0;
     cursor: pointer;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease, color 0.18s ease;
 }
 
-.select-estilizado:hover,
-.select-wrapper select:hover {
-    border-color: var(--cor-slate-400);
-    background-color: var(--cor-branco);
+/* Variante compacta para toolbars e ordenação */
+.select-wrapper.sort-select-wrapper select,
+.select-wrapper.sort-select-wrapper .custom-select-trigger,
+.ordenar-container .select-wrapper select,
+.ordenar-container .select-wrapper .custom-select-trigger,
+.filtro-sort-mobile .select-wrapper select,
+.filtro-sort-mobile .select-wrapper .custom-select-trigger {
+    min-height: 42px;
+    height: 42px;
+    padding: 0 40px 0 16px;
+    font-size: 0.88rem;
+}
+
+.select-estilizado:hover:not(:disabled),
+.sort-select:hover:not(:disabled),
+.select-wrapper select:hover:not(:disabled),
+.custom-select-trigger:hover:not(:disabled) {
+    border-color: var(--cor-slate-400, #94a3b8);
+    background-color: var(--cor-branco, #ffffff);
+    color: var(--cor-preto-suave, #111111);
+    box-shadow: 0 3px 8px rgba(15, 23, 42, 0.05);
+    transform: none;
 }
 
 .select-estilizado:focus,
-.select-wrapper select:focus {
+.sort-select:focus,
+.select-wrapper select:focus,
+.custom-select-trigger:focus,
+.custom-select-trigger:focus-visible,
+.select-wrapper.is-open .custom-select-trigger {
     outline: none;
-    border-color: var(--cor-preto-suave);
-    box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.06);
+    border-color: var(--cor-preto-suave, #111111);
+    background-color: var(--cor-branco, #ffffff);
+    box-shadow: 0 0 0 3.5px rgba(17, 24, 39, 0.08);
 }
 
 .select-estilizado:disabled,
-.select-wrapper select:disabled {
+.select-estilizado.disabled,
+.sort-select:disabled,
+.select-wrapper select:disabled,
+.custom-select-trigger:disabled {
     cursor: not-allowed;
-    color: var(--cor-slate-400);
-    background-color: var(--cor-slate-50);
+    color: var(--cor-slate-400, #94a3b8);
+    background-color: var(--cor-slate-50, #f8fafc);
+    border-color: var(--cor-slate-200, #e2e8f0);
+    box-shadow: none;
+}
+
+.select-wrapper.is-disabled::after {
+    border-color: var(--cor-slate-400, #94a3b8);
 }
 
 .select-wrapper.custom-select-wrapper {
     min-height: 46px;
 }
 
+.select-wrapper.sort-select-wrapper.custom-select-wrapper,
+.ordenar-container .select-wrapper.custom-select-wrapper,
+.filtro-sort-mobile .select-wrapper.custom-select-wrapper {
+    min-height: 42px;
+}
+
 .select-wrapper.custom-select-wrapper select {
     position: absolute;
     inset: 0;
+    width: 100%;
+    height: 100%;
     opacity: 0;
     pointer-events: none;
 }
@@ -88,68 +164,43 @@
     z-index: 1;
     display: flex;
     align-items: center;
+    overflow: hidden;
+}
+
+.custom-select-label {
+    display: block;
     width: 100%;
-    min-height: 46px;
-    padding: 0 44px 0 16px;
-    border: 1px solid #dfe3ea;
-    border-radius: 10px;
-    background: var(--cor-branco);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
-    color: var(--cor-preto-suave);
-    font-family: 'Inter', sans-serif;
-    font-size: 0.92rem;
-    font-weight: 600;
-    line-height: 1.2;
-    text-align: left;
-    text-transform: none;
-    letter-spacing: 0;
-    cursor: pointer;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.custom-select-trigger:hover {
-    border-color: var(--cor-slate-400);
-    background: var(--cor-branco);
-    color: var(--cor-preto-suave);
-    transform: none;
-}
-
-.custom-select-trigger:focus-visible {
-    outline: 2px solid var(--cor-texto);
-    outline-offset: 2px;
-    border-color: var(--cor-preto-suave);
-    box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.06);
-}
-
-.custom-select-trigger:disabled {
-    cursor: not-allowed;
-    color: var(--cor-slate-400);
-    background-color: var(--cor-slate-50);
-}
-
+/* Menu flutuante de opções */
 .custom-select-options {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + 6px);
+    bottom: auto;
     left: 0;
     right: auto;
-    z-index: 10020;
+    z-index: 10035;
     box-sizing: border-box;
     width: var(--custom-select-menu-width, 100%);
     min-width: 100%;
-    max-width: calc(100vw - 32px);
-    max-height: min(300px, 45vh);
-    padding: 5px;
+    max-width: calc(100vw - 24px);
+    max-height: min(296px, 44vh);
+    padding: 6px;
     overflow-y: auto;
     overscroll-behavior: contain;
-    border: 1px solid rgba(203, 213, 225, 0.82);
-    border-radius: 14px;
-    background: linear-gradient(180deg, var(--cor-branco) 0%, #fbfcfd 100%);
-    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.06);
+    border: 1px solid rgba(203, 213, 225, 0.88);
+    border-radius: 16px;
+    background: var(--cor-branco, #ffffff);
+    box-shadow: 0 20px 44px -10px rgba(15, 23, 42, 0.18), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-2px) scale(0.98);
+    pointer-events: none;
+    transform: translateY(-4px) scale(0.985);
     transform-origin: top center;
-    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
+    transition: opacity 0.16s cubic-bezier(0.16, 1, 0.3, 1), transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.16s;
 }
 
 .custom-select-options.align-right {
@@ -157,44 +208,55 @@
     right: 0;
 }
 
+.select-wrapper.drop-up .custom-select-options {
+    top: auto;
+    bottom: calc(100% + 6px);
+    transform: translateY(4px) scale(0.985);
+    transform-origin: bottom center;
+}
+
 .select-wrapper.is-open .custom-select-options {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
     transform: translateY(0) scale(1);
 }
 
+/* Scrollbar discreta */
 .custom-select-options::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
+}
+
+.custom-select-options::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 .custom-select-options::-webkit-scrollbar-thumb {
     border-radius: 999px;
-    border: 2px solid transparent;
-    background: #cfd6df;
-    background-clip: padding-box;
+    background: rgba(148, 163, 184, 0.45);
 }
 
 .custom-select-options::-webkit-scrollbar-thumb:hover {
-    background: #aeb8c5;
-    background-clip: padding-box;
+    background: rgba(100, 116, 139, 0.7);
 }
 
+/* Item individual da lista */
 .custom-select-option {
     position: relative;
     display: flex;
     align-items: center;
     width: 100%;
-    min-height: 32px;
+    min-height: 36px;
     margin: 1px 0;
-    padding: 6px 34px 6px 12px;
+    padding: 8px 34px 8px 12px;
     border: 0;
-    border-radius: 8px;
+    border-radius: 10px;
     background: transparent;
-    color: #1f2937;
+    color: var(--cor-slate-800, #1e293b);
     font-family: 'Inter', sans-serif;
     font-size: 0.88rem;
-    font-weight: 600;
-    line-height: 1.25;
+    font-weight: 500;
+    line-height: 1.3;
     text-align: left;
     white-space: nowrap;
     text-transform: none;
@@ -202,30 +264,39 @@
     overflow: hidden;
     text-overflow: ellipsis;
     cursor: pointer;
-    transition: background-color 0.14s ease, color 0.14s ease, box-shadow 0.14s ease;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.custom-select-option + .custom-select-option {
+    margin-top: 2px;
 }
 
 .custom-select-option:hover,
 .custom-select-option.is-focused {
-    background: #f4f6f8;
-    color: var(--cor-preto-suave);
-    box-shadow: inset 0 0 0 1px rgba(203, 213, 225, 0.6);
+    background: var(--cor-slate-100, #f1f5f9);
+    color: var(--cor-preto-suave, #111111);
     transform: none;
 }
 
 .custom-select-option.is-selected {
-    background: var(--cor-preto-suave);
-    color: var(--cor-branco);
-    box-shadow: none;
+    background: var(--cor-preto-suave, #111111);
+    color: var(--cor-branco, #ffffff);
+    font-weight: 600;
+}
+
+.custom-select-option.is-selected:hover,
+.custom-select-option.is-selected.is-focused {
+    background: var(--cor-preto, #000000);
+    color: var(--cor-branco, #ffffff);
 }
 
 .custom-select-option.is-selected::after {
     content: '';
     position: absolute;
     top: 50%;
-    right: 12px;
-    width: 7px;
-    height: 11px;
+    right: 13px;
+    width: 5px;
+    height: 9px;
     border-right: 2px solid currentColor;
     border-bottom: 2px solid currentColor;
     transform: translateY(-62%) rotate(45deg);
@@ -233,30 +304,30 @@
 
 .custom-select-option.is-disabled {
     cursor: not-allowed;
-    color: #a4acb8;
+    color: var(--cor-slate-400, #94a3b8);
     background: transparent;
-    box-shadow: none;
 }
 
 .custom-select-option.is-disabled:hover {
-    color: #a4acb8;
+    color: var(--cor-slate-400, #94a3b8);
     background: transparent;
-    box-shadow: none;
 }
 
 @media (max-width: 600px) {
     .custom-select-options {
-        max-height: min(260px, 50vh);
-        border-radius: 12px;
+        max-height: min(260px, 48vh);
+        border-radius: 14px;
     }
 
     .custom-select-option {
-        min-height: 36px;
+        min-height: 38px;
         font-size: 0.9rem;
     }
 }
 
-/* 5. Toggle Switch Moderno (iOS Style) */
+/* ==========================================================================
+   2. TOGGLE SWITCH MODERNO (iOS Style)
+   ========================================================================== */
 .switch {
     position: relative;
     display: inline-block;
@@ -304,7 +375,9 @@
     transform: translateX(20px);
 }
 
-/* 6. Inputs Globais Refinados */
+/* ==========================================================================
+   3. INPUTS GLOBAIS REFINADOS
+   ========================================================================== */
 input[type="text"],
 input[type="number"],
 input[type="email"],

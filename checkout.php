@@ -46,21 +46,21 @@ $portes_por_pais = $portes_js ?? [];
                     <?php endif; ?>
                     <div class="ck-f">
                         <label for="email">Email</label>
-                        <input class="ck-in" type="email" id="email" required placeholder="exemplo@email.com" autocomplete="email" value="<?php echo htmlspecialchars($cliente_checkout['email'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $cliente_checkout ? 'readonly' : ''; ?>>
+                        <?php echo ui_input('', ['type' => 'email', 'id' => 'email', 'class' => 'ck-in', 'required' => true, 'placeholder' => 'exemplo@email.com', 'autocomplete' => 'email', 'value' => $cliente_checkout['email'] ?? '', 'readonly' => !empty($cliente_checkout)]); ?>
                     </div>
                     <div class="ck-row">
                         <div class="ck-f">
                             <label for="nome">Nome completo</label>
-                            <input class="ck-in" type="text" id="nome" required placeholder="Maria Silva" autocomplete="name" value="<?php echo htmlspecialchars($cliente_checkout['nome'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo !empty($cliente_checkout['nome']) ? 'readonly' : ''; ?>>
+                            <?php echo ui_input('', ['id' => 'nome', 'class' => 'ck-in', 'required' => true, 'placeholder' => 'Maria Silva', 'autocomplete' => 'name', 'value' => $cliente_checkout['nome'] ?? '', 'readonly' => !empty($cliente_checkout['nome'])]); ?>
                         </div>
                         <div class="ck-f">
                             <label for="telefone">Telefone</label>
-                            <input class="ck-in" type="tel" id="telefone" required placeholder="912345678" autocomplete="tel" value="<?php echo htmlspecialchars($cliente_checkout['telefone'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo !empty($cliente_checkout['telefone']) ? 'readonly' : ''; ?>>
+                            <?php echo ui_input('', ['type' => 'tel', 'id' => 'telefone', 'class' => 'ck-in', 'required' => true, 'placeholder' => '912345678', 'autocomplete' => 'tel', 'value' => $cliente_checkout['telefone'] ?? '', 'readonly' => !empty($cliente_checkout['telefone'])]); ?>
                         </div>
                     </div>
                     <div class="ck-f">
                         <label for="nif">NIF (Opcional)</label>
-                        <input class="ck-in" type="text" id="nif" placeholder="261871923" value="<?php echo htmlspecialchars($cliente_checkout['nif'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo !empty($cliente_checkout['nif']) ? 'readonly' : ''; ?>>
+                        <?php echo ui_input('', ['id' => 'nif', 'class' => 'ck-in', 'placeholder' => '261871923', 'value' => $cliente_checkout['nif'] ?? '', 'readonly' => !empty($cliente_checkout['nif'])]); ?>
                     </div>
                 </div>
 
@@ -82,39 +82,40 @@ $portes_por_pais = $portes_js ?? [];
                         <?php if ($cliente_checkout && $cliente_moradas_checkout): ?>
                             <div class="ck-f">
                                 <label for="morada_guardada">Morada guardada</label>
-                                <div class="select-wrapper">
-                                    <select id="morada_guardada" class="ck-in select-estilizado">
-                                        <?php foreach ($cliente_moradas_checkout as $morada): ?>
-                                            <option value="<?php echo (int)$morada['id']; ?>" <?php echo (int)$morada['principal'] === 1 ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars(($morada['nome'] ?: 'Morada') . ' - ' . $morada['rua'] . ', ' . $morada['codigo_postal'] . ' ' . $morada['localidade'], ENT_QUOTES, 'UTF-8'); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
+                                <?php
+                                $opcoes_moradas_ck = [];
+                                $morada_principal_ck = '';
+                                foreach ($cliente_moradas_checkout as $morada) {
+                                    $mId = (string)(int)$morada['id'];
+                                    $opcoes_moradas_ck[$mId] = ($morada['nome'] ?: 'Morada') . ' - ' . $morada['rua'] . ', ' . $morada['codigo_postal'] . ' ' . $morada['localidade'];
+                                    if ((int)$morada['principal'] === 1 || $morada_principal_ck === '') {
+                                        $morada_principal_ck = $mId;
+                                    }
+                                }
+                                echo ui_select('', $opcoes_moradas_ck, $morada_principal_ck, ['id' => 'morada_guardada', 'class' => 'ck-in']);
+                                ?>
                             </div>
                         <?php endif; ?>
                         <div class="ck-f" id="bloco-pais">
                             <label for="pais_regiao">País / Região</label>
-                            <div class="select-wrapper">
-                                <select id="pais_regiao" class="ck-in select-estilizado" required autocomplete="country"></select>
-                            </div>
+                            <?php echo ui_select('', [], '', ['id' => 'pais_regiao', 'class' => 'ck-in', 'required' => true, 'autocomplete' => 'country']); ?>
                         </div>
                         <div class="ck-f">
                             <label for="rua" id="lbl-rua">Rua e número</label>
-                            <input class="ck-in" type="text" id="rua" required placeholder="Rua das Flores, 12" autocomplete="address-line1">
+                            <?php echo ui_input('', ['id' => 'rua', 'class' => 'ck-in', 'required' => true, 'placeholder' => 'Rua das Flores, 12', 'autocomplete' => 'address-line1']); ?>
                         </div>
                         <div id="bloco-provincia" class="ck-f" style="display:none;">
                             <label for="provincia">Província / Estado</label>
-                            <input class="ck-in" type="text" id="provincia" placeholder="Ex: Pontevedra" autocomplete="address-level1">
+                            <?php echo ui_input('', ['id' => 'provincia', 'class' => 'ck-in', 'placeholder' => 'Ex: Pontevedra', 'autocomplete' => 'address-level1']); ?>
                         </div>
                         <div class="ck-row">
                             <div class="ck-f">
                                 <label for="codigo_postal">Código postal</label>
-                                <input class="ck-in" type="text" id="codigo_postal" required placeholder="0000-000" autocomplete="postal-code">
+                                <?php echo ui_input('', ['id' => 'codigo_postal', 'class' => 'ck-in', 'required' => true, 'placeholder' => '0000-000', 'autocomplete' => 'postal-code']); ?>
                             </div>
                             <div class="ck-f">
                                 <label for="localidade">Localidade</label>
-                                <input class="ck-in" type="text" id="localidade" required placeholder="Porto" autocomplete="address-level2">
+                                <?php echo ui_input('', ['id' => 'localidade', 'class' => 'ck-in', 'required' => true, 'placeholder' => 'Porto', 'autocomplete' => 'address-level2']); ?>
                             </div>
                         </div>
                     </div>
@@ -123,13 +124,13 @@ $portes_por_pais = $portes_js ?? [];
                     </div>
                 </div>
 
-                <button type="button" id="btn-continuar" class="ck-btn">Continuar para pagamento →</button>
+                <?php echo ui_button('Continuar para pagamento →', ['id' => 'btn-continuar', 'class' => 'ck-btn', 'raw_class' => true]); ?>
                 <div class="ck-back-row"><a href="carrinho.php" class="ck-back ck-back-full">← Voltar ao carrinho</a></div>
             </form>
         </div>
 
         <div id="passo-2" style="display:none;">
-            <button type="button" id="btn-voltar" class="ck-back" style="margin-bottom:20px;">← Editar dados</button>
+            <?php echo ui_button('← Editar dados', ['id' => 'btn-voltar', 'class' => 'ck-back', 'raw_class' => true, 'style' => 'margin-bottom:20px;']); ?>
             <div class="ck-review" id="review-content"></div>
             <div id="stripe-container">
                 <div class="ck-pay-hd"><h3>Pagamento Seguro</h3></div>

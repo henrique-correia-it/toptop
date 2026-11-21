@@ -212,23 +212,25 @@ ob_start(); // Inicia um novo buffer para o HTML dos produtos
 <?php if (!empty($produtos_finais)): ?>
     <div class="cabecalho-grelha">
         <div class="quick-filters desktop-only-flex">
-            <label class="switch-premium" title="Mostrar apenas produtos em promoção">
-                <input type="checkbox" class="promocao-toggle-sync" data-target="header" value="1" <?php echo !empty($promocao_selecionada) ? 'checked' : ''; ?>>
-                <span class="slider"></span>
-                <span class="label-text">Só Promoções</span>
-            </label>
+            <?php echo ui_switch('', 'Só Promoções', !empty($promocao_selecionada), [
+                'id'          => false,
+                'input_class' => 'promocao-toggle-sync',
+                'title'       => 'Mostrar apenas produtos em promoção',
+                'attrs'       => ['data-target' => 'header'],
+            ]); ?>
         </div>
         <div class="ordenar-container">
             <label for="ordenar">Ordenar por:</label>
-            <div class="select-wrapper">
-                <select name="ordenar" id="ordenar" class="select-estilizado">
-                    <option value="" <?php if ($ordenar_selecionado == '') echo 'selected'; ?>>Destaques</option>
-                    <option value="categoria" <?php if ($ordenar_selecionado == 'categoria') echo 'selected'; ?>>Por Categoria</option>
-                    <option value="recentes" <?php if ($ordenar_selecionado == 'recentes') echo 'selected'; ?>>Mais Recentes</option>
-                    <option value="asc" <?php if ($ordenar_selecionado == 'asc') echo 'selected'; ?>>Preço Crescente</option>
-                    <option value="desc" <?php if ($ordenar_selecionado == 'desc') echo 'selected'; ?>>Preço Decrescente</option>
-                </select>
-            </div>
+            <?php
+            $opcoes_ordenar_loja = [
+                ''          => 'Destaques',
+                'categoria' => 'Por Categoria',
+                'recentes'  => 'Mais Recentes',
+                'asc'       => 'Preço Crescente',
+                'desc'      => 'Preço Decrescente',
+            ];
+            echo ui_select('ordenar', $opcoes_ordenar_loja, $ordenar_selecionado, ['id' => 'ordenar']);
+            ?>
         </div>
     </div>
     <div class="produtos-grid">
@@ -448,24 +450,16 @@ include 'templates/header.php';
                 <input type="checkbox" name="promocao" id="promocao-real" value="1" <?php echo !empty($promocao_selecionada) ? 'checked' : ''; ?> style="display: none;">
 
                 <div class="sidebar-promo-toggle mobile-only-flex">
-                    <label class="switch-premium">
-                        <input type="checkbox" class="promocao-toggle-sync" data-target="sidebar" value="1" <?php echo !empty($promocao_selecionada) ? 'checked' : ''; ?>>
-                        <span class="slider"></span>
-                        <span class="label-text">Só Promoções</span>
-                    </label>
+                    <?php echo ui_switch('', 'Só Promoções', !empty($promocao_selecionada), [
+                        'id'          => false,
+                        'input_class' => 'promocao-toggle-sync',
+                        'attrs'       => ['data-target' => 'sidebar'],
+                    ]); ?>
                 </div>
                 
                 <div class="filtro-sort-mobile">
                     <label for="ordenar-mobile">Ordenar por</label>
-                    <div class="select-wrapper">
-                        <select id="ordenar-mobile" class="select-estilizado">
-                            <option value="" <?php if ($ordenar_selecionado == '') echo 'selected'; ?>>Destaques</option>
-                            <option value="categoria" <?php if ($ordenar_selecionado == 'categoria') echo 'selected'; ?>>Por Categoria</option>
-                            <option value="recentes" <?php if ($ordenar_selecionado == 'recentes') echo 'selected'; ?>>Mais Recentes</option>
-                            <option value="asc" <?php if ($ordenar_selecionado == 'asc') echo 'selected'; ?>>Preço Crescente</option>
-                            <option value="desc" <?php if ($ordenar_selecionado == 'desc') echo 'selected'; ?>>Preço Decrescente</option>
-                        </select>
-                    </div>
+                    <?php echo ui_select('', $opcoes_ordenar_loja, $ordenar_selecionado, ['id' => 'ordenar-mobile']); ?>
                 </div>
 
                 <div class="sidebar-desktop-header">
@@ -479,14 +473,12 @@ include 'templates/header.php';
                         <div class="filtro-conteudo">
                             <div class="filtro-conteudo-inner">
                                 <ul class="lista-filtros">
-                                    <?php foreach ($categorias as $cat):
-                                        $cat_nome = htmlspecialchars($cat['categoria']); ?>
+                                    <?php foreach ($categorias as $cat): ?>
                                         <li>
-                                            <label class="filtro-checkbox">
-                                                <input type="checkbox" name="categorias[]" value="<?php echo $cat_nome; ?>" <?php echo in_array($cat['categoria'], $categorias_selecionadas) ? 'checked' : ''; ?>>
-                                                <span class="custom-checkbox"></span>
-                                                <span class="filtro-label-text"><?php echo $cat_nome; ?></span>
-                                            </label>
+                                            <?php echo ui_checkbox('categorias[]', $cat['categoria'], in_array($cat['categoria'], $categorias_selecionadas), [
+                                                'variant' => 'filter',
+                                                'value'   => $cat['categoria'],
+                                            ]); ?>
                                         </li>
                                     <?php endforeach; ?>
                                 </ul>
@@ -501,14 +493,12 @@ include 'templates/header.php';
                         <div class="filtro-conteudo">
                             <div class="filtro-conteudo-inner">
                                 <ul class="lista-filtros">
-                                    <?php foreach ($valores as $valor):
-                                        $valor_nome = htmlspecialchars($valor); ?>
+                                    <?php foreach ($valores as $valor): ?>
                                         <li>
-                                            <label class="filtro-checkbox">
-                                                <input type="checkbox" name="atributos[<?php echo htmlspecialchars($nome_grupo); ?>][]" value="<?php echo $valor_nome; ?>" <?php echo (isset($atributos_selecionados[$nome_grupo]) && in_array($valor, $atributos_selecionados[$nome_grupo])) ? 'checked' : ''; ?>>
-                                                <span class="custom-checkbox"></span>
-                                                <span class="filtro-label-text"><?php echo $valor_nome; ?></span>
-                                            </label>
+                                            <?php echo ui_checkbox('atributos[' . $nome_grupo . '][]', $valor, isset($atributos_selecionados[$nome_grupo]) && in_array($valor, $atributos_selecionados[$nome_grupo]), [
+                                                'variant' => 'filter',
+                                                'value'   => $valor,
+                                            ]); ?>
                                         </li>
                                     <?php endforeach; ?>
                                 </ul>
@@ -535,7 +525,7 @@ include 'templates/header.php';
 
 <div id="produtoModal" class="modal">
     <div class="modal-conteudo">
-        <button type="button" class="btn-close-unified fechar" title="Fechar">&times;</button>
+        <?php echo ui_close_button(['class' => 'fechar']); ?>
 
         <div class="modal-loading-overlay">
             <div class="spinner"></div>
@@ -587,14 +577,9 @@ include 'templates/header.php';
                     <div class="modal-acoes-principais">
                         <div class="seletor-quantidade">
                             <label for="modalQuantidade">Quantidade:</label>
-                            <div class="input-wrapper">
-                                <button type="button" class="btn-qty" data-action="minus">-</button>
-                                <input type="number" id="modalQuantidade" value="1" min="1" max="10" readonly>
-                                <button type="button" class="btn-qty" data-action="plus">+</button>
-                            </div>
+                            <?php echo ui_qty_stepper(1, ['variant' => 'product', 'id' => 'modalQuantidade', 'min' => 1, 'max' => 10]); ?>
                         </div>
-                        <button type="button" id="adicionarCarrinhoBtn" class="button add-btn" disabled>A
-                            carregar...</button>
+                        <?php echo ui_button('A carregar...', ['id' => 'adicionarCarrinhoBtn', 'class' => 'button add-btn', 'disabled' => true]); ?>
                     </div>
                 </div>
             </div>

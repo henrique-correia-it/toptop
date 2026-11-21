@@ -1,1 +1,1 @@
-<?php $versao_global = '1795211000'; ?>
+<?php $versao_site = 1795220000; ?>

@@ -102,24 +102,14 @@ $qs_base = http_build_query(array_filter([
     <div class="prod-toolbar">
         <div class="prod-toolbar-right">
             <form method="GET" style="display:flex; align-items:center; gap:10px;">
-                <div class="select-wrapper sort-select-wrapper">
-                    <select name="resultado" class="sort-select" onchange="this.form.submit()">
-                        <option value="">Todos os resultados</option>
-                        <option value="sucesso" <?php echo $filtro_resultado === 'sucesso' ? 'selected' : ''; ?>>Sucesso</option>
-                        <option value="falha"   <?php echo $filtro_resultado === 'falha'   ? 'selected' : ''; ?>>Falhados</option>
-                    </select>
-                </div>
-                <div class="search-input-wrap">
-                    <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="search" name="username" placeholder="Filtrar utilizador..."
-                           value="<?php echo htmlspecialchars($filtro_username); ?>"
-                           class="search-input-toolbar" autocomplete="off">
-                </div>
+                <?php echo ui_select('resultado', [
+                    ''        => 'Todos os resultados',
+                    'sucesso' => 'Sucesso',
+                    'falha'   => 'Falhados',
+                ], $filtro_resultado, ['variant' => 'toolbar', 'onchange' => 'this.form.submit()']); ?>
+                <?php echo ui_search_input('username', 'Filtrar utilizador...', ['value' => $filtro_username]); ?>
             </form>
-            <button class="button btn-sel-mode" id="btn-sel-mode">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="5" width="4" height="4" rx="1"/><rect x="3" y="13" width="4" height="4" rx="1"/><line x1="11" y1="7" x2="21" y2="7"/><line x1="11" y1="15" x2="21" y2="15"/></svg>
-                Selecionar
-            </button>
+            <?php echo ui_select_mode_button(); ?>
         </div>
     </div>
 
@@ -139,8 +129,8 @@ $qs_base = http_build_query(array_filter([
                 . '</div></div>';
 
             $resCell = ($log['resultado'] === 'sucesso')
-                ? '<span class="badge badge-verde">Sucesso</span>'
-                : '<span class="badge badge-vermelho">Falha</span>' . ($log['motivo_falha'] ? '<span class="motivo">' . ui_e($log['motivo_falha']) . '</span>' : '');
+                ? ui_badge('Sucesso', 'success', ['class' => 'badge badge-verde'])
+                : ui_badge('Falha', 'danger', ['class' => 'badge badge-vermelho']) . ($log['motivo_falha'] ? '<span class="motivo">' . ui_e($log['motivo_falha']) . '</span>' : '');
 
             $logRows[] = [
                 'attrs' => ['data-id' => (int)$log['id']],
@@ -149,7 +139,7 @@ $qs_base = http_build_query(array_filter([
                     $userCell,
                     $resCell,
                     '<div class="device-info"><span class="browser">' . ui_e($device['browser']) . '</span><span class="os">' . ui_e($device['os']) . '</span></div>',
-                    '<span class="ip-pill">' . ui_e($log['ip']) . '</span>',
+                    ui_badge((string)$log['ip'], 'neutral', ['class' => 'ip-pill']),
                 ],
             ];
         }

@@ -119,62 +119,61 @@ include '../templates/header.php';
 
             <!-- Coluna Esquerda: Info Básica -->
             <div class="profile-column">
-                <div class="form-card">
-                    <div class="form-card-header">
-                        <div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
-                        <h3>Identidade</h3>
-                    </div>
-                    <div class="form-card-body">
-                        <div class="form-group">
-    <label for="username">Nome de Utilizador</label>
-    <input type="text" id="username" name="username" value="<?php echo $username_valor; ?>" required placeholder="Ex: joao_admin" autocomplete="off">
-</div>
-                        
-                        <div class="form-group">
-    <label for="email">Endereço de Email</label>
-    <input type="email" id="email" name="email" value="<?php echo $email_valor; ?>" required placeholder="joao@exemplo.com" autocomplete="off">
-</div>
-
-                        <div class="form-group">
-                            <label for="role">Função no Sistema</label>
-                            <div class="select-wrapper">
-                                <select name="role" id="role" class="select-estilizado">
-                                    <option value="admin" <?php echo ($role_valor == 'admin') ? 'selected' : ''; ?>>Administrador Normal</option>
-                                    <option value="superadmin" <?php echo ($role_valor == 'superadmin') ? 'selected' : ''; ?>>Super-Administrador</option>
-                                    <?php if ($_SESSION['admin_role'] === 'desenvolvedor'): ?>
-                                        <option value="desenvolvedor" <?php echo ($role_valor == 'desenvolvedor') ? 'selected' : ''; ?>>Desenvolvedor</option>
-                                    <?php endif; ?>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+                <?php
+                $roles_opcoes = [
+                    'admin'      => 'Administrador Normal',
+                    'superadmin' => 'Super-Administrador',
+                ];
+                if ($_SESSION['admin_role'] === 'desenvolvedor') {
+                    $roles_opcoes['desenvolvedor'] = 'Desenvolvedor';
+                }
+                ob_start();
+                ?>
+                <div class="form-group">
+                    <label for="username">Nome de Utilizador</label>
+                    <?php echo ui_input('username', ['id' => 'username', 'value' => $username_valor, 'required' => true, 'placeholder' => 'Ex: joao_admin', 'autocomplete' => 'off']); ?>
                 </div>
+                <div class="form-group">
+                    <label for="email">Endereço de Email</label>
+                    <?php echo ui_input('email', ['type' => 'email', 'id' => 'email', 'value' => $email_valor, 'required' => true, 'placeholder' => 'joao@exemplo.com', 'autocomplete' => 'off']); ?>
+                </div>
+                <div class="form-group">
+                    <label for="role">Função no Sistema</label>
+                    <?php echo ui_select('role', $roles_opcoes, $role_valor, ['id' => 'role']); ?>
+                </div>
+                <?php
+                echo ui_card(ob_get_clean(), [
+                    'variant'     => 'form',
+                    'header_html' => '<div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div><h3>Identidade</h3>',
+                ]);
+                ?>
             </div>
 
             <!-- Coluna Direita: Segurança -->
             <div class="profile-column">
-                <div class="form-card">
-                    <div class="form-card-header">
-                        <div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
-                        <h3>Segurança Inicial</h3>
-                    </div>
-                    <div class="form-card-body">
-                        <p class="helper-text">Defina uma senha provisória para o novo utilizador.</p>
-                        <div class="form-group">
-    <label for="password">Senha Provisória (mín. 8 caracteres)</label>
-    <div class="password-wrapper">
-        <input type="password" id="password" name="password" required placeholder="Crie uma senha forte" autocomplete="new-password">
-        <span class="toggle-senha" data-target="password">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-        </span>
-    </div>
-</div>
+                <?php ob_start(); ?>
+                <p class="helper-text">Defina uma senha provisória para o novo utilizador.</p>
+                <div class="form-group">
+                    <label for="password">Senha Provisória (mín. 8 caracteres)</label>
+                    <div class="password-wrapper">
+                        <?php echo ui_input('password', ['type' => 'password', 'id' => 'password', 'required' => true, 'placeholder' => 'Crie uma senha forte', 'autocomplete' => 'new-password']); ?>
+                        <span class="toggle-senha" data-target="password">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </span>
                     </div>
                 </div>
+                <?php
+                echo ui_card(ob_get_clean(), [
+                    'variant'     => 'form',
+                    'header_html' => '<div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div><h3>Segurança Inicial</h3>',
+                ]);
+                ?>
 
                 <div class="form-footer-actions">
-                    <a href="listar_admins.php" class="button-secondary">Cancelar</a>
-                    <button type="submit" class="button-primary">Criar Administrador</button>
+                    <?php
+                    echo ui_button('Cancelar', ['href' => 'listar_admins.php', 'class' => 'button-secondary']);
+                    echo ui_button('Criar Administrador', ['type' => 'submit', 'class' => 'button-primary']);
+                    ?>
                 </div>
             </div>
         </form>

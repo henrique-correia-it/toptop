@@ -120,14 +120,18 @@ include '../templates/header.php';
             <button class="gal-tab" data-filter="fantasmas" id="tab-fantasmas" disabled>Fantasmas</button>
         </div>
         <div class="gal-spacer"></div>
-        <button class="gal-btn-del-all" id="btn-del-all">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-            <span id="del-all-txt">Apagar todas as fantasmas</span>
-        </button>
-        <button class="gal-btn-scan" id="btn-scan">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <span id="scan-txt">Reanalisar</span>
-        </button>
+        <?php
+        echo ui_button('Apagar todas as fantasmas', [
+            'id'    => 'btn-del-all',
+            'class' => 'gal-btn-del-all',
+            'html'  => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg><span id="del-all-txt">Apagar todas as fantasmas</span>',
+        ]);
+        echo ui_button('Reanalisar', [
+            'id'    => 'btn-scan',
+            'class' => 'gal-btn-scan',
+            'html'  => '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span id="scan-txt">Reanalisar</span>',
+        ]);
+        ?>
     </div>
 
     <!-- ── Result banner ── -->
@@ -174,7 +178,7 @@ include '../templates/header.php';
 
 <!-- ── Lightbox ── -->
 <div class="gal-lb" id="lightbox" onclick="fecharLightbox()">
-    <button class="btn-close-unified gal-lb-close" onclick="fecharLightbox()" title="Fechar">&times;</button>
+    <?php echo ui_close_button(['class' => 'gal-lb-close', 'onclick' => 'fecharLightbox()']); ?>
     <div class="gal-lb-inner" onclick="event.stopPropagation()">
         <img id="lb-img" src="" alt="">
         <div class="gal-lb-info" id="lb-info"></div>

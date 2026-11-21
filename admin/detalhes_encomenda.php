@@ -207,278 +207,267 @@ include '../templates/header.php';
 
     <div class="admin-form-grid">
         <div class="form-coluna-principal">
-            <div class="form-card">
-                <div class="form-card-header">
-                    <h3>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 12px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                        Informação do Cliente
-                    </h3>
-                </div>
-                <div class="form-card-body">
-                    <div class="info-cliente-item">
-                        <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
-                        <div class="info-cliente-texto">
-                            <strong>Nome</strong>
-                            <span><?php echo htmlspecialchars($encomenda['cliente_nome']); ?></span>
-                        </div>
-                    </div>
-                     <div class="info-cliente-item">
-                        <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
-                        <div class="info-cliente-texto">
-                            <strong>Data do Pedido</strong>
-                            <span><?php echo date('d/m/Y, H:i', strtotime($encomenda['data_encomenda'])); ?></span>
-                        </div>
-                    </div>
-                    <div class="info-cliente-item com-acoes">
-                        <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
-                        <div class="info-cliente-texto">
-                            <strong>Email</strong>
-                            <a href="mailto:<?php echo htmlspecialchars($encomenda['cliente_email']); ?>"><?php echo htmlspecialchars($encomenda['cliente_email']); ?></a>
-                        </div>
-                    </div>
-                    <div class="info-cliente-item com-acoes">
-                       <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
-                       <div class="info-cliente-texto">
-                            <strong>Telefone</strong>
-                            <a href="tel:<?php echo htmlspecialchars($encomenda['cliente_telefone']); ?>"><?php echo htmlspecialchars($encomenda['cliente_telefone']); ?></a>
-                       </div>
-                       <div class="botoes-contacto">
-                            <a href="https://wa.me/<?php echo $telefone_whatsapp; ?>" target="_blank" class="whatsapp-btn">WhatsApp</a>
-                       </div>
-                    </div>
-                    <?php if(!empty($encomenda['cliente_nif'])): ?>
-                    <div class="info-cliente-item">
-                        <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
-                        <div class="info-cliente-texto">
-                            <strong>NIF / Contribuinte</strong>
-                            <span><?php echo htmlspecialchars($encomenda['cliente_nif']); ?></span>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-                    <div class="info-cliente-item info-entrega">
-                        <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
-                        <div class="info-cliente-texto">
-                            <strong>Método de Pagamento</strong>
-                            <?php
-                            $mp = $encomenda['metodo_pagamento'] ?? 'N/D';
-                            if ($mp === 'Stripe' && $encomenda['estado'] === 'pendente') {
-                                echo '<span style="color:#888;">A aguardar confirmação de pagamento…</span>';
-                            } elseif ($mp === 'Stripe') {
-                                echo '<span>Stripe</span>';
-                            } else {
-                                echo '<span>' . htmlspecialchars($mp) . '</span>';
-                            }
-                            ?>
-                        </div>
-                    </div>
-                    <?php if (!empty($encomenda['stripe_payment_intent_id'])): ?>
-                    <div class="info-cliente-item">
-                        <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
-                        <div class="info-cliente-texto">
-                            <strong>Stripe Payment ID</strong>
-                            <span style="font-family:monospace;font-size:.8em;color:#888;"><?php echo htmlspecialchars($encomenda['stripe_payment_intent_id']); ?></span>
-                            <small style="color:#aaa;">Use este ID para reembolsos no painel Stripe.</small>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-                    <div class="info-cliente-item info-entrega">
-                        <div class="info-cliente-icon">
-                            <?php if ($encomenda['metodo_entrega'] === 'recolha'): ?>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                            <?php else: ?>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-                            <?php endif; ?>
-                        </div>
-                        <div class="info-cliente-texto">
-                            <strong>Método de Entrega</strong>
-                            <?php if ($encomenda['metodo_entrega'] === 'recolha'): ?>
-                                <span style="color:var(--cor-accent); font-weight:700;">RECOLHA NA LOJA</span>
-                                <small style="color:#666; display:block; margin-top:2px;">O cliente virá levantar à loja física.</small>
-                            <?php else: ?>
-                                <span>Envio por Transportadora</span>
-                                <div class="morada-envio" style="margin-top:5px; color:#555;"><?php echo nl2br(htmlspecialchars($encomenda['cliente_morada'])); ?></div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
+            <?php ob_start(); ?>
+            <div class="info-cliente-item">
+                <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+                <div class="info-cliente-texto">
+                    <strong>Nome</strong>
+                    <span><?php echo htmlspecialchars($encomenda['cliente_nome']); ?></span>
                 </div>
             </div>
-
-            <div class="form-card">
-                <div class="form-card-header">
-                    <h3>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 12px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                        Produtos da Encomenda
-                    </h3>
+            <div class="info-cliente-item">
+                <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
+                <div class="info-cliente-texto">
+                    <strong>Data do Pedido</strong>
+                    <span><?php echo date('d/m/Y, H:i', strtotime($encomenda['data_encomenda'])); ?></span>
                 </div>
-                <div class="form-card-body" style="padding: 0;">
+            </div>
+            <div class="info-cliente-item com-acoes">
+                <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
+                <div class="info-cliente-texto">
+                    <strong>Email</strong>
+                    <a href="mailto:<?php echo htmlspecialchars($encomenda['cliente_email']); ?>"><?php echo htmlspecialchars($encomenda['cliente_email']); ?></a>
+                </div>
+            </div>
+            <div class="info-cliente-item com-acoes">
+                <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
+                <div class="info-cliente-texto">
+                    <strong>Telefone</strong>
+                    <a href="tel:<?php echo htmlspecialchars($encomenda['cliente_telefone']); ?>"><?php echo htmlspecialchars($encomenda['cliente_telefone']); ?></a>
+                </div>
+                <div class="botoes-contacto">
+                    <a href="https://wa.me/<?php echo $telefone_whatsapp; ?>" target="_blank" class="whatsapp-btn">WhatsApp</a>
+                </div>
+            </div>
+            <?php if(!empty($encomenda['cliente_nif'])): ?>
+            <div class="info-cliente-item">
+                <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                <div class="info-cliente-texto">
+                    <strong>NIF / Contribuinte</strong>
+                    <span><?php echo htmlspecialchars($encomenda['cliente_nif']); ?></span>
+                </div>
+            </div>
+            <?php endif; ?>
+            <div class="info-cliente-item info-entrega">
+                <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+                <div class="info-cliente-texto">
+                    <strong>Método de Pagamento</strong>
                     <?php
-                    $itemRows = [];
-                    foreach ($itens as $item) {
-                        $prodCell = '';
-                        if (!empty($item['foto_exibicao'])) {
-                            $prodCell .= '<img src="/public/images/' . ui_e($item['foto_exibicao']) . '" alt="">';
-                        }
-                        $prodCell .= '<div class="item-info-cell"><strong>' . ui_e($item['nome_produto']) . '</strong>';
-                        $selecoes = json_decode($item['selecoes_atributos'] ?? '', true);
-                        if (!empty($selecoes) && is_array($selecoes)) {
-                            $prodCell .= '<div class="item-atributos-cell">' . implode(' / ', array_map('ui_e', array_values($selecoes))) . '</div>';
-                        }
-                        if (!empty($item['ref_variacao'])) {
-                            $prodCell .= '<div class="item-ref-cell">Ref: ' . ui_e($item['ref_variacao']) . '</div>';
-                        }
-                        $prodCell .= '</div>';
-
-                        $itemRows[] = [
-                            'cells' => [
-                                ['style' => 'text-align: left;', 'html' => $prodCell],
-                                ui_e($item['quantidade']),
-                                ['style' => 'text-align: right;', 'html' => format_money($item['preco_unitario'] * $item['quantidade'])],
-                            ],
-                        ];
+                    $mp = $encomenda['metodo_pagamento'] ?? 'N/D';
+                    if ($mp === 'Stripe' && $encomenda['estado'] === 'pendente') {
+                        echo '<span style="color:#888;">A aguardar confirmação de pagamento…</span>';
+                    } elseif ($mp === 'Stripe') {
+                        echo '<span>Stripe</span>';
+                    } else {
+                        echo '<span>' . htmlspecialchars($mp) . '</span>';
                     }
-                    echo ui_table(
-                        [
-                            ['label' => 'Produto', 'attrs' => ['style' => 'text-align: left;']],
-                            'Qtd',
-                            ['label' => 'Total', 'attrs' => ['style' => 'text-align: right;']],
-                        ],
-                        $itemRows,
-                        ['wrap_class' => 'table-wrapper', 'table_class' => 'admin-table tabela-itens-encomenda']
-                    );
                     ?>
-                    <div class="detalhes-card-sumario">
-                        <div class="sumario-box">
-                            <div class="sumario-linha"><span>Subtotal (Produtos)</span><span><?php echo format_money($encomenda['total']); ?></span></div>
-                            <div class="sumario-linha"><span>Portes de Envio</span><span id="display-portes"><?php echo format_money((float)$encomenda['portes_envio']); ?></span></div>
-                            <div class="sumario-linha total"><span>Total</span><span id="display-total"><?php echo format_money((float)$encomenda['total'] + (float)$encomenda['portes_envio']); ?></span></div>
-                        </div>
-                    </div>
                 </div>
             </div>
+            <?php if (!empty($encomenda['stripe_payment_intent_id'])): ?>
+            <div class="info-cliente-item">
+                <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+                <div class="info-cliente-texto">
+                    <strong>Stripe Payment ID</strong>
+                    <span style="font-family:monospace;font-size:.8em;color:#888;"><?php echo htmlspecialchars($encomenda['stripe_payment_intent_id']); ?></span>
+                    <small style="color:#aaa;">Use este ID para reembolsos no painel Stripe.</small>
+                </div>
+            </div>
+            <?php endif; ?>
+            <div class="info-cliente-item info-entrega">
+                <div class="info-cliente-icon">
+                    <?php if ($encomenda['metodo_entrega'] === 'recolha'): ?>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    <?php else: ?>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                    <?php endif; ?>
+                </div>
+                <div class="info-cliente-texto">
+                    <strong>Método de Entrega</strong>
+                    <?php if ($encomenda['metodo_entrega'] === 'recolha'): ?>
+                        <span style="color:var(--cor-accent); font-weight:700;">RECOLHA NA LOJA</span>
+                        <small style="color:#666; display:block; margin-top:2px;">O cliente virá levantar à loja física.</small>
+                    <?php else: ?>
+                        <span>Envio por Transportadora</span>
+                        <div class="morada-envio" style="margin-top:5px; color:#555;"><?php echo nl2br(htmlspecialchars($encomenda['cliente_morada'])); ?></div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php
+            echo ui_card(ob_get_clean(), [
+                'variant'    => 'form',
+                'title_html' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 12px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Informação do Cliente',
+            ]);
+            ?>
+
+            <?php
+            ob_start();
+            $itemRows = [];
+            foreach ($itens as $item) {
+                $prodCell = '';
+                if (!empty($item['foto_exibicao'])) {
+                    $prodCell .= '<img src="/public/images/' . ui_e($item['foto_exibicao']) . '" alt="">';
+                }
+                $prodCell .= '<div class="item-info-cell"><strong>' . ui_e($item['nome_produto']) . '</strong>';
+                $selecoes = json_decode($item['selecoes_atributos'] ?? '', true);
+                if (!empty($selecoes) && is_array($selecoes)) {
+                    $prodCell .= '<div class="item-atributos-cell">' . implode(' / ', array_map('ui_e', array_values($selecoes))) . '</div>';
+                }
+                if (!empty($item['ref_variacao'])) {
+                    $prodCell .= '<div class="item-ref-cell">Ref: ' . ui_e($item['ref_variacao']) . '</div>';
+                }
+                $prodCell .= '</div>';
+
+                $itemRows[] = [
+                    'cells' => [
+                        ['style' => 'text-align: left;', 'html' => $prodCell],
+                        ui_e($item['quantidade']),
+                        ['style' => 'text-align: right;', 'html' => format_money($item['preco_unitario'] * $item['quantidade'])],
+                    ],
+                ];
+            }
+            echo ui_table(
+                [
+                    ['label' => 'Produto', 'attrs' => ['style' => 'text-align: left;']],
+                    'Qtd',
+                    ['label' => 'Total', 'attrs' => ['style' => 'text-align: right;']],
+                ],
+                $itemRows,
+                ['wrap_class' => 'table-wrapper', 'table_class' => 'admin-table tabela-itens-encomenda']
+            );
+            ?>
+            <div class="detalhes-card-sumario">
+                <div class="sumario-box">
+                    <div class="sumario-linha"><span>Subtotal (Produtos)</span><span><?php echo format_money($encomenda['total']); ?></span></div>
+                    <div class="sumario-linha"><span>Portes de Envio</span><span id="display-portes"><?php echo format_money((float)$encomenda['portes_envio']); ?></span></div>
+                    <div class="sumario-linha total"><span>Total</span><span id="display-total"><?php echo format_money((float)$encomenda['total'] + (float)$encomenda['portes_envio']); ?></span></div>
+                </div>
+            </div>
+            <?php
+            echo ui_card(ob_get_clean(), [
+                'variant'    => 'form',
+                'body_style' => 'padding: 0;',
+                'title_html' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 12px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> Produtos da Encomenda',
+            ]);
+            ?>
 
             <?php if (!empty($mensagens_enviadas)): ?>
-            <div class="form-card">
-                <div class="form-card-header">
-                    <h3>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 12px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        Histórico de Comunicações
-                    </h3>
-                </div>
-                <div class="form-card-body" style="padding-top: 10px;">
-                    <div class="historico-mensagens" style="padding: 0;">
-                        <?php foreach (array_reverse($mensagens_enviadas) as $msg): ?>
-                        <div class="mensagem-item">
-                            <div class="mensagem-header">
-                                <span class="mensagem-tipo">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                                    Email Enviado
-                                </span>
-                                <span class="mensagem-data"><?php echo date('d/m/Y H:i', strtotime($msg['data'])); ?></span>
-                            </div>
-                            <div class="mensagem-body">
-                                <strong>Assunto:</strong> <?php echo htmlspecialchars($msg['assunto']); ?><br>
-                                <?php echo sanitize_email_history_html($msg['mensagem'] ?? ''); ?>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
+            <?php ob_start(); ?>
+            <div class="historico-mensagens" style="padding: 0;">
+                <?php foreach (array_reverse($mensagens_enviadas) as $msg): ?>
+                <div class="mensagem-item">
+                    <div class="mensagem-header">
+                        <span class="mensagem-tipo">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                            Email Enviado
+                        </span>
+                        <span class="mensagem-data"><?php echo date('d/m/Y H:i', strtotime($msg['data'])); ?></span>
+                    </div>
+                    <div class="mensagem-body">
+                        <strong>Assunto:</strong> <?php echo htmlspecialchars($msg['assunto']); ?><br>
+                        <?php echo sanitize_email_history_html($msg['mensagem'] ?? ''); ?>
                     </div>
                 </div>
+                <?php endforeach; ?>
             </div>
+            <?php
+            echo ui_card(ob_get_clean(), [
+                'variant'    => 'form',
+                'body_style' => 'padding-top: 10px;',
+                'title_html' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 12px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Histórico de Comunicações',
+            ]);
+            ?>
             <?php endif; ?>
         </div>
 
         <div class="form-coluna-secundaria">
-            <div class="form-card">
-                <?php if (!$is_encomenda_incompleta): ?>
-                <div class="painel-acoes-tabs">
-                    <button class="tab-link ativo" data-tab="tab-acoes">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-                        Ações
-                    </button>
-                    <?php if (!$is_encomenda_incompleta): ?>
-                    <button class="tab-link" data-tab="tab-comunicar">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                        Comunicar
-                    </button>
-                    <button class="tab-link" data-tab="tab-notas">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        Notas
-                    </button>
-                    <?php endif; ?>
-                </div>
-                <?php endif; ?>
+            <?php ob_start(); ?>
+            <?php if (!$is_encomenda_incompleta): ?>
+            <div class="painel-acoes-tabs">
+                <button class="tab-link ativo" data-tab="tab-acoes">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                    Ações
+                </button>
+                <button class="tab-link" data-tab="tab-comunicar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    Comunicar
+                </button>
+                <button class="tab-link" data-tab="tab-notas">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Notas
+                </button>
+            </div>
+            <?php endif; ?>
 
-                <div id="tab-acoes" class="tab-content ativo">
-                    <?php if (in_array($encomenda['estado'], ['cancelada', 'concluida'])): ?>
-                        <p class="aviso-bloqueio">
-                            Esta encomenda foi <?php echo $encomenda['estado'] === 'cancelada' ? 'cancelada' : 'concluída'; ?>. Não são permitidas mais ações.
-                        </p>
-                    <?php elseif ($is_encomenda_incompleta): ?>
-                        <div class="incomplete-order-notice">
-                            <strong>Encomenda a aguardar pagamento</strong>
-                            <p>Esta encomenda foi criada no checkout e reservou stock temporariamente, mas o cliente ainda não concluiu o pagamento. Não altere o estado manualmente.</p>
-                        </div>
-                        <div class="zona-perigo">
-                            <button id="btn-eliminar-incompleta" class="btn-admin-danger" style="width: 100%; margin-bottom: 10px;">Cancelar e Repor Stock</button>
-                            <p>Repõe as unidades reservadas no stock e elimina esta encomenda incompleta.</p>
-                        </div>
-                    <?php else: ?>
-                        <div class="form-group">
-                            <label for="select-estado">Alterar Estado da Encomenda</label>
-                            <div class="select-wrapper">
-                                <select id="select-estado" class="select-estilizado">
-                                    <?php foreach ($estados_permitidos_para_esta_encomenda as $estado):
-                                        $selected = ($estado === $encomenda['estado']) ? 'selected' : '';
-                                        $nome_display = $map_nomes[$estado] ?? ucfirst($estado);
-                                        echo "<option value='{$estado}' {$selected}>{$nome_display}</option>";
-                                    endforeach; ?>
-                                </select>
-                            </div>
-                        </div>
-                        <div id="campos-contexto-tracking" class="form-group" style="display:none;">
-                            <label for="codigo_tracking">Código de Tracking (Opcional):</label>
-                            <input type="text" id="codigo_tracking" class="variacao-input" placeholder="Ex: PT123456789PT" value="<?php echo htmlspecialchars($encomenda['codigo_tracking'] ?? ''); ?>">
-                        </div>
-                        <div class="form-actions" style="border-top: none; padding-top: 0;">
-                            <button id="btn-atualizar-estado" class="btn-admin-primary" style="width: 100%;">Guardar Alterações</button>
-                        </div>
-                        <?php if (in_array($encomenda['estado'], ['pendente', 'pago'])): ?>
-                        <hr style="margin: 10px 0 25px 0;">
-                        <div class="zona-perigo">
-                            <?php if ($encomenda['estado'] === 'pendente'): ?>
-                                <button id="btn-cancelar-encomenda" class="btn-admin-danger" data-tipo="nao_paga" style="width: 100%; margin-bottom: 10px;">Cancelar Encomenda</button>
-                                <p>O pagamento ainda não foi confirmado.</p>
-                            <?php elseif ($encomenda['estado'] === 'pago'): ?>
-                                <button id="btn-cancelar-reembolsar" class="btn-admin-danger" style="width: 100%; margin-bottom: 10px;">Cancelar e Reembolsar</button>
-                                <p>Ação irreversível via Stripe.</p>
-                            <?php endif; ?>
-                        </div>
+            <div id="tab-acoes" class="tab-content ativo">
+                <?php if (in_array($encomenda['estado'], ['cancelada', 'concluida'])): ?>
+                    <p class="aviso-bloqueio">
+                        Esta encomenda foi <?php echo $encomenda['estado'] === 'cancelada' ? 'cancelada' : 'concluída'; ?>. Não são permitidas mais ações.
+                    </p>
+                <?php elseif ($is_encomenda_incompleta): ?>
+                    <div class="incomplete-order-notice">
+                        <strong>Encomenda a aguardar pagamento</strong>
+                        <p>Esta encomenda foi criada no checkout e reservou stock temporariamente, mas o cliente ainda não concluiu o pagamento. Não altere o estado manualmente.</p>
+                    </div>
+                    <div class="zona-perigo">
+                        <?php echo ui_button('Cancelar e Repor Stock', ['id' => 'btn-eliminar-incompleta', 'class' => 'btn-admin-danger', 'style' => 'width: 100%; margin-bottom: 10px;']); ?>
+                        <p>Repõe as unidades reservadas no stock e elimina esta encomenda incompleta.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="form-group">
+                        <label for="select-estado">Alterar Estado da Encomenda</label>
+                        <?php
+                        $opcoes_estado_detalhe = [];
+                        foreach ($estados_permitidos_para_esta_encomenda as $estado) {
+                            $opcoes_estado_detalhe[$estado] = $map_nomes[$estado] ?? ucfirst($estado);
+                        }
+                        echo ui_select('', $opcoes_estado_detalhe, $encomenda['estado'], ['id' => 'select-estado']);
+                        ?>
+                    </div>
+                    <div id="campos-contexto-tracking" class="form-group" style="display:none;">
+                        <label for="codigo_tracking">Código de Tracking (Opcional):</label>
+                        <?php echo ui_input('', ['id' => 'codigo_tracking', 'class' => 'variacao-input', 'placeholder' => 'Ex: PT123456789PT', 'value' => $encomenda['codigo_tracking'] ?? '']); ?>
+                    </div>
+                    <div class="form-actions" style="border-top: none; padding-top: 0;">
+                        <?php echo ui_button('Guardar Alterações', ['id' => 'btn-atualizar-estado', 'class' => 'btn-admin-primary', 'style' => 'width: 100%;']); ?>
+                    </div>
+                    <?php if (in_array($encomenda['estado'], ['pendente', 'pago'])): ?>
+                    <hr style="margin: 10px 0 25px 0;">
+                    <div class="zona-perigo">
+                        <?php if ($encomenda['estado'] === 'pendente'): ?>
+                            <?php echo ui_button('Cancelar Encomenda', ['id' => 'btn-cancelar-encomenda', 'class' => 'btn-admin-danger', 'style' => 'width: 100%; margin-bottom: 10px;', 'attrs' => ['data-tipo' => 'nao_paga']]); ?>
+                            <p>O pagamento ainda não foi confirmado.</p>
+                        <?php elseif ($encomenda['estado'] === 'pago'): ?>
+                            <?php echo ui_button('Cancelar e Reembolsar', ['id' => 'btn-cancelar-reembolsar', 'class' => 'btn-admin-danger', 'style' => 'width: 100%; margin-bottom: 10px;']); ?>
+                            <p>Ação irreversível via Stripe.</p>
                         <?php endif; ?>
+                    </div>
                     <?php endif; ?>
-                </div>
-
-                <?php if (!$is_encomenda_incompleta): ?>
-                <div id="tab-comunicar" class="tab-content">
-                    <div class="form-group">
-                        <label for="email-assunto">Assunto do Email:</label>
-                        <input type="text" id="email-assunto" placeholder="Assunto da sua mensagem">
-                    </div>
-                    <div class="form-group">
-                        <label for="email-mensagem">Mensagem para o Cliente:</label>
-                        <textarea id="email-mensagem" class="auto-resize-textarea" rows="8" placeholder="Escreva aqui a sua mensagem..."></textarea>
-                    </div>
-                    <button id="btn-enviar-email" class="btn-admin-primary" style="width: 100%;">Enviar Email</button>
-                </div>
-
-                <div id="tab-notas" class="tab-content">
-                    <div class="form-group">
-                        <label for="notas-internas">Notas (apenas visível para si)</label>
-                        <textarea id="notas-internas" class="auto-resize-textarea" rows="8"><?php echo htmlspecialchars($encomenda['notas_internas'] ?? ''); ?></textarea>
-                    </div>
-                    <button id="btn-guardar-notas" class="btn-admin-secondary" style="width: 100%;">Guardar Notas</button>
-                </div>
                 <?php endif; ?>
             </div>
+
+            <?php if (!$is_encomenda_incompleta): ?>
+            <div id="tab-comunicar" class="tab-content">
+                <div class="form-group">
+                    <label for="email-assunto">Assunto do Email:</label>
+                    <?php echo ui_input('', ['id' => 'email-assunto', 'placeholder' => 'Assunto da sua mensagem']); ?>
+                </div>
+                <div class="form-group">
+                    <label for="email-mensagem">Mensagem para o Cliente:</label>
+                    <?php echo ui_textarea('', '', ['id' => 'email-mensagem', 'class' => 'auto-resize-textarea', 'rows' => 8, 'placeholder' => 'Escreva aqui a sua mensagem...']); ?>
+                </div>
+                <?php echo ui_button('Enviar Email', ['id' => 'btn-enviar-email', 'class' => 'btn-admin-primary', 'style' => 'width: 100%;']); ?>
+            </div>
+
+            <div id="tab-notas" class="tab-content">
+                <div class="form-group">
+                    <label for="notas-internas">Notas (apenas visível para si)</label>
+                    <?php echo ui_textarea('', (string)($encomenda['notas_internas'] ?? ''), ['id' => 'notas-internas', 'class' => 'auto-resize-textarea', 'rows' => 8]); ?>
+                </div>
+                <?php echo ui_button('Guardar Notas', ['id' => 'btn-guardar-notas', 'class' => 'btn-admin-secondary', 'style' => 'width: 100%;']); ?>
+            </div>
+            <?php endif; ?>
+            <?php echo ui_card(ob_get_clean(), ['variant' => 'form', 'body_style' => 'padding: 0;']); ?>
         </div>
     </div>
 </main>
@@ -490,17 +479,19 @@ include '../templates/header.php';
 
         <div class="form-group">
             <label for="modal-assunto">Assunto do Email:</label>
-            <input type="text" id="modal-assunto" style="width: 100%;">
+            <?php echo ui_input('', ['id' => 'modal-assunto', 'style' => 'width: 100%;']); ?>
         </div>
 
         <div class="form-group">
             <label for="modal-mensagem">Mensagem a enviar (pode editar):</label>
-            <textarea id="modal-mensagem" class="auto-resize-textarea" rows="6"></textarea>
+            <?php echo ui_textarea('', '', ['id' => 'modal-mensagem', 'class' => 'auto-resize-textarea', 'rows' => 6]); ?>
         </div>
 
         <div class="modal-confirmacao-acoes">
-            <button id="modal-btn-cancelar" class="button voltar-btn">Cancelar</button>
-            <button id="modal-btn-confirmar" class="button add-btn">Confirmar e Enviar Email</button>
+            <?php
+            echo ui_button('Cancelar', ['id' => 'modal-btn-cancelar', 'class' => 'button voltar-btn']);
+            echo ui_button('Confirmar e Enviar Email', ['id' => 'modal-btn-confirmar', 'class' => 'button add-btn']);
+            ?>
         </div>
     </div>
 </div>

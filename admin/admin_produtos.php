@@ -66,34 +66,29 @@ $ordem = $ordenar_opcoes[$ordenar_key];
     <!-- ── Toolbar ── -->
     <div class="prod-toolbar">
         <div class="prod-toolbar-left">
-            <a href="adicionar.php?return_to=admin_produtos" class="button btn-with-plus btn-with-plus-text">Adicionar Produto</a>
+            <?php echo ui_button('Adicionar Produto', ['href' => 'adicionar.php?return_to=admin_produtos', 'class' => 'button btn-with-plus btn-with-plus-text']); ?>
         </div>
         <div class="prod-toolbar-right">
             <form method="GET" id="form-ordenar" style="display:flex; align-items:center; gap:10px;">
-                <label class="toggle-visiveis" title="Mostrar apenas produtos visíveis">
-                    <input type="checkbox" name="visiveis" value="1"
-                           <?= $so_visiveis ? 'checked' : '' ?>
-                           onchange="this.form.submit()">
-                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                    <span>Só visíveis</span>
-                </label>
-                <div class="select-wrapper sort-select-wrapper">
-                    <select name="ordenar" class="sort-select" onchange="this.form.submit()" title="Ordenar por">
-                    <option value="id_desc"       <?= $ordenar_key === 'id_desc'       ? 'selected' : '' ?>>Mais recente</option>
-                    <option value="nome_asc"      <?= $ordenar_key === 'nome_asc'      ? 'selected' : '' ?>>Nome (A → Z)</option>
-                    <option value="nome_desc"     <?= $ordenar_key === 'nome_desc'     ? 'selected' : '' ?>>Nome (Z → A)</option>
-                    <option value="preco_asc"     <?= $ordenar_key === 'preco_asc'     ? 'selected' : '' ?>>Preço (↑)</option>
-                    <option value="preco_desc"    <?= $ordenar_key === 'preco_desc'    ? 'selected' : '' ?>>Preço (↓)</option>
-                    <option value="stock_desc"    <?= $ordenar_key === 'stock_desc'    ? 'selected' : '' ?>>Stock (↓)</option>
-                    <option value="stock_asc"     <?= $ordenar_key === 'stock_asc'     ? 'selected' : '' ?>>Stock (↑)</option>
-                    <option value="categoria_asc" <?= $ordenar_key === 'categoria_asc' ? 'selected' : '' ?>>Categoria (A → Z)</option>
-                    </select>
-                </div>
+                <?php
+                echo ui_switch('visiveis', 'Só visíveis', (bool)$so_visiveis, [
+                    'variant'  => 'compact',
+                    'value'    => '1',
+                    'title'    => 'Mostrar apenas produtos visíveis',
+                    'onchange' => 'this.form.submit()',
+                ]);
+                echo ui_select('ordenar', [
+                    'id_desc'       => 'Mais recente',
+                    'nome_asc'      => 'Nome (A → Z)',
+                    'nome_desc'     => 'Nome (Z → A)',
+                    'preco_asc'     => 'Preço (↑)',
+                    'preco_desc'    => 'Preço (↓)',
+                    'stock_desc'    => 'Stock (↓)',
+                    'stock_asc'     => 'Stock (↑)',
+                    'categoria_asc' => 'Categoria (A → Z)',
+                ], $ordenar_key, ['variant' => 'toolbar', 'onchange' => 'this.form.submit()', 'title' => 'Ordenar por']); ?>
             </form>
-            <button class="button btn-sel-mode" id="btn-sel-mode" type="button">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="5" width="4" height="4" rx="1"/><rect x="3" y="13" width="4" height="4" rx="1"/><line x1="11" y1="7" x2="21" y2="7"/><line x1="11" y1="15" x2="21" y2="15"/></svg>
-                Selecionar
-            </button>
+            <?php echo ui_select_mode_button(); ?>
         </div>
     </div>
 
@@ -216,26 +211,26 @@ renderContextMenu([
     <div class="qe-body">
         <div class="qe-f">
             <label>Nome do Produto</label>
-            <input type="text" id="qe-nome" name="nome" class="qe-in" required>
+            <?php echo ui_input('nome', ['id' => 'qe-nome', 'class' => 'qe-in', 'required' => true]); ?>
         </div>
         <div class="qe-row">
             <div class="qe-f">
                 <label>Referência</label>
-                <input type="text" id="qe-ref" name="referencia" class="qe-in" required>
+                <?php echo ui_input('referencia', ['id' => 'qe-ref', 'class' => 'qe-in', 'required' => true]); ?>
             </div>
             <div class="qe-f">
                 <label>Stock Total</label>
-                <input type="number" id="qe-stock" name="stock" class="qe-in" required min="0">
+                <?php echo ui_input('stock', ['type' => 'number', 'id' => 'qe-stock', 'class' => 'qe-in', 'required' => true, 'min' => '0']); ?>
             </div>
         </div>
         <div class="qe-row">
             <div class="qe-f">
                 <label>Preço (€)</label>
-                <input type="number" id="qe-preco" name="preco" class="qe-in" required step="0.01" min="0">
+                <?php echo ui_input('preco', ['type' => 'number', 'id' => 'qe-preco', 'class' => 'qe-in', 'required' => true, 'step' => '0.01', 'min' => '0']); ?>
             </div>
             <div class="qe-f">
                 <label>Promoção (€)</label>
-                <input type="number" id="qe-promo" name="preco_promocional" class="qe-in" step="0.01" min="0" placeholder="Opcional">
+                <?php echo ui_input('preco_promocional', ['type' => 'number', 'id' => 'qe-promo', 'class' => 'qe-in', 'step' => '0.01', 'min' => '0', 'placeholder' => 'Opcional']); ?>
             </div>
         </div>
     </div>

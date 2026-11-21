@@ -174,10 +174,12 @@ include 'templates/header.php';
 
             <div class="sc-btns">
                 <?php if ($encomenda_id && $token): ?>
-                    <a href="estado_encomenda.php?id=<?php echo $encomenda_id; ?>&token=<?php echo urlencode($token); ?>"
-                       class="sc-btn-primary">Acompanhar Encomenda</a>
+                    <?php echo ui_button('Acompanhar Encomenda', [
+                        'href'  => 'estado_encomenda.php?id=' . $encomenda_id . '&token=' . urlencode($token),
+                        'class' => 'sc-btn-primary',
+                    ]); ?>
                 <?php endif; ?>
-                <a href="produtos.php" class="sc-btn-secondary">Continuar a comprar</a>
+                <?php echo ui_button('Continuar a comprar', ['href' => 'produtos.php', 'class' => 'sc-btn-secondary']); ?>
             </div>
 
         <?php elseif ($estado === 'aguardar'): ?>
@@ -203,10 +205,12 @@ include 'templates/header.php';
 
             <div class="sc-btns">
                 <?php if ($encomenda_id && $token): ?>
-                    <a href="estado_encomenda.php?id=<?php echo $encomenda_id; ?>&token=<?php echo urlencode($token); ?>"
-                       class="sc-btn-primary">Ver Estado da Encomenda</a>
+                    <?php echo ui_button('Ver Estado da Encomenda', [
+                        'href'  => 'estado_encomenda.php?id=' . $encomenda_id . '&token=' . urlencode($token),
+                        'class' => 'sc-btn-primary',
+                    ]); ?>
                 <?php endif; ?>
-                <a href="produtos.php" class="sc-btn-secondary">Continuar a comprar</a>
+                <?php echo ui_button('Continuar a comprar', ['href' => 'produtos.php', 'class' => 'sc-btn-secondary']); ?>
             </div>
 
         <?php else: /* falhou */ ?>
@@ -232,7 +236,7 @@ include 'templates/header.php';
             <hr class="sc-divider">
 
             <div class="sc-btns">
-                <a href="produtos.php" class="sc-btn-primary">Continuar a comprar</a>
+                <?php echo ui_button('Continuar a comprar', ['href' => 'produtos.php', 'class' => 'sc-btn-primary']); ?>
             </div>
 
         <?php endif; ?>

@@ -64,10 +64,7 @@ include '../templates/header.php';
 
     <div class="prod-toolbar">
         <div class="prod-toolbar-right">
-            <button class="button btn-sel-mode" id="btn-sel-mode" type="button">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="5" width="4" height="4" rx="1"/><rect x="3" y="13" width="4" height="4" rx="1"/><line x1="11" y1="7" x2="21" y2="7"/><line x1="11" y1="15" x2="21" y2="15"/></svg>
-                Selecionar
-            </button>
+            <?php echo ui_select_mode_button(); ?>
         </div>
     </div>
 

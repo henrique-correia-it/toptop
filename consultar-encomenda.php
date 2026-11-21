@@ -56,14 +56,14 @@ include 'templates/header.php';
             <?php echo csrf_input(); ?>
             <div class="form-group">
                 <label for="encomenda_id">Número da Encomenda:</label>
-                <input type="number" id="encomenda_id" name="encomenda_id" min="1" inputmode="numeric" placeholder="Ex: 123" required>
+                <?php echo ui_input('encomenda_id', ['type' => 'number', 'id' => 'encomenda_id', 'min' => '1', 'inputmode' => 'numeric', 'placeholder' => 'Ex: 123', 'required' => true]); ?>
             </div>
             <div class="form-group">
                 <label for="cliente_email">Email da Compra:</label>
-                <input type="email" id="cliente_email" name="cliente_email" required>
+                <?php echo ui_input('cliente_email', ['type' => 'email', 'id' => 'cliente_email', 'required' => true]); ?>
             </div>
             <div class="form-actions">
-                <button type="submit" class="button add-btn">Consultar</button>
+                <?php echo ui_button('Consultar', ['type' => 'submit', 'class' => 'button add-btn']); ?>
             </div>
         </form>
     </div>

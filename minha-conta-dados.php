@@ -94,21 +94,21 @@ include __DIR__ . '/templates/header.php';
                         <input type="hidden" name="acao" value="dados">
                         <label for="d-nome">
                             <span>Nome completo</span>
-                            <input type="text" id="d-nome" name="nome" required value="<?php echo htmlspecialchars($cliente['nome'], ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php echo ui_input('nome', ['id' => 'd-nome', 'required' => true, 'value' => $cliente['nome']]); ?>
                         </label>
                         <label for="d-email">
                             <span>Email</span>
-                            <input type="email" id="d-email" value="<?php echo htmlspecialchars($cliente['email'], ENT_QUOTES, 'UTF-8'); ?>" disabled>
+                            <?php echo ui_input('', ['type' => 'email', 'id' => 'd-email', 'value' => $cliente['email'], 'disabled' => true]); ?>
                         </label>
                         <label for="d-telefone">
                             <span>Telefone</span>
-                            <input type="tel" id="d-telefone" name="telefone" value="<?php echo htmlspecialchars($cliente['telefone'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php echo ui_input('telefone', ['type' => 'tel', 'id' => 'd-telefone', 'value' => $cliente['telefone'] ?? '']); ?>
                         </label>
                         <label for="d-nif">
                             <span>NIF</span>
-                            <input type="text" id="d-nif" name="nif" value="<?php echo htmlspecialchars($cliente['nif'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php echo ui_input('nif', ['id' => 'd-nif', 'value' => $cliente['nif'] ?? '']); ?>
                         </label>
-                        <button type="submit" class="button">Guardar dados</button>
+                        <?php echo ui_button('Guardar dados', ['type' => 'submit', 'class' => 'button']); ?>
                     </form>
                 </div>
             </div>
@@ -122,25 +122,25 @@ include __DIR__ . '/templates/header.php';
                         <label for="d-pw-atual" style="grid-column:1/-1;">
                             <span>Palavra-passe atual</span>
                             <div class="password-wrapper">
-                                <input type="password" id="d-pw-atual" name="password_atual" required autocomplete="current-password">
+                                <?php echo ui_input('password_atual', ['type' => 'password', 'id' => 'd-pw-atual', 'required' => true, 'autocomplete' => 'current-password']); ?>
                                 <span class="toggle-senha" data-target="d-pw-atual"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></span>
                             </div>
                         </label>
                         <label for="d-pw-nova">
                             <span>Nova palavra-passe</span>
                             <div class="password-wrapper">
-                                <input type="password" id="d-pw-nova" name="password_nova" required autocomplete="new-password">
+                                <?php echo ui_input('password_nova', ['type' => 'password', 'id' => 'd-pw-nova', 'required' => true, 'autocomplete' => 'new-password']); ?>
                                 <span class="toggle-senha" data-target="d-pw-nova"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></span>
                             </div>
                         </label>
                         <label for="d-pw-confirm">
                             <span>Confirmar nova</span>
                             <div class="password-wrapper">
-                                <input type="password" id="d-pw-confirm" name="password_confirm" required autocomplete="new-password">
+                                <?php echo ui_input('password_confirm', ['type' => 'password', 'id' => 'd-pw-confirm', 'required' => true, 'autocomplete' => 'new-password']); ?>
                                 <span class="toggle-senha" data-target="d-pw-confirm"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></span>
                             </div>
                         </label>
-                        <button type="submit" class="button">Alterar palavra-passe</button>
+                        <?php echo ui_button('Alterar palavra-passe', ['type' => 'submit', 'class' => 'button']); ?>
                     </form>
                 </div>
             </div>
@@ -149,7 +149,7 @@ include __DIR__ . '/templates/header.php';
                 <div class="cliente-panel-head"><h2>Zona de perigo</h2></div>
                 <div class="cliente-form-wrap">
                     <p class="danger-zone-text">Ao apagares a conta, todos os teus dados pessoais e moradas são removidos permanentemente. As tuas encomendas ficam guardadas para que possas continuar a acompanhá-las.</p>
-                    <button type="button" id="btn-abrir-apagar-conta" class="button delete-btn">Apagar conta</button>
+                    <?php echo ui_button('Apagar conta', ['id' => 'btn-abrir-apagar-conta', 'class' => 'button delete-btn']); ?>
                 </div>
             </div>
         </section>
@@ -167,13 +167,15 @@ window.CSRF_TOKEN = "<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QU
         <div class="cliente-form-grid" style="margin-top:16px;">
             <label for="apagar-conta-password" style="grid-column:1/-1;">
                 <span>Palavra-passe atual</span>
-                <input type="password" id="apagar-conta-password" placeholder="Confirma a tua palavra-passe" autocomplete="current-password">
+                <?php echo ui_input('', ['type' => 'password', 'id' => 'apagar-conta-password', 'placeholder' => 'Confirma a tua palavra-passe', 'autocomplete' => 'current-password']); ?>
             </label>
         </div>
         <div id="apagar-conta-erro" class="dados-inline-erro"></div>
         <div class="modal-confirmacao-acoes">
-            <button type="button" class="button voltar-btn" id="apagar-conta-cancelar">Cancelar</button>
-            <button type="button" class="button delete-btn" id="apagar-conta-confirmar">Apagar conta</button>
+            <?php
+            echo ui_button('Cancelar', ['id' => 'apagar-conta-cancelar', 'class' => 'button voltar-btn']);
+            echo ui_button('Apagar conta', ['id' => 'apagar-conta-confirmar', 'class' => 'button delete-btn']);
+            ?>
         </div>
     </div>
 </div>

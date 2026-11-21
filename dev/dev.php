@@ -169,10 +169,7 @@ $recent_logs = getRecentAppLogs(3);
             <form id="backup-db-form" method="post" action="ajax_backup_db.php" style="display:inline; margin:0;">
                 <?php echo csrf_input(); ?>
                 <input type="hidden" name="current_password" value="">
-                <button type="button" class="action-btn-pill btn-backup" title="Gerar dump SQL completo" onclick="document.getElementById('backup-password-dialog').showModal()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 16px; height: 16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Cópia de Segurança (DB)
-                </button>
+                <?php echo ui_button('Cópia de Segurança (DB)', ['class' => 'action-btn-pill btn-backup', 'title' => 'Gerar dump SQL completo', 'onclick' => "document.getElementById('backup-password-dialog').showModal()", 'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 16px; height: 16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> ']); ?>
             </form>
             <style>#backup-password-dialog::backdrop { background:rgba(15,23,42,.48); backdrop-filter:blur(2px); }</style>
             <dialog id="backup-password-dialog" style="position:fixed; inset:50% auto auto 50%; transform:translate(-50%,-50%); margin:0; border:0; border-radius:16px; padding:0; box-shadow:0 20px 60px rgba(15,23,42,.25); max-width:420px; width:calc(100% - 32px);">
@@ -181,11 +178,10 @@ $recent_logs = getRecentAppLogs(3);
                         <h3 style="margin:0 0 8px;">Confirmar backup</h3>
                         <p style="margin:0; color:#64748b;">Introduza a sua palavra-passe para descarregar a base de dados.</p>
                     </div>
-                    <input id="backup-current-password" type="password" required autocomplete="current-password" placeholder="Palavra-passe atual" style="width:100%; box-sizing:border-box; padding:12px 14px; border:1px solid #cbd5e1; border-radius:10px;">
+                    <?php echo ui_input('', ['id' => 'backup-current-password', 'type' => 'password', 'required' => true, 'autocomplete' => 'current-password', 'placeholder' => 'Palavra-passe atual', 'style' => 'width:100%; box-sizing:border-box; padding:12px 14px; border:1px solid #cbd5e1; border-radius:10px;']); ?>
                     <p id="backup-error" role="alert" style="display:none; margin:0; padding:10px 12px; border-radius:10px; background:#fef2f2; color:#b91c1c;"></p>
                     <div style="display:flex; justify-content:flex-end; gap:10px;">
-                        <button type="button" class="action-btn-pill" onclick="document.getElementById('backup-password-dialog').close()">Cancelar</button>
-                        <button id="backup-confirm-button" type="button" class="action-btn-pill btn-backup" onclick="descarregarBackupDb()">Descarregar backup</button>
+                        <?php echo ui_button('Cancelar', ['class' => 'action-btn-pill', 'onclick' => "document.getElementById('backup-password-dialog').close()"]); echo ui_button('Descarregar backup', ['id' => 'backup-confirm-button', 'class' => 'action-btn-pill btn-backup', 'onclick' => 'descarregarBackupDb()']); ?>
                     </div>
                 </form>
             </dialog>
@@ -243,11 +239,7 @@ $recent_logs = getRecentAppLogs(3);
             }
             </script>
             <div class="simulate-wrap" style="position:relative;">
-                <button type="button" id="btn-criar-encomenda-fake" class="action-btn-pill btn-simulate" title="Gerar encomenda fictícia" style="border: 1px solid #e2e8f0;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 16px; height: 16px;"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                    Simular Encomenda
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px; margin-left: 2px; transition: transform 0.2s;" id="simulate-chevron"><polyline points="6 9 12 15 18 9"/></svg>
-                </button>
+                <?php echo ui_button('Simular Encomenda', ['id' => 'btn-criar-encomenda-fake', 'class' => 'action-btn-pill btn-simulate', 'title' => 'Gerar encomenda fictícia', 'style' => 'border: 1px solid #e2e8f0;', 'html' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 16px; height: 16px;"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> Simular Encomenda <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px; margin-left: 2px; transition: transform 0.2s;" id="simulate-chevron"><polyline points="6 9 12 15 18 9"/></svg>']); ?>
                 <div id="simulate-dropdown" class="simulate-dropdown" style="display:none;">
                     <div class="simulate-dropdown-item" data-estado="pago">
                         <span class="sim-dot" style="background:#10b981;"></span>

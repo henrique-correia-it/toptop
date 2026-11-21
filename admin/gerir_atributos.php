@@ -156,15 +156,11 @@ while ($valor = $todos_valores_result->fetch_assoc()) {
             <h3 style="margin:0; font-size: 1.1rem;">Criar Novo Grupo</h3>
             <form id="form-add-group">
                 <div class="input-group">
-                    <input type="text" name="nome_grupo" placeholder="Ex: Material, Estação, Estilo..." required autocomplete="off">
+                    <?php echo ui_input('nome_grupo', ['placeholder' => 'Ex: Material, Estação, Estilo...', 'required' => true, 'autocomplete' => 'off']); ?>
                 </div>
-                <label class="toggle-visiveis">
-                    <input type="checkbox" name="e_filtravel" value="1" checked>
-                    <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                    <span>Mostrar como filtro</span>
-                </label>
+                <?php echo ui_switch('e_filtravel', 'Mostrar como filtro', true, ['variant' => 'compact', 'value' => '1']); ?>
                 <div class="btn-add">
-                    <button type="submit" class="add-btn btn-with-plus btn-with-plus-text">Adicionar Grupo</button>
+                    <?php echo ui_button('Adicionar Grupo', ['type' => 'submit', 'class' => 'add-btn btn-with-plus btn-with-plus-text']); ?>
                 </div>
             </form>
         </div>
@@ -180,19 +176,23 @@ while ($valor = $todos_valores_result->fetch_assoc()) {
                             <span class="attribute-title nome-display"><?php echo htmlspecialchars($grupo['nome']); ?></span>
                             
                             <div class="filter-toggle-container" title="Ativar/Desativar como filtro na loja">
-                                <label class="toggle-visiveis" style="transform: scale(0.85);">
-                                    <input type="checkbox" class="toggle-filtravel-checkbox" data-id="<?php echo $grupo_id; ?>" <?php echo $grupo['e_filtravel'] ? 'checked' : ''; ?>>
-                                    <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                                </label>
-                                <span class="badge-status <?php echo $grupo['e_filtravel'] ? 'visivel' : 'oculto'; ?>">
-                                    <?php echo $grupo['e_filtravel'] ? 'Filtro' : 'Interno'; ?>
-                                </span>
+                                <?php
+                                echo ui_switch('', '', (bool)$grupo['e_filtravel'], [
+                                    'variant'     => 'compact',
+                                    'input_class' => 'toggle-filtravel-checkbox',
+                                    'style'       => 'transform: scale(0.85);',
+                                    'attrs'       => ['data-id' => $grupo_id],
+                                ]);
+                                echo ui_badge($grupo['e_filtravel'] ? 'Filtro' : 'Interno', $grupo['e_filtravel'] ? 'success' : 'neutral', ['class' => 'badge-status ' . ($grupo['e_filtravel'] ? 'visivel' : 'oculto')]);
+                                ?>
                             </div>
                         </div>
                         <div class="attribute-actions">
-                            <button type="button" class="button voltar-btn btn-sort-alpha" style="font-size: 0.75rem; padding: 5px 12px;" title="Ordenar valores de A a Z">Ordenar A-Z</button>
-                            <button type="button" class="btn-edit-single btn-editar" title="Editar Nome"></button>
-                            <button type="button" class="btn-del-single btn-apagar" title="Eliminar Grupo"></button>
+                            <?php
+                            echo ui_button('Ordenar A-Z', ['class' => 'button voltar-btn btn-sort-alpha', 'style' => 'font-size: 0.75rem; padding: 5px 12px;', 'title' => 'Ordenar valores de A a Z']);
+                            echo ui_icon_button('edit', ['class' => 'btn-editar', 'title' => 'Editar Nome']);
+                            echo ui_icon_button('delete', ['class' => 'btn-apagar', 'title' => 'Eliminar Grupo']);
+                            ?>
                         </div>
                     </div>
 
@@ -205,8 +205,10 @@ while ($valor = $todos_valores_result->fetch_assoc()) {
                                         <span class="nome-display"><?php echo htmlspecialchars($v['valor']); ?></span>
                                     </div>
                                     <div class="value-actions">
-                                        <button type="button" class="btn-edit-single btn-editar" title="Editar"></button>
-                                        <button type="button" class="btn-del-single btn-apagar" title="Eliminar Valor"></button>
+                                        <?php
+                                        echo ui_icon_button('edit', ['class' => 'btn-editar', 'title' => 'Editar']);
+                                        echo ui_icon_button('delete', ['class' => 'btn-apagar', 'title' => 'Eliminar Valor']);
+                                        ?>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -220,8 +222,10 @@ while ($valor = $todos_valores_result->fetch_assoc()) {
                     <div class="attribute-card-footer">
                         <form class="add-value-form">
                             <input type="hidden" name="grupo_id" value="<?php echo $grupo_id; ?>">
-                            <input type="text" name="valor" placeholder="Novo valor (ex: Algodão)..." required autocomplete="off" maxlength="50">
-                            <button type="submit" class="add-btn" style="padding: 8px 15px; font-size: 0.85rem;">Adicionar</button>
+                            <?php
+                            echo ui_input('valor', ['placeholder' => 'Novo valor (ex: Algodão)...', 'required' => true, 'autocomplete' => 'off', 'maxlength' => '50']);
+                            echo ui_button('Adicionar', ['type' => 'submit', 'class' => 'add-btn', 'style' => 'padding: 8px 15px; font-size: 0.85rem;']);
+                            ?>
                         </form>
                     </div>
 

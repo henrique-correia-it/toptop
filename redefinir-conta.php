@@ -139,7 +139,7 @@ include __DIR__ . '/templates/header.php';
                 <div class="form-group">
                     <label for="password">Nova palavra-passe</label>
                     <div class="password-wrapper">
-                        <input type="password" id="password" name="password" required autocomplete="new-password">
+                        <?php echo ui_input('password', ['type' => 'password', 'id' => 'password', 'required' => true, 'autocomplete' => 'new-password']); ?>
                         <span class="toggle-senha" data-target="password">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </span>
@@ -148,13 +148,13 @@ include __DIR__ . '/templates/header.php';
                 <div class="form-group">
                     <label for="password_confirm">Confirmar palavra-passe</label>
                     <div class="password-wrapper">
-                        <input type="password" id="password_confirm" name="password_confirm" required autocomplete="new-password">
+                        <?php echo ui_input('password_confirm', ['type' => 'password', 'id' => 'password_confirm', 'required' => true, 'autocomplete' => 'new-password']); ?>
                         <span class="toggle-senha" data-target="password_confirm">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </span>
                     </div>
                 </div>
-                <input type="submit" value="Guardar palavra-passe">
+                <?php echo ui_button('Guardar palavra-passe', ['type' => 'submit', 'class' => 'button add-btn']); ?>
             </form>
             <?php endif; ?>
 

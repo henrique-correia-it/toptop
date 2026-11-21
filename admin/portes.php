@@ -46,23 +46,20 @@ $portes_por_pais = $portes_js ?? [];
                         <strong id="portes-gratis-estado"><?php echo $portes_gratis_ativo ? 'Ativo' : 'Desativado'; ?></strong>
                         <small>Aplicar esta oferta na loja</small>
                     </span>
-                    <span class="switch-premium">
-                        <input type="checkbox" id="portes-gratis-ativo" <?php echo $portes_gratis_ativo ? 'checked' : ''; ?>>
-                        <span class="slider" aria-hidden="true"></span>
-                    </span>
+                    <?php echo ui_switch('', '', (bool)$portes_gratis_ativo, ['id' => 'portes-gratis-ativo', 'tag' => 'span', 'value' => false]); ?>
                 </label>
                 <label class="free-shipping-value" for="portes-gratis-minimo">
                     <span>Valor mínimo</span>
                     <span class="money-input">
                         <span aria-hidden="true">€</span>
-                        <input
-                            type="number"
-                            id="portes-gratis-minimo"
-                            min="0.01"
-                            step="0.01"
-                            inputmode="decimal"
-                            value="<?php echo htmlspecialchars(number_format($portes_gratis_minimo, 2, '.', ''), ENT_QUOTES, 'UTF-8'); ?>"
-                        >
+                        <?php echo ui_input('', [
+                            'type'      => 'number',
+                            'id'        => 'portes-gratis-minimo',
+                            'min'       => '0.01',
+                            'step'      => '0.01',
+                            'inputmode' => 'decimal',
+                            'value'     => number_format($portes_gratis_minimo, 2, '.', ''),
+                        ]); ?>
                     </span>
                 </label>
             </div>
@@ -71,10 +68,11 @@ $portes_por_pais = $portes_js ?? [];
         <div id="configuracoes-shipping">
             <div class="toolbar-shipping">
                 <h3>Tabelas de Portes</h3>
-                <button type="button" id="btn-adicionar-pais" class="btn-primary-plus btn-with-plus">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    Adicionar País de Envio
-                </button>
+                <?php echo ui_button('Adicionar País de Envio', [
+                    'id'    => 'btn-adicionar-pais',
+                    'class' => 'btn-primary-plus btn-with-plus',
+                    'icon'  => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> ',
+                ]); ?>
             </div>
 
             <div id="paises-container" class="paises-grid">
@@ -85,23 +83,28 @@ $portes_por_pais = $portes_js ?? [];
 </main>
 
 <!-- Modal Adicionar País -->
-<div id="modal-add-pais" class="modal-overlay-shipping">
-    <div class="modal-content-shipping">
-        <div class="modal-header-shipping">
-            <h3>Selecionar País</h3>
-            <button type="button" class="btn-close-unified btn-close-modal" id="btn-close-modal" title="Fechar">&times;</button>
-        </div>
-        <div class="modal-body-shipping">
-            <div class="search-wrap">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" id="search-pais" placeholder="Pesquisar por nome ou código ISO..." autocomplete="off">
-            </div>
-            <div id="lista-paises" class="lista-paises-scroll">
-                <!-- Injetado via JS -->
-            </div>
-        </div>
-    </div>
-</div>
+<?php
+echo ui_modal(
+    'modal-add-pais',
+    'Selecionar País',
+    ui_search_input('', 'Pesquisar por nome ou código ISO...', [
+        'id'              => 'search-pais',
+        'type'            => 'text',
+        'class'           => 'search-wrap',
+        'raw_wrap_class'  => true,
+        'raw_input_class' => true,
+    ]) . '<div id="lista-paises" class="lista-paises-scroll"></div>',
+    [
+        'raw_class'    => true,
+        'class'        => 'modal-overlay-shipping',
+        'card_class'   => 'modal-content-shipping',
+        'header_class' => 'modal-header-shipping',
+        'body_class'   => 'modal-body-shipping',
+        'close_class'  => 'btn-close-modal',
+        'close_id'     => 'btn-close-modal',
+    ]
+);
+?>
 
 
 <script>

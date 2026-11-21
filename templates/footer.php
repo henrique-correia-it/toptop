@@ -98,7 +98,7 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
         <span id="popupTitulo"></span>
         <span id="popupTexto"></span>
     </div>
-    <button id="popupFechar" class="btn-close-unified popup-fechar" title="Fechar">&times;</button>
+    <?php echo ui_close_button(['id' => 'popupFechar', 'class' => 'popup-fechar']); ?>
 </div>
 
 <div id="modalConfirmacao" class="modal-confirmacao">
@@ -106,8 +106,10 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
         <h3 id="modalConfirmacaoTitulo">Tem a certeza?</h3>
         <p id="modalConfirmacaoTexto">Esta ação não pode ser revertida.</p>
         <div class="modal-confirmacao-acoes">
-            <button id="modalConfirmacaoBtnCancelar" class="button voltar-btn">Cancelar</button>
-            <button id="modalConfirmacaoBtnConfirmar" class="button delete-btn">Confirmar</button>
+            <?php
+            echo ui_button('Cancelar', ['id' => 'modalConfirmacaoBtnCancelar', 'class' => 'button voltar-btn']);
+            echo ui_button('Confirmar', ['id' => 'modalConfirmacaoBtnConfirmar', 'class' => 'button delete-btn']);
+            ?>
         </div>
     </div>
 </div>
@@ -115,7 +117,7 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
 <?php if (basename($_SERVER['PHP_SELF']) !== 'gerir_guias_tamanho.php'): ?>
     <div id="modalGuiaTamanhos" class="qe-modal">
         <div class="qe-card" style="max-width: 850px;">
-            <button type="button" class="btn-close-unified qe-close" title="Fechar">&times;</button>
+            <?php echo ui_close_button(['class' => 'qe-close']); ?>
             <h3 id="guia-titulo"></h3>
             <div id="guia-conteudo"></div>
         </div>
@@ -125,12 +127,8 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
 <?php if ($isAdminFooter): ?>
 <div id="modalEditorFooter" class="qe-modal footer-editor-modal">
     <div class="qe-card">
-        <button type="button" class="btn-close-unified qe-close" onclick="fecharEditorFooter()">&times;</button>
-        <div class="form-card-header">
-            <div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div>
-            <h3>Editar Elemento </h3>
-        </div>
-        <div class="form-card-body">
+        <?php echo ui_close_button(['class' => 'qe-close', 'onclick' => 'fecharEditorFooter()']); ?>
+        <?php ob_start(); ?>
             <div class="admin-warning-box" id="footer-sync-warning">
                 <svg class="admin-warning-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                 <strong>Sincronização Ativa:</strong> Esta alteração será refletida automaticamente noutras áreas do site.
@@ -140,37 +138,37 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
             <div id="footer-edit-normal-fields">
                 <div class="form-group">
                     <label id="footer-edit-label">Conteúdo</label>
-                    <textarea id="footer-edit-conteudo" rows="6" class="admin-textarea"></textarea>
+                    <?php echo ui_textarea('', '', ['id' => 'footer-edit-conteudo', 'rows' => 6, 'class' => 'admin-textarea']); ?>
                 </div>
             </div>
 
             <div id="footer-edit-address-fields">
                 <div class="form-group">
                     <label>Rua / Edifício</label>
-                    <input type="text" id="footer-edit-rua" class="admin-input-style">
+                    <?php echo ui_input('', ['id' => 'footer-edit-rua', 'class' => 'admin-input-style']); ?>
                 </div>
                 <div class="form-group">
                     <label>Código Postal</label>
-                    <input type="text" id="footer-edit-cp" class="admin-input-style">
+                    <?php echo ui_input('', ['id' => 'footer-edit-cp', 'class' => 'admin-input-style']); ?>
                 </div>
                 <div class="form-group">
                     <label>Localidade / País</label>
-                    <input type="text" id="footer-edit-localidade" class="admin-input-style">
+                    <?php echo ui_input('', ['id' => 'footer-edit-localidade', 'class' => 'admin-input-style']); ?>
                 </div>
             </div>
 
             <div id="footer-edit-social-fields">
                 <div class="form-group">
                     <label>Link WhatsApp</label>
-                    <input type="text" id="footer-edit-wa" class="admin-input-style">
+                    <?php echo ui_input('', ['id' => 'footer-edit-wa', 'class' => 'admin-input-style']); ?>
                 </div>
                 <div class="form-group">
                     <label>Link Instagram</label>
-                    <input type="text" id="footer-edit-ig" class="admin-input-style">
+                    <?php echo ui_input('', ['id' => 'footer-edit-ig', 'class' => 'admin-input-style']); ?>
                 </div>
                 <div class="form-group">
                     <label>Link Facebook</label>
-                    <input type="text" id="footer-edit-fb" class="admin-input-style">
+                    <?php echo ui_input('', ['id' => 'footer-edit-fb', 'class' => 'admin-input-style']); ?>
                 </div>
             </div>
 
@@ -181,15 +179,23 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
                 <div id="horario-editor-list" class="horario-editor-list"></div>
                 <div class="form-group horario-note-group">
                     <label>Nota opcional</label>
-                    <input type="text" id="footer-edit-horario-nota" class="admin-input-style" placeholder="Ex.: Horário sujeito a marcação em feriados">
+                    <?php echo ui_input('', ['id' => 'footer-edit-horario-nota', 'class' => 'admin-input-style', 'placeholder' => 'Ex.: Horário sujeito a marcação em feriados']); ?>
                 </div>
             </div>
 
             <div class="form-footer-actions">
-                <button type="button" class="button voltar-btn" onclick="fecharEditorFooter()">Cancelar</button>
-                <button type="button" class="button add-btn" onclick="guardarAlteracaoFooter()">Guardar Alterações</button>
+                <?php
+                echo ui_button('Cancelar', ['class' => 'button voltar-btn', 'onclick' => 'fecharEditorFooter()']);
+                echo ui_button('Guardar Alterações', ['class' => 'button add-btn', 'onclick' => 'guardarAlteracaoFooter()']);
+                ?>
             </div>
-        </div>
+        <?php
+        echo ui_card(ob_get_clean(), [
+            'variant'     => 'form',
+            'style'       => 'border:0; box-shadow:none; margin:0;',
+            'header_html' => '<div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div><h3>Editar Elemento </h3>',
+        ]);
+        ?>
     </div>
 </div>
 
@@ -197,18 +203,14 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
 
 <div id="modalEditorHeader" class="qe-modal footer-editor-modal">
     <div class="qe-card">
-        <button type="button" class="btn-close-unified qe-close" onclick="fecharEditorHeader()">&times;</button>
-        <div class="form-card-header">
-            <div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div>
-            <h3>Editar Elemento do Cabecalho</h3>
-        </div>
-        <div class="form-card-body">
+        <?php echo ui_close_button(['class' => 'qe-close', 'onclick' => 'fecharEditorHeader()']); ?>
+        <?php ob_start(); ?>
             <input type="hidden" id="header-edit-seccao">
 
             <div id="header-edit-text-fields">
                 <div class="form-group">
                     <label id="header-edit-label">Conteudo</label>
-                    <input type="text" id="header-edit-conteudo" class="admin-input-style">
+                    <?php echo ui_input('', ['id' => 'header-edit-conteudo', 'class' => 'admin-input-style']); ?>
                 </div>
             </div>
 
@@ -224,8 +226,10 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
                 
                 <!-- Ferramentas do Cropper -->
                 <div id="header-cropper-actions" style="display: none; margin-bottom: 15px; gap: 10px; justify-content: center;">
-                    <button type="button" class="button voltar-btn" style="padding: 6px 12px; font-size: 0.85rem;" onclick="window.headerCropper && window.headerCropper.rotate(-90)">↺ Rodar Esq.</button>
-                    <button type="button" class="button voltar-btn" style="padding: 6px 12px; font-size: 0.85rem;" onclick="window.headerCropper && window.headerCropper.rotate(90)">↻ Rodar Dir.</button>
+                    <?php
+                    echo ui_button('↺ Rodar Esq.', ['class' => 'button voltar-btn', 'style' => 'padding: 6px 12px; font-size: 0.85rem;', 'onclick' => 'window.headerCropper && window.headerCropper.rotate(-90)']);
+                    echo ui_button('↻ Rodar Dir.', ['class' => 'button voltar-btn', 'style' => 'padding: 6px 12px; font-size: 0.85rem;', 'onclick' => 'window.headerCropper && window.headerCropper.rotate(90)']);
+                    ?>
                 </div>
 
                 <div class="form-group">
@@ -239,10 +243,18 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
             </div>
 
             <div class="form-footer-actions">
-                <button type="button" class="button voltar-btn" onclick="fecharEditorHeader()">Cancelar</button>
-                <button type="button" class="button add-btn" onclick="guardarAlteracaoHeader()">Guardar Alteracoes</button>
+                <?php
+                echo ui_button('Cancelar', ['class' => 'button voltar-btn', 'onclick' => 'fecharEditorHeader()']);
+                echo ui_button('Guardar Alteracoes', ['class' => 'button add-btn', 'onclick' => 'guardarAlteracaoHeader()']);
+                ?>
             </div>
-        </div>
+        <?php
+        echo ui_card(ob_get_clean(), [
+            'variant'     => 'form',
+            'style'       => 'border:0; box-shadow:none; margin:0;',
+            'header_html' => '<div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div><h3>Editar Elemento do Cabecalho</h3>',
+        ]);
+        ?>
     </div>
 </div>
 
@@ -902,7 +914,7 @@ document.getElementById('header-edit-logo')?.addEventListener('change', function
 <div id="side-cart" class="side-cart">
     <div class="side-cart-header">
         <h4>O Meu Carrinho</h4>
-        <button id="btn-fechar-side-cart" class="btn-fechar-side-cart" type="button" aria-label="Fechar carrinho">&times;</button>
+        <?php echo ui_close_button(['id' => 'btn-fechar-side-cart', 'class' => 'btn-fechar-side-cart', 'raw_class' => true, 'title' => 'Fechar carrinho', 'attrs' => ['aria-label' => 'Fechar carrinho']]); ?>
     </div>
     <div id="side-cart-items" class="side-cart-items"></div>
     <div class="side-cart-footer">
@@ -910,8 +922,10 @@ document.getElementById('header-edit-logo')?.addEventListener('change', function
             <span>Subtotal</span>
             <span>€0,00</span>
         </div>
-        <a href="/carrinho.php" class="button voltar-btn">Ver Carrinho</a>
-        <a href="/checkout" id="side-cart-finalizar" class="button add-btn">Finalizar Encomenda</a>
+        <?php
+        echo ui_button('Ver Carrinho', ['href' => '/carrinho.php', 'class' => 'button voltar-btn']);
+        echo ui_button('Finalizar Encomenda', ['href' => '/checkout', 'id' => 'side-cart-finalizar', 'class' => 'button add-btn']);
+        ?>
     </div>
 </div>
 

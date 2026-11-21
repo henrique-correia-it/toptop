@@ -172,92 +172,89 @@ include '../templates/header.php';
 
             <!-- Coluna Esquerda: Info Básica -->
             <div class="profile-column">
-                <div class="form-card">
-                    <div class="form-card-header">
-                        <div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
-                        <h3>Informação da Conta</h3>
-                    </div>
-                    <div class="form-card-body">
-                        <div class="form-group">
-                            <label for="username">Nome de Utilizador</label>
-                            <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($admin['username']); ?>" required placeholder="Ex: kiko_dev">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="email">Endereço de Email</label>
-                            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($admin['email']); ?>" required placeholder="exemplo@email.com">
-                        </div>
-                        
-                        <?php if ($is_superadmin): ?>
-                        <div class="form-group">
-                            <label for="role">Função no Sistema</label>
-                            <?php
-                                $stmt_count_display = $conn->prepare("SELECT COUNT(id) FROM administradores WHERE role = ?");
-                                $stmt_count_display->bind_param("s", $admin['role']);
-                                $stmt_count_display->execute();
-                                $role_count_display = $stmt_count_display->get_result()->fetch_row()[0];
-                                $stmt_count_display->close();
-                                $is_last_critical_role = in_array($admin['role'], ['superadmin', 'desenvolvedor']) && $role_count_display <= 1;
-                            ?>
-                            <?php if ($is_last_critical_role): ?>
-                                <div class="select-wrapper">
-                                    <select name="role" id="role" disabled class="select-estilizado disabled">
-                                        <option value="<?php echo $admin['role']; ?>" selected><?php echo ($admin['role'] === 'superadmin') ? 'Super-Admin' : 'Desenvolvedor'; ?></option>
-                                    </select>
-                                </div>
-                                <input type="hidden" name="role" value="<?php echo $admin['role']; ?>"> 
-                                <p class="helper-text warning">Esta função não pode ser alterada por ser a única conta deste tipo.</p>
-                            <?php else: ?>
-                                <div class="select-wrapper">
-                                    <select name="role" id="role" class="select-estilizado">
-                                        <option value="admin" <?php echo ($admin['role'] == 'admin') ? 'selected' : ''; ?>>Administrador Normal</option>
-                                        <option value="superadmin" <?php echo ($admin['role'] == 'superadmin') ? 'selected' : ''; ?>>Super-Administrador</option>
-                                        <?php if ($is_dev): ?>
-                                            <option value="desenvolvedor" <?php echo ($admin['role'] == 'desenvolvedor') ? 'selected' : ''; ?>>Desenvolvedor</option>
-                                        <?php endif; ?>
-                                    </select>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                        <?php endif; ?>
-                    </div>
+                <?php ob_start(); ?>
+                <div class="form-group">
+                    <label for="username">Nome de Utilizador</label>
+                    <?php echo ui_input('username', ['id' => 'username', 'value' => $admin['username'], 'required' => true, 'placeholder' => 'Ex: kiko_dev']); ?>
                 </div>
+                
+                <div class="form-group">
+                    <label for="email">Endereço de Email</label>
+                    <?php echo ui_input('email', ['type' => 'email', 'id' => 'email', 'value' => $admin['email'], 'required' => true, 'placeholder' => 'exemplo@email.com']); ?>
+                </div>
+                
+                <?php if ($is_superadmin): ?>
+                <div class="form-group">
+                    <label for="role">Função no Sistema</label>
+                    <?php
+                        $stmt_count_display = $conn->prepare("SELECT COUNT(id) FROM administradores WHERE role = ?");
+                        $stmt_count_display->bind_param("s", $admin['role']);
+                        $stmt_count_display->execute();
+                        $role_count_display = $stmt_count_display->get_result()->fetch_row()[0];
+                        $stmt_count_display->close();
+                        $is_last_critical_role = in_array($admin['role'], ['superadmin', 'desenvolvedor']) && $role_count_display <= 1;
+                    ?>
+                    <?php if ($is_last_critical_role): ?>
+                        <?php echo ui_select('role', [$admin['role'] => ($admin['role'] === 'superadmin') ? 'Super-Admin' : 'Desenvolvedor'], $admin['role'], ['id' => 'role', 'disabled' => true]); ?>
+                        <input type="hidden" name="role" value="<?php echo ui_e($admin['role']); ?>"> 
+                        <p class="helper-text warning">Esta função não pode ser alterada por ser a única conta deste tipo.</p>
+                    <?php else: ?>
+                        <?php
+                        $roles_edit_opcoes = [
+                            'admin'      => 'Administrador Normal',
+                            'superadmin' => 'Super-Administrador',
+                        ];
+                        if ($is_dev) {
+                            $roles_edit_opcoes['desenvolvedor'] = 'Desenvolvedor';
+                        }
+                        echo ui_select('role', $roles_edit_opcoes, $admin['role'], ['id' => 'role']);
+                        ?>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+                <?php
+                echo ui_card(ob_get_clean(), [
+                    'variant'     => 'form',
+                    'header_html' => '<div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div><h3>Informação da Conta</h3>',
+                ]);
+                ?>
             </div>
 
             <!-- Coluna Direita: Segurança -->
             <div class="profile-column">
-                <div class="form-card">
-                    <div class="form-card-header">
-                        <div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
-                        <h3>Segurança e Senha</h3>
-                    </div>
-                    <div class="form-card-body">
-                        <p class="helper-text">Deixe em branco se não pretender alterar a senha atual.</p>
-                        <div class="form-group">
-                            <label for="nova_senha">Nova Senha</label>
-                            <div class="password-wrapper">
-                                <input type="password" id="nova_senha" name="nova_senha" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
-                                <span class="toggle-senha" data-target="nova_senha">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                </span>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="confirma_senha">Confirmar Nova Senha</label>
-                            <div class="password-wrapper">
-                                <input type="password" id="confirma_senha" name="confirma_senha" autocomplete="new-password" placeholder="Repita a nova senha">
-                                <span class="toggle-senha" data-target="confirma_senha">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                </span>
-                            </div>
-                        </div>
+                <?php ob_start(); ?>
+                <p class="helper-text">Deixe em branco se não pretender alterar a senha atual.</p>
+                <div class="form-group">
+                    <label for="nova_senha">Nova Senha</label>
+                    <div class="password-wrapper">
+                        <?php echo ui_input('nova_senha', ['type' => 'password', 'id' => 'nova_senha', 'autocomplete' => 'new-password', 'placeholder' => 'Mínimo 8 caracteres']); ?>
+                        <span class="toggle-senha" data-target="nova_senha">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </span>
                     </div>
                 </div>
+                
+                <div class="form-group">
+                    <label for="confirma_senha">Confirmar Nova Senha</label>
+                    <div class="password-wrapper">
+                        <?php echo ui_input('confirma_senha', ['type' => 'password', 'id' => 'confirma_senha', 'autocomplete' => 'new-password', 'placeholder' => 'Repita a nova senha']); ?>
+                        <span class="toggle-senha" data-target="confirma_senha">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </span>
+                    </div>
+                </div>
+                <?php
+                echo ui_card(ob_get_clean(), [
+                    'variant'     => 'form',
+                    'header_html' => '<div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div><h3>Segurança e Senha</h3>',
+                ]);
+                ?>
 
                 <div class="form-footer-actions">
-                    <a href="<?php echo $return_url; ?>" class="button-secondary">Cancelar</a>
-                    <button type="submit" class="button-primary">Guardar Alterações</button>
+                    <?php
+                    echo ui_button('Cancelar', ['href' => $return_url, 'class' => 'button-secondary']);
+                    echo ui_button('Guardar Alterações', ['type' => 'submit', 'class' => 'button-primary']);
+                    ?>
                 </div>
             </div>
         </form>
