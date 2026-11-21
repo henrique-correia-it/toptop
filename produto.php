@@ -78,10 +78,10 @@ $filtros_url_json = htmlspecialchars(json_encode($filtros_url), ENT_QUOTES, 'UTF
 ?>
 
 <main class="pagina-produto-detalhe"
-    data-id="<?php echo $produto['id']; ?>" data-slug="<?php echo $slug_produto; ?>" data-categoria="<?php echo htmlspecialchars($produto['categoria']); ?>"
-    data-referencia="<?php echo htmlspecialchars($produto['referencia']); ?>" data-nome="<?php echo htmlspecialchars($produto['nome']); ?>"
-    data-preco="<?php echo $produto['preco']; ?>" data-descricao="<?php echo htmlspecialchars($produto['descricao']); ?>"
-    data-fotos='<?php echo $fotos_json; ?>' data-preco-promocional="<?php echo $produto['preco_promocional']; ?>"
+    data-id="<?php echo $produto['id']; ?>" data-slug="<?php echo $slug_produto; ?>" data-categoria="<?php echo htmlspecialchars((string)($produto['categoria'] ?? '')); ?>"
+    data-referencia="<?php echo htmlspecialchars((string)($produto['referencia'] ?? '')); ?>" data-nome="<?php echo htmlspecialchars((string)($produto['nome'] ?? '')); ?>"
+    data-preco="<?php echo $produto['preco']; ?>" data-descricao="<?php echo htmlspecialchars((string)($produto['descricao'] ?? '')); ?>"
+    data-fotos='<?php echo $fotos_json; ?>' data-preco-promocional="<?php echo $produto['preco_promocional'] ?? ''; ?>"
     data-atributos='<?php echo $atributos_json_html; ?>' data-quantidade="<?php echo $stock_para_js; ?>"
     data-guia-tamanho-id="<?php echo $produto['guia_tamanho_id'] ?? ''; ?>"
     data-peso="<?php echo $produto['peso_gramas'] ?? 0; ?>"

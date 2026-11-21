@@ -29,7 +29,7 @@ try {
     
     $variacoes = [];
     while ($row = $result_variacoes->fetch_assoc()) {
-        $row['atributos'] = json_decode($row['atributos'], true);
+        $row['atributos'] = json_decode((string)($row['atributos'] ?? '{}'), true);
         $variacoes[$row['id']] = $row; 
     }
     $stmt_variacoes->close();

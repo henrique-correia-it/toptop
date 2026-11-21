@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST'
 include '../config/database.php';
 
 // Atualiza layouts bento
-if (isset($_POST['home_bento_layouts'])) {
+if (isset($_POST['home_bento_layouts']) && is_string($_POST['home_bento_layouts'])) {
     $layouts = json_decode($_POST['home_bento_layouts'], true);
     if (is_array($layouts)) {
         setLojaConfig('home_bento_layouts', json_encode($layouts));

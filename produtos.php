@@ -266,7 +266,7 @@ ob_start(); // Inicia um novo buffer para o HTML dos produtos
                 $stmt_vars->execute();
                 $result_vars = $stmt_vars->get_result();
                 while ($var_row = $result_vars->fetch_assoc()) {
-                    $attrs = json_decode($var_row['atributos'], true);
+                    $attrs = json_decode((string)($var_row['atributos'] ?? '{}'), true);
                     if (json_last_error() === JSON_ERROR_NONE) {
                         $variations_with_images_by_product_id[$var_row['produto_id']][] = [
                             'atributos' => $attrs,
@@ -627,13 +627,13 @@ if ($abrir_produto_id > 0 && !in_array($abrir_produto_id, array_map('intval', $p
             <div id="produto-modal-preload" class="produto" style="display:none;"
                 data-id="<?php echo (int) $preload_row['id']; ?>"
                 data-slug="<?php echo htmlspecialchars($preload_slug, ENT_QUOTES, 'UTF-8'); ?>"
-                data-categoria="<?php echo htmlspecialchars($preload_row['categoria'], ENT_QUOTES, 'UTF-8'); ?>"
-                data-referencia="<?php echo htmlspecialchars($preload_row['referencia'], ENT_QUOTES, 'UTF-8'); ?>"
-                data-nome="<?php echo htmlspecialchars($preload_row['nome'], ENT_QUOTES, 'UTF-8'); ?>"
+                data-categoria="<?php echo htmlspecialchars((string)($preload_row['categoria'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                data-referencia="<?php echo htmlspecialchars((string)($preload_row['referencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                data-nome="<?php echo htmlspecialchars((string)($preload_row['nome'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
                 data-preco="<?php echo $preload_row['preco']; ?>"
-                data-descricao="<?php echo htmlspecialchars($preload_row['descricao'], ENT_QUOTES, 'UTF-8'); ?>"
+                data-descricao="<?php echo htmlspecialchars((string)($preload_row['descricao'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
                 data-fotos='<?php echo htmlspecialchars(json_encode($preload_imgs), ENT_QUOTES, 'UTF-8'); ?>'
-                data-preco-promocional="<?php echo $preload_row['preco_promocional']; ?>"
+                data-preco-promocional="<?php echo $preload_row['preco_promocional'] ?? ''; ?>"
                 data-atributos='<?php echo htmlspecialchars($preload_row['atributos'] ?? '{}', ENT_QUOTES, 'UTF-8'); ?>'
                 data-quantidade="<?php echo (int) ($preload_row['stock_total'] ?? 0); ?>"
                 data-base-variacao-id="<?php echo $preload_row['base_variacao_id'] ?? ''; ?>"

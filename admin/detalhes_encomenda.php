@@ -226,14 +226,14 @@ include '../templates/header.php';
                 <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
                 <div class="info-cliente-texto">
                     <strong>Email</strong>
-                    <a href="mailto:<?php echo htmlspecialchars($encomenda['cliente_email']); ?>"><?php echo htmlspecialchars($encomenda['cliente_email']); ?></a>
+                    <a href="mailto:<?php echo htmlspecialchars((string)($encomenda['cliente_email'] ?? '')); ?>"><?php echo htmlspecialchars((string)($encomenda['cliente_email'] ?? '')); ?></a>
                 </div>
             </div>
             <div class="info-cliente-item com-acoes">
                 <div class="info-cliente-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
                 <div class="info-cliente-texto">
                     <strong>Telefone</strong>
-                    <a href="tel:<?php echo htmlspecialchars($encomenda['cliente_telefone']); ?>"><?php echo htmlspecialchars($encomenda['cliente_telefone']); ?></a>
+                    <a href="tel:<?php echo htmlspecialchars((string)($encomenda['cliente_telefone'] ?? '')); ?>"><?php echo htmlspecialchars((string)($encomenda['cliente_telefone'] ?? '')); ?></a>
                 </div>
                 <div class="botoes-contacto">
                     <a href="https://wa.me/<?php echo $telefone_whatsapp; ?>" target="_blank" class="whatsapp-btn">WhatsApp</a>
@@ -289,7 +289,7 @@ include '../templates/header.php';
                         <small style="color:#666; display:block; margin-top:2px;">O cliente virá levantar à loja física.</small>
                     <?php else: ?>
                         <span>Envio por Transportadora</span>
-                        <div class="morada-envio" style="margin-top:5px; color:#555;"><?php echo nl2br(htmlspecialchars($encomenda['cliente_morada'])); ?></div>
+                        <div class="morada-envio" style="margin-top:5px; color:#555;"><?php echo nl2br(htmlspecialchars((string)($encomenda['cliente_morada'] ?? ''))); ?></div>
                     <?php endif; ?>
                 </div>
             </div>

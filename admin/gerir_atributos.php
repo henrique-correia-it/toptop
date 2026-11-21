@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
     if (isset($_SESSION['admin_logado']) && in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor'])) {
         try {
             if ($acao === 'adicionar_grupo') {
-                $nome_grupo = trim($_POST['nome_grupo']);
+                $nome_grupo = trim((string)($_POST['nome_grupo'] ?? ''));
                 $e_filtravel = isset($_POST['e_filtravel']) ? 1 : 0;
                 if (empty($nome_grupo)) {
                     $response['mensagem'] = 'O nome do grupo não pode estar vazio.';
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                 }
             } elseif ($acao === 'adicionar_valor') {
                  $grupo_id = (int)($_POST['grupo_id'] ?? 0);
-                 $valor = trim($_POST['valor']);
+                 $valor = trim((string)($_POST['valor'] ?? ''));
                  if (empty($valor) || $grupo_id <= 0) { $response['mensagem'] = 'Dados inválidos.';
                  } else {
                      $stmt_check = $conn->prepare("SELECT id FROM atributos_valores WHERE grupo_id = ? AND valor = ?");

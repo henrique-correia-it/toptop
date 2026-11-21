@@ -138,7 +138,7 @@ function enviarEmailEncomenda($tipo, $dados) {
 
             $lista_produtos_html = "<table border='0' cellpadding='5' cellspacing='0' width='100%' style='border-collapse:collapse;margin-top:15px;'>";
             foreach ($itens as $item) {
-                $detalhes     = json_decode($item['selecoes_atributos'], true);
+                $detalhes     = json_decode((string)($item['selecoes_atributos'] ?? ''), true);
                 $detalhes_str = !empty($detalhes)
                     ? "<br><small style='color:#777;'>" . implode(' / ', array_map('htmlspecialchars', $detalhes)) . "</small>"
                     : '';

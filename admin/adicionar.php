@@ -85,10 +85,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // --- INÍCIO DA ALTERAÇÃO ---
             $guia_tamanho_id = !empty($_POST['guia_tamanho_id']) ? (int)$_POST['guia_tamanho_id'] : NULL;
             $peso_gramas = max(0, (int)($_POST['peso_gramas'] ?? 0));
+            $ativo_post = (int)($_POST['ativo'] ?? 1);
+            $categoria_post = trim((string)($_POST['categoria'] ?? ''));
+            $atributos_json_post = (string)($_POST['atributos_json'] ?? '{}');
 
             // Inserir produto
             $stmt_prod = $conn->prepare("INSERT INTO produtos (nome, referencia, ativo, preco, preco_promocional, categoria, descricao, atributos, foto_principal, guia_tamanho_id, peso_gramas) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt_prod->bind_param("ssiddssssii", $nome, $referencia, $_POST['ativo'], $preco_float, $preco_promocional_db, $_POST['categoria'], $descricao, $_POST['atributos_json'], $foto_principal_nome, $guia_tamanho_id, $peso_gramas);
+            $stmt_prod->bind_param("ssiddssssii", $nome, $referencia, $ativo_post, $preco_float, $preco_promocional_db, $categoria_post, $descricao, $atributos_json_post, $foto_principal_nome, $guia_tamanho_id, $peso_gramas);
             // --- FIM DA ALTERAÇÃO ---
             $stmt_prod->execute();
             $produto_id = $conn->insert_id;

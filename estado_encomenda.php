@@ -348,7 +348,7 @@ if ($indice_atual >= $total_passos) $progresso = 100;
     <div class="acomp-card">
         <h3>Resumo da Encomenda</h3>
         <?php foreach ($itens as $item):
-            $selecoes = json_decode($item['selecoes_atributos'], true);
+            $selecoes = json_decode((string)($item['selecoes_atributos'] ?? ''), true);
             $attrs    = !empty($selecoes) ? implode(' · ', array_map('htmlspecialchars', array_values($selecoes))) : '';
         ?>
         <div class="item-linha">

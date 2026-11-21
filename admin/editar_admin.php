@@ -68,9 +68,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         goto fim_editar_admin;
     }
 
-    $username = trim($_POST['username']);
-    $email    = trim($_POST['email']);
-    $role     = $is_superadmin ? ($_POST['role'] ?? $admin['role']) : $admin['role'];
+    $username = trim((string)($_POST['username'] ?? ''));
+    $email    = trim((string)($_POST['email'] ?? ''));
+    $role     = $is_superadmin ? (string)($_POST['role'] ?? $admin['role']) : $admin['role'];
     
     // Proteção NÍVEL 2: VERIFICAÇÃO NO BACK-END
     if (in_array($admin['role'], ['superadmin', 'desenvolvedor']) && $role !== $admin['role']) {

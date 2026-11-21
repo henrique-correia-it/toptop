@@ -118,7 +118,7 @@ include __DIR__ . '/templates/header.php';
                             4535-221 Lourosa, Portugal
                         </p>
                     <?php else: ?>
-                        <p class="cliente-morada-text"><?php echo nl2br(htmlspecialchars($encomenda['cliente_morada'])); ?></p>
+                        <p class="cliente-morada-text"><?php echo nl2br(htmlspecialchars((string)($encomenda['cliente_morada'] ?? ''))); ?></p>
                     <?php endif; ?>
                     <?php if (!empty($encomenda['codigo_tracking'])): ?>
                         <div class="cliente-tracking-box">

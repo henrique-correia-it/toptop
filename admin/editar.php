@@ -155,10 +155,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // --- INÍCIO DA ALTERAÇÃO ---
             $guia_tamanho_id = !empty($_POST['guia_tamanho_id']) ? (int)$_POST['guia_tamanho_id'] : NULL;
             $peso_gramas = (int)($_POST['peso_gramas'] ?? 0);
+            $ativo_post = (int)($_POST['ativo'] ?? 1);
+            $categoria_post = trim((string)($_POST['categoria'] ?? ''));
+            $atributos_json_post = (string)($_POST['atributos_json'] ?? '{}');
 
             // 6. Atualizar a informação principal do produto
             $stmt_update_prod = $conn->prepare("UPDATE produtos SET nome=?, referencia=?, ativo=?, preco=?, preco_promocional=?, categoria=?, descricao=?, atributos=?, foto_principal=?, guia_tamanho_id=?, peso_gramas=? WHERE id=?");
-            $stmt_update_prod->bind_param("ssiddssssiii", $nome, $referencia, $_POST['ativo'], $preco, $preco_promocional, $_POST['categoria'], $descricao, $_POST['atributos_json'], $foto_principal_nova, $guia_tamanho_id, $peso_gramas, $id);
+            $stmt_update_prod->bind_param("ssiddssssiii", $nome, $referencia, $ativo_post, $preco, $preco_promocional, $categoria_post, $descricao, $atributos_json_post, $foto_principal_nova, $guia_tamanho_id, $peso_gramas, $id);
             // --- FIM DA ALTERAÇÃO ---
             $stmt_update_prod->execute();
             $stmt_update_prod->close();
@@ -276,7 +279,7 @@ $stmt_variacoes->execute();
 $result_variacoes = $stmt_variacoes->get_result();
 $variacoes_map = [];
 while($row_v = $result_variacoes->fetch_assoc()) {
-    $row_v['atributos'] = json_decode($row_v['atributos'], true);
+    $row_v['atributos'] = json_decode((string)($row_v['atributos'] ?? '{}'), true);
     $row_v['imagens_associadas'] = [];
     $variacoes_map[$row_v['id']] = $row_v;
 }
