@@ -25,6 +25,15 @@ function getLojaConfig(string $chave, $default = null) {
     $stmt->close();
 
     $val = ($row !== null) ? $row['valor'] : $default;
+    if (is_string($val)) {
+        $trim = trim($val);
+        if ($trim !== '' && $trim[0] !== '{' && $trim[0] !== '[') {
+            $val = preg_replace('/&lt;(\/?(?:p|br)\b[^&]*?)&gt;/i', '<$1>', $val);
+            $val = preg_replace('#</p>\s*<p\b[^>]*>#i', "\n", $val);
+            $val = preg_replace('#<br\s*/?>#i', "\n", $val);
+            $val = trim(preg_replace('#</?p\b[^>]*>#i', '', $val));
+        }
+    }
     _lojaConfigCache($chave, $val);
     return $val;
 }

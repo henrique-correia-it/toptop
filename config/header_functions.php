@@ -16,7 +16,10 @@ function getHeaderText($seccao, $fallback = '') {
             $res = $conn->query("SELECT seccao, conteudo FROM header_config");
             if ($res) {
                 while ($row = $res->fetch_assoc()) {
-                    $cache[$row['seccao']] = $row['conteudo'];
+                    $val = (string)$row['conteudo'];
+                    $val = preg_replace('/&lt;(\/?(?:p|br)\b[^&]*?)&gt;/i', '<$1>', $val);
+                    $val = preg_replace('#</?p\b[^>]*>#i', '', $val);
+                    $cache[$row['seccao']] = trim($val);
                 }
             }
         } catch (Throwable $e) {

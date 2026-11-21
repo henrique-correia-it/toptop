@@ -1,5 +1,23 @@
 <?php
 /**
+ * Remove tags <p>, </p> e <br> legadas guardadas na BD em textos simples.
+ */
+if (!function_exists('limparTextoConfigLegado')) {
+    function limparTextoConfigLegado($texto): string {
+        $str = (string)$texto;
+        $trim = trim($str);
+        if ($trim !== '' && ($trim[0] === '{' || $trim[0] === '[')) {
+            return $str;
+        }
+        $str = preg_replace('/&lt;(\/?(?:p|br)\b[^&]*?)&gt;/i', '<$1>', $str);
+        $str = preg_replace('#</p>\s*<p\b[^>]*>#i', "\n", $str);
+        $str = preg_replace('#<br\s*/?>#i', "\n", $str);
+        $str = preg_replace('#</?p\b[^>]*>#i', '', $str);
+        return trim($str);
+    }
+}
+
+/**
  * Obtém o conteúdo de uma secção do rodapé com fallback.
  */
 function getFooterText($seccao, $fallback = '') {
@@ -7,7 +25,7 @@ function getFooterText($seccao, $fallback = '') {
     static $cache = null;
     
     if (!$conn) {
-        return $fallback;
+        return limparTextoConfigLegado($fallback);
     }
 
     if ($cache === null) {
@@ -15,7 +33,7 @@ function getFooterText($seccao, $fallback = '') {
         $res = $conn->query("SELECT seccao, conteudo FROM footer_config");
         if ($res) {
             while ($row = $res->fetch_assoc()) {
-                $cache[$row['seccao']] = $row['conteudo'];
+                $cache[$row['seccao']] = limparTextoConfigLegado($row['conteudo']);
             }
         }
     }
@@ -24,7 +42,7 @@ function getFooterText($seccao, $fallback = '') {
         return $cache[$seccao];
     }
 
-    return $fallback;
+    return limparTextoConfigLegado($fallback);
 }
 
 function getHorarioSemanaBase() {

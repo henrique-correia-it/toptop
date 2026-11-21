@@ -53,6 +53,13 @@ if (!is_string($seccao) || !is_string($conteudo) || !in_array($seccao, $seccoes_
     json_error('Secção inválida.', 400);
 }
 
+if ($seccao !== 'horario_funcionamento') {
+    $conteudo = preg_replace('/&lt;(\/?(?:p|br)\b[^&]*?)&gt;/i', '<$1>', $conteudo);
+    $conteudo = preg_replace('#</p>\s*<p\b[^>]*>#i', "\n", $conteudo);
+    $conteudo = preg_replace('#<br\s*/?>#i', "\n", $conteudo);
+    $conteudo = trim(preg_replace('#</?p\b[^>]*>#i', '', $conteudo));
+}
+
 // Upsert (Insert ou Update)
 $stmt = $conn->prepare("INSERT INTO footer_config (seccao, conteudo) VALUES (?, ?) ON DUPLICATE KEY UPDATE conteudo = ?, ultima_atualizacao = CURRENT_TIMESTAMP");
 $stmt->bind_param("sss", $seccao, $conteudo, $conteudo);
