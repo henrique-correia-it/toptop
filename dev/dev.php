@@ -171,7 +171,7 @@ $recent_logs = getRecentAppLogs(3);
                 <input type="hidden" name="current_password" value="">
                 <?php echo ui_button('Cópia de Segurança (DB)', ['class' => 'action-btn-pill btn-backup', 'title' => 'Gerar dump SQL completo', 'onclick' => "document.getElementById('backup-password-dialog').showModal()", 'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 16px; height: 16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> ']); ?>
             </form>
-            <style>#backup-password-dialog::backdrop { background:rgba(15,23,42,.48); backdrop-filter:blur(2px); }</style>
+            <style>#backup-password-dialog::backdrop, #stripe-password-dialog::backdrop { background:rgba(15,23,42,.48); backdrop-filter:blur(2px); }</style>
             <dialog id="backup-password-dialog" style="position:fixed; inset:50% auto auto 50%; transform:translate(-50%,-50%); margin:0; border:0; border-radius:16px; padding:0; box-shadow:0 20px 60px rgba(15,23,42,.25); max-width:420px; width:calc(100% - 32px);">
                 <form method="dialog" onsubmit="event.preventDefault(); descarregarBackupDb();" style="padding:24px; display:grid; gap:16px;">
                     <div>
@@ -182,6 +182,22 @@ $recent_logs = getRecentAppLogs(3);
                     <p id="backup-error" role="alert" style="display:none; margin:0; padding:10px 12px; border-radius:10px; background:#fef2f2; color:#b91c1c;"></p>
                     <div style="display:flex; justify-content:flex-end; gap:10px;">
                         <?php echo ui_button('Cancelar', ['class' => 'action-btn-pill', 'onclick' => "document.getElementById('backup-password-dialog').close()"]); echo ui_button('Descarregar backup', ['id' => 'backup-confirm-button', 'class' => 'action-btn-pill btn-backup', 'onclick' => 'descarregarBackupDb()']); ?>
+                    </div>
+                </form>
+            </dialog>
+            <dialog id="stripe-password-dialog" style="position:fixed; inset:50% auto auto 50%; transform:translate(-50%,-50%); margin:0; border:0; border-radius:16px; padding:0; box-shadow:0 20px 60px rgba(15,23,42,.25); max-width:420px; width:calc(100% - 32px);">
+                <form id="stripe-password-form" method="dialog" style="padding:24px; display:grid; gap:16px;">
+                    <div>
+                        <h3 style="margin:0 0 8px;">Confirmar alteração do Stripe</h3>
+                        <p style="margin:0; color:#64748b;">Introduza a sua palavra-passe para alterar o modo do Stripe para <strong id="stripe-target-mode-label" style="color:var(--cor-texto);">LIVE</strong>.</p>
+                    </div>
+                    <?php echo ui_input('', ['id' => 'stripe-current-password', 'type' => 'password', 'required' => true, 'autocomplete' => 'current-password', 'placeholder' => 'Palavra-passe atual', 'style' => 'width:100%; box-sizing:border-box; padding:12px 14px; border:1px solid #cbd5e1; border-radius:10px;']); ?>
+                    <p id="stripe-password-error" role="alert" style="display:none; margin:0; padding:10px 12px; border-radius:10px; background:#fef2f2; color:#b91c1c;"></p>
+                    <div style="display:flex; justify-content:flex-end; gap:10px;">
+                        <?php
+                        echo ui_button('Cancelar', ['class' => 'action-btn-pill', 'onclick' => "document.getElementById('stripe-password-dialog').close()"]);
+                        echo ui_button('Confirmar alteração', ['id' => 'stripe-confirm-button', 'type' => 'submit', 'class' => 'action-btn-pill btn-backup']);
+                        ?>
                     </div>
                 </form>
             </dialog>
@@ -398,18 +414,50 @@ $recent_logs = getRecentAppLogs(3);
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ── Stripe Toggle (no Card) ──
-    const stripeCard = document.getElementById('stripe-card-toggle');
-    const stripeLabel = document.getElementById('stripe-mode-label');
-    const stripeCheckbox = document.getElementById('stripe-mode-hidden-checkbox');
+    // ── Stripe Toggle (no Card, com reautenticação por palavra-passe) ──
+    const stripeCard          = document.getElementById('stripe-card-toggle');
+    const stripeLabel         = document.getElementById('stripe-mode-label');
+    const stripeCheckbox      = document.getElementById('stripe-mode-hidden-checkbox');
+    const stripeDialog        = document.getElementById('stripe-password-dialog');
+    const stripeForm          = document.getElementById('stripe-password-form');
+    const stripePwInput       = document.getElementById('stripe-current-password');
+    const stripePwError       = document.getElementById('stripe-password-error');
+    const stripeConfirmBtn    = document.getElementById('stripe-confirm-button');
+    const stripeTargetModeLbl = document.getElementById('stripe-target-mode-label');
 
-    if (stripeCard) {
+    if (stripeCard && stripeDialog && stripeForm) {
         stripeCard.addEventListener('click', function () {
             const isLive = !stripeCheckbox.checked;
+            const mode   = isLive ? 'LIVE' : 'TEST';
+            if (stripeTargetModeLbl) stripeTargetModeLbl.textContent = mode;
+            if (stripePwError) {
+                stripePwError.style.display = 'none';
+                stripePwError.textContent = '';
+            }
+            if (stripePwInput) stripePwInput.value = '';
+            stripeDialog.showModal();
+            if (stripePwInput) stripePwInput.focus();
+        });
+
+        stripeForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (!stripePwInput || !stripePwInput.reportValidity()) return;
+
+            const isLive = !stripeCheckbox.checked;
             const mode   = isLive ? 'live' : 'test';
-            
+
+            if (stripePwError) {
+                stripePwError.style.display = 'none';
+                stripePwError.textContent = '';
+            }
+            if (stripeConfirmBtn) {
+                stripeConfirmBtn.disabled = true;
+                stripeConfirmBtn.textContent = 'A verificar...';
+            }
+
             const fd = new FormData();
             fd.append('stripe_mode', mode);
+            fd.append('current_password', stripePwInput.value);
             fd.append('csrf_token', '<?php echo $_SESSION['csrf_token']; ?>');
 
             fetch('ajax_toggle_stripe.php', { method: 'POST', body: fd })
@@ -418,8 +466,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (data.sucesso) {
                         stripeCheckbox.checked = isLive;
                         stripeLabel.textContent = mode.toUpperCase();
-                        
-                        // Atualizar Cores do Card
+
                         if (isLive) {
                             stripeCard.classList.remove('stripe-test');
                             stripeCard.classList.add('stripe-live');
@@ -428,12 +475,30 @@ document.addEventListener('DOMContentLoaded', function () {
                             stripeCard.classList.add('stripe-test');
                         }
 
+                        stripePwInput.value = '';
+                        stripeDialog.close();
                         mostrarPopup('Modo Stripe alterado para ' + mode.toUpperCase(), 'sucesso');
                     } else {
-                        mostrarPopup('Erro ao alterar modo Stripe.', 'erro');
+                        if (stripePwError) {
+                            stripePwError.textContent = data.mensagem || 'Palavra-passe incorreta.';
+                            stripePwError.style.display = 'block';
+                        }
+                        stripePwInput.select();
+                        stripePwInput.focus();
                     }
                 })
-                .catch(() => { mostrarPopup('Erro de rede ao alterar Stripe.', 'erro'); });
+                .catch(() => {
+                    if (stripePwError) {
+                        stripePwError.textContent = 'Erro de rede ao alterar o modo Stripe.';
+                        stripePwError.style.display = 'block';
+                    }
+                })
+                .finally(() => {
+                    if (stripeConfirmBtn) {
+                        stripeConfirmBtn.disabled = false;
+                        stripeConfirmBtn.textContent = 'Confirmar alteração';
+                    }
+                });
         });
     }
 
