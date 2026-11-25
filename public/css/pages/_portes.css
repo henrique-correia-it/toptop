@@ -1,18 +1,16 @@
 /* public/css/pages/_portes.css */
 
-/* Barra Portes Grátis (limpa, 1 linha) */
+/* Barra Portes Grátis (ui_card + ui_input prefix) */
 .free-shipping-config {
+    margin-bottom: 20px;
+}
+
+.free-shipping-config .ui-card__body {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
-    margin-bottom: 20px;
-    padding: 14px 20px;
-    border: 1px solid #eef2f6;
-    border-radius: 16px;
-    background: var(--cor-branco);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
 }
 
 .free-shipping-check {
@@ -32,45 +30,25 @@
     font-weight: 600;
 }
 
-.money-input {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    width: 124px;
-    overflow: hidden;
-    border: 1px solid var(--cor-slate-200);
-    border-radius: var(--button-radius, 14px);
-    background: var(--cor-branco);
+.free-shipping-config .ui-field__prefix-wrap {
+    width: 132px;
     transition: border-color 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
 }
 
-.money-input:focus-within {
+.free-shipping-config .ui-field__prefix-wrap:focus-within {
     border-color: var(--cor-preto-suave);
     box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.06);
 }
 
-.money-input > span {
-    padding-left: 12px;
-    color: var(--cor-slate-400);
-    font-size: 0.9rem;
+.free-shipping-input {
+    min-width: 0;
+    height: 38px;
+    padding: 0 10px 0 8px;
+    text-align: right;
     font-weight: 600;
 }
 
-.money-input input {
-    min-width: 0;
-    height: 38px;
-    padding: 0 10px 0 6px !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    outline: 0 !important;
-    box-shadow: none !important;
-    color: var(--cor-slate-900);
-    background: transparent !important;
-    font-size: 0.9rem;
-    font-weight: 700;
-}
-
-.money-input input:disabled {
+.free-shipping-input:disabled {
     cursor: not-allowed;
     color: var(--cor-slate-400);
 }
@@ -79,7 +57,7 @@
     opacity: 0.5;
 }
 
-.free-shipping-config.is-disabled .money-input {
+.free-shipping-config.is-disabled .ui-field__prefix-wrap {
     background: var(--cor-slate-50);
 }
 
@@ -89,43 +67,14 @@
 }
 
 .tabela-portes tbody tr.is-expanded td {
-    background: #f8fafc !important;
-    border-bottom: 1px solid var(--cor-slate-200) !important;
-}
-
-.portes-pais-cell {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.iso-badge {
-    background: var(--cor-slate-100);
-    color: var(--cor-slate-800);
-    border: 1px solid var(--cor-slate-200);
-    padding: 3px 8px;
-    border-radius: 7px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    flex-shrink: 0;
-}
-
-.portes-pais-nome {
-    color: var(--cor-slate-800);
-    font-weight: 600;
-}
-
-.portes-preco-meta {
-    color: var(--cor-slate-600);
-    font-weight: 600;
-    font-size: 0.88rem;
+    background: var(--cor-slate-50);
+    border-bottom: 1px solid var(--cor-slate-200);
 }
 
 /* Subtabela expansível de escalões (idêntica à de atributos) */
 .tabela-portes tr.portes-subrow > td.portes-subrow-cell {
     padding: 0 !important;
-    background: #f8fafc !important;
+    background: var(--cor-slate-50);
     border-bottom: 1px solid transparent;
     text-align: left !important;
     transition: border-color 0.28s ease;
@@ -224,14 +173,14 @@
     letter-spacing: 0.04em;
 }
 
-.weight-row .input-group input {
+.weight-row .input-group .portes-weight-input {
     width: 100%;
     height: 36px;
-    padding: 0 10px !important;
-    border: 1px solid var(--cor-slate-200) !important;
-    border-radius: 10px !important;
-    background: var(--cor-branco) !important;
-    font-size: 0.86rem !important;
+    padding: 0 10px;
+    border: 1px solid var(--cor-slate-200);
+    border-radius: var(--radius-md);
+    background: var(--cor-branco);
+    font-size: 0.86rem;
     font-weight: 600;
     color: var(--cor-slate-800);
     text-align: center;
@@ -239,10 +188,10 @@
     transition: border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
-.weight-row .input-group input:focus {
-    outline: none !important;
-    border-color: var(--cor-preto-suave) !important;
-    box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.06) !important;
+.weight-row .input-group .portes-weight-input:focus {
+    outline: none;
+    border-color: var(--cor-preto-suave);
+    box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.06);
 }
 
 .portes-sub-empty {
@@ -279,7 +228,7 @@
 
 .pais-item-select {
     padding: 9px 12px;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -308,8 +257,8 @@
 
 @media (max-width: 768px) {
     .tabela-portes {
-        min-width: 0 !important;
-        width: 100% !important;
+        min-width: 0;
+        width: 100%;
     }
 
     /* No mobile esconde a coluna Escalões para a tabela caber folgada sem scroll lateral */
@@ -321,15 +270,6 @@
     .tabela-portes thead th:first-child,
     .tabela-portes tbody tr[data-id] td:first-child {
         text-align: left;
-    }
-
-    .portes-pais-cell {
-        gap: 6px;
-    }
-
-    .iso-badge {
-        padding: 2px 6px;
-        font-size: 0.66rem;
     }
 
     .portes-subrow-inner {
@@ -359,24 +299,23 @@
         font-size: 0.64rem;
     }
 
-    .weight-row .input-group input {
+    .weight-row .input-group .portes-weight-input {
         height: 36px;
-        padding: 0 6px !important;
-        font-size: 0.82rem !important;
+        padding: 0 6px;
+        font-size: 0.82rem;
     }
 
     .weight-row .btn-del-single {
-        width: 32px !important;
-        height: 32px !important;
+        width: 32px;
+        height: 32px;
     }
 }
 
 @media (max-width: 640px) {
-    .free-shipping-config {
+    .free-shipping-config .ui-card__body {
         flex-direction: column;
         align-items: stretch;
         gap: 12px;
-        padding: 14px 16px;
     }
 
     .free-shipping-value {

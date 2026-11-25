@@ -113,22 +113,26 @@ include '../templates/header.php';
                     'admin'      => 'Administrador Normal',
                     'superadmin' => 'Super-Administrador',
                 ];
-                ob_start();
-                ?>
-                <div class="form-group">
-                    <label for="username">Nome de Utilizador</label>
-                    <?php echo ui_input('username', ['id' => 'username', 'value' => $username_valor, 'required' => true, 'placeholder' => 'Ex: joao_admin', 'autocomplete' => 'off']); ?>
-                </div>
-                <div class="form-group">
-                    <label for="email">Endereço de Email</label>
-                    <?php echo ui_input('email', ['type' => 'email', 'id' => 'email', 'value' => $email_valor, 'required' => true, 'placeholder' => 'joao@exemplo.com', 'autocomplete' => 'off']); ?>
-                </div>
-                <div class="form-group">
-                    <label for="role">Função no Sistema</label>
-                    <?php echo ui_select('role', $roles_opcoes, $role_valor, ['id' => 'role']); ?>
-                </div>
-                <?php
-                echo ui_card(ob_get_clean(), [
+                $identidadeHtml = ui_field('username', 'Nome de Utilizador', [
+                    'id'           => 'username',
+                    'value'        => $username_valor,
+                    'required'     => true,
+                    'placeholder'  => 'Ex: joao_admin',
+                    'autocomplete' => 'off',
+                ]) . ui_field('email', 'Endereço de Email', [
+                    'type'         => 'email',
+                    'id'           => 'email',
+                    'value'        => $email_valor,
+                    'required'     => true,
+                    'placeholder'  => 'joao@exemplo.com',
+                    'autocomplete' => 'off',
+                ]) . ui_field('role', 'Função no Sistema', [
+                    'type'    => 'select',
+                    'id'      => 'role',
+                    'options' => $roles_opcoes,
+                    'value'   => $role_valor,
+                ]);
+                echo ui_card($identidadeHtml, [
                     'variant'    => 'form',
                     'title_html' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 12px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Identidade',
                 ]);
@@ -137,19 +141,17 @@ include '../templates/header.php';
 
             <!-- Coluna Direita: Segurança -->
             <div class="profile-column">
-                <?php ob_start(); ?>
-                <p class="helper-text">Defina uma senha provisória para o novo utilizador.</p>
-                <div class="form-group">
-                    <label for="password">Senha Provisória (mín. 8 caracteres)</label>
-                    <div class="password-wrapper">
-                        <?php echo ui_input('password', ['type' => 'password', 'id' => 'password', 'required' => true, 'placeholder' => 'Crie uma senha forte', 'autocomplete' => 'new-password']); ?>
-                        <button type="button" class="toggle-senha" aria-label="Mostrar ou ocultar palavra-passe" data-target="password" style="background:none;border:none;padding:0;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        </button>
-                    </div>
-                </div>
                 <?php
-                echo ui_card(ob_get_clean(), [
+                $segurancaHtml = '<p class="helper-text">Defina uma senha provisória para o novo utilizador.</p>'
+                    . ui_field('password', 'Senha Provisória (mín. 8 caracteres)', [
+                        'type'            => 'password',
+                        'id'              => 'password',
+                        'required'        => true,
+                        'placeholder'     => 'Crie uma senha forte',
+                        'autocomplete'    => 'new-password',
+                        'password_toggle' => true,
+                    ]);
+                echo ui_card($segurancaHtml, [
                     'variant'    => 'form',
                     'title_html' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 12px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Segurança Inicial',
                 ]);

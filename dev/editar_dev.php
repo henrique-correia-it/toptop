@@ -119,18 +119,20 @@ include '../templates/header.php';
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
 
             <div class="profile-column">
-                <?php ob_start(); ?>
-                <div class="form-group">
-                    <label for="username">Nome de Utilizador</label>
-                    <?php echo ui_input('username', ['id' => 'username', 'value' => $dev['username'], 'required' => true, 'placeholder' => 'Ex: kiko_dev']); ?>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Endereço de Email</label>
-                    <?php echo ui_input('email', ['type' => 'email', 'id' => 'email', 'value' => $dev['email'], 'required' => true, 'placeholder' => 'dev@exemplo.com']); ?>
-                </div>
                 <?php
-                echo ui_card(ob_get_clean(), [
+                $infoHtml = ui_field('username', 'Nome de Utilizador', [
+                    'id'          => 'username',
+                    'value'       => $dev['username'],
+                    'required'    => true,
+                    'placeholder' => 'Ex: kiko_dev',
+                ]) . ui_field('email', 'Endereço de Email', [
+                    'type'        => 'email',
+                    'id'          => 'email',
+                    'value'       => $dev['email'],
+                    'required'    => true,
+                    'placeholder' => 'dev@exemplo.com',
+                ]);
+                echo ui_card($infoHtml, [
                     'variant'    => 'form',
                     'title_html' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 12px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Informação da Conta',
                 ]);
@@ -138,29 +140,22 @@ include '../templates/header.php';
             </div>
 
             <div class="profile-column">
-                <?php ob_start(); ?>
-                <p class="helper-text">Deixe em branco se não pretender alterar a senha atual.</p>
-                <div class="form-group">
-                    <label for="nova_senha">Nova Senha</label>
-                    <div class="password-wrapper">
-                        <?php echo ui_input('nova_senha', ['type' => 'password', 'id' => 'nova_senha', 'autocomplete' => 'new-password', 'placeholder' => 'Mínimo 8 caracteres']); ?>
-                        <button type="button" class="toggle-senha" aria-label="Mostrar ou ocultar palavra-passe" data-target="nova_senha" style="background:none;border:none;padding:0;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="confirma_senha">Confirmar Nova Senha</label>
-                    <div class="password-wrapper">
-                        <?php echo ui_input('confirma_senha', ['type' => 'password', 'id' => 'confirma_senha', 'autocomplete' => 'new-password', 'placeholder' => 'Repita a nova senha']); ?>
-                        <button type="button" class="toggle-senha" aria-label="Mostrar ou ocultar palavra-passe" data-target="confirma_senha" style="background:none;border:none;padding:0;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        </button>
-                    </div>
-                </div>
                 <?php
-                echo ui_card(ob_get_clean(), [
+                $segurancaHtml = '<p class="helper-text">Deixe em branco se não pretender alterar a senha atual.</p>'
+                    . ui_field('nova_senha', 'Nova Senha', [
+                        'type'            => 'password',
+                        'id'              => 'nova_senha',
+                        'autocomplete'    => 'new-password',
+                        'placeholder'     => 'Mínimo 8 caracteres',
+                        'password_toggle' => true,
+                    ]) . ui_field('confirma_senha', 'Confirmar Nova Senha', [
+                        'type'            => 'password',
+                        'id'              => 'confirma_senha',
+                        'autocomplete'    => 'new-password',
+                        'placeholder'     => 'Repita a nova senha',
+                        'password_toggle' => true,
+                    ]);
+                echo ui_card($segurancaHtml, [
                     'variant'    => 'form',
                     'title_html' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 12px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Segurança e Senha',
                 ]);

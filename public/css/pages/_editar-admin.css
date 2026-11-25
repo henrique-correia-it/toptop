@@ -21,14 +21,8 @@
     display: block;
 }
 
-.helper-text.warning {
-    color: #b45309;
-    background: #fffbeb;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid #fef3c7;
+.role-lock-alert {
     margin-top: 10px;
-    margin-bottom: 0;
 }
 
 .form-footer-actions {

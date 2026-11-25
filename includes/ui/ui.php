@@ -1071,10 +1071,18 @@ if (!function_exists('ui_table')) {
                 $html .= '<th' . ui_attrs($colAttrs) . '>' . ui_e($label) . '</th>';
             }
         }
-        $html .= '</tr></thead><tbody>';
+        $tbodyAttrs = [];
+        if (!empty($opts['tbody_id'])) {
+            $tbodyAttrs['id'] = (string)$opts['tbody_id'];
+        }
+        $html .= '</tr></thead><tbody' . ui_attrs($tbodyAttrs) . '>';
 
-        if (empty($rows)) {
-            $html .= '<tr><td colspan="' . $totalCols . '" class="' . ui_e($emptyClass) . '">' . ui_e($emptyMessage) . '</td></tr>';
+        if (array_key_exists('tbody_html', $opts)) {
+            $html .= (string)$opts['tbody_html'];
+        } elseif (empty($rows)) {
+            if (!array_key_exists('show_empty', $opts) || $opts['show_empty']) {
+                $html .= '<tr><td colspan="' . $totalCols . '" class="' . ui_e($emptyClass) . '">' . ui_e($emptyMessage) . '</td></tr>';
+            }
         } else {
             foreach ($rows as $row) {
                 $rowAttrs = is_array($row['attrs'] ?? null) ? $row['attrs'] : [];

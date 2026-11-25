@@ -421,6 +421,10 @@ button.ui-badge {
     text-align: left;
 }
 
+.ui-field:last-child {
+    margin-bottom: 0;
+}
+
 .ui-field__label {
     font-size: var(--text-sm);
     font-weight: 600;

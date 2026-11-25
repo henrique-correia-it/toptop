@@ -24,26 +24,29 @@ $portes_por_pais = $portes_js ?? [];
     ]); ?>
 
     <div class="admin-container" style="max-width: 1200px; margin: 0 auto;">
-        <section class="free-shipping-config" aria-label="Portes grátis">
-            <?php echo ui_checkbox('', 'Portes grátis em Portugal Continental', (bool)$portes_gratis_ativo, [
-                'id'    => 'portes-gratis-ativo',
-                'class' => 'free-shipping-check',
-            ]); ?>
-            <label class="free-shipping-value" for="portes-gratis-minimo">
-                <span>A partir de</span>
-                <span class="money-input">
-                    <span aria-hidden="true">€</span>
-                    <?php echo ui_input('', [
-                        'type'      => 'number',
-                        'id'        => 'portes-gratis-minimo',
-                        'min'       => '0.01',
-                        'step'      => '0.01',
-                        'inputmode' => 'decimal',
-                        'value'     => number_format($portes_gratis_minimo, 2, '.', ''),
-                    ]); ?>
-                </span>
-            </label>
-        </section>
+        <?php
+        $freeShippingHtml = ui_checkbox('', 'Portes grátis em Portugal Continental', (bool)$portes_gratis_ativo, [
+            'id'    => 'portes-gratis-ativo',
+            'class' => 'free-shipping-check',
+        ]) . '<label class="free-shipping-value" for="portes-gratis-minimo">'
+           . '<span>A partir de</span>'
+           . ui_input('', [
+               'type'      => 'number',
+               'id'        => 'portes-gratis-minimo',
+               'prefix'    => '€',
+               'class'     => 'ui-field__control free-shipping-input',
+               'min'       => '0.01',
+               'step'      => '0.01',
+               'inputmode' => 'decimal',
+               'value'     => number_format($portes_gratis_minimo, 2, '.', ''),
+           ])
+           . '</label>';
+        echo ui_card($freeShippingHtml, [
+            'compact' => true,
+            'class'   => 'free-shipping-config',
+            'attrs'   => ['aria-label' => 'Portes grátis'],
+        ]);
+        ?>
 
         <?php echo ui_table_toolbar([
             'primary_action' => ui_button('Adicionar País', [
@@ -59,19 +62,22 @@ $portes_por_pais = $portes_js ?? [];
             'preserve_sort'  => false,
         ]); ?>
 
-        <div class="table-wrapper" id="table-wrapper" style="max-width: 1200px; margin: 0 auto;">
-            <table class="admin-table tabela-portes">
-                <thead>
-                    <tr>
-                        <th>País</th>
-                        <th>Escalões</th>
-                        <th>Preço</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="portes-tbody"></tbody>
-            </table>
-        </div>
+        <?php echo ui_table(
+            [
+                ['label' => 'País'],
+                ['label' => 'Escalões'],
+                ['label' => 'Preço'],
+                ['label' => 'Ações', 'sortable' => false],
+            ],
+            [],
+            [
+                'wrap_id'     => 'table-wrapper',
+                'wrap_style'  => 'max-width: 1200px; margin: 0 auto;',
+                'table_class' => 'admin-table tabela-portes',
+                'tbody_id'    => 'portes-tbody',
+                'show_empty'  => false,
+            ]
+        ); ?>
     </div>
 </main>
 
@@ -155,10 +161,10 @@ function atualizarResumoLinha(iso) {
     const regras = dadosPortes[iso];
     const total = regras.length;
     if (tr.children[1]) {
-        tr.children[1].innerHTML = `<span class="ui-badge ui-badge--${total > 0 ? 'info' : 'neutral'}">${total} ${total === 1 ? 'escalão' : 'escalões'}</span>`;
+        tr.children[1].textContent = `${total} ${total === 1 ? 'escalão' : 'escalões'}`;
     }
     if (tr.children[2]) {
-        tr.children[2].innerHTML = `<span class="portes-preco-meta">${esc(resumirPrecos(regras))}</span>`;
+        tr.children[2].textContent = resumirPrecos(regras);
     }
 }
 
@@ -171,15 +177,15 @@ function renderizarLinhasPeso(iso) {
         <div class="weight-row" data-iso="${iso}" data-index="${index}">
             <div class="input-group">
                 <label>Mín (g)</label>
-                <input type="number" min="0" value="${regra.min}" onchange="atualizarRegra('${iso}', ${index}, 'min', this.value)">
+                <input type="number" class="ui-field__control portes-weight-input" min="0" value="${regra.min}" onchange="atualizarRegra('${iso}', ${index}, 'min', this.value)">
             </div>
             <div class="input-group">
                 <label>Máx (g)</label>
-                <input type="number" min="0" value="${regra.max}" onchange="atualizarRegra('${iso}', ${index}, 'max', this.value)">
+                <input type="number" class="ui-field__control portes-weight-input" min="0" value="${regra.max}" onchange="atualizarRegra('${iso}', ${index}, 'max', this.value)">
             </div>
             <div class="input-group">
                 <label>Preço (€)</label>
-                <input type="number" min="0" step="0.01" value="${regra.preco}" onchange="atualizarRegra('${iso}', ${index}, 'preco', this.value)">
+                <input type="number" class="ui-field__control portes-weight-input" min="0" step="0.01" value="${regra.preco}" onchange="atualizarRegra('${iso}', ${index}, 'preco', this.value)">
             </div>
             <button type="button" class="btn-del-single" onclick="removerLinhaPeso('${iso}', ${index})" title="Remover escalão" aria-label="Remover escalão"></button>
         </div>
@@ -294,14 +300,9 @@ function renderizarPaises(reabrirIso = '') {
         const tr     = document.createElement('tr');
         tr.dataset.id = iso;
         tr.innerHTML = `
-            <td>
-                <div class="portes-pais-cell">
-                    <span class="iso-badge">${esc(iso)}</span>
-                    <strong class="portes-pais-nome">${esc(nome)}</strong>
-                </div>
-            </td>
-            <td><span class="ui-badge ui-badge--${total > 0 ? 'info' : 'neutral'}">${total} ${total === 1 ? 'escalão' : 'escalões'}</span></td>
-            <td><span class="portes-preco-meta">${esc(resumirPrecos(regras))}</span></td>
+            <td>${esc(nome)} (${esc(iso)})</td>
+            <td>${total} ${total === 1 ? 'escalão' : 'escalões'}</td>
+            <td>${esc(resumirPrecos(regras))}</td>
             <td>
                 <div class="acoes-tabela">
                     <button type="button" class="btn-expand-single" data-iso="${esc(iso)}" title="Gerir escalões" aria-label="Gerir escalões" aria-expanded="false"></button>
@@ -422,7 +423,7 @@ function filtrarPaises(termo) {
     `).join('');
 
     if (filtrados.length === 0) {
-        listaPaises.innerHTML = '<div style="padding:20px; text-align:center; color:#94a3b8; font-weight:600;">Nenhum país encontrado...</div>';
+        listaPaises.innerHTML = '<div class="portes-sub-empty">Nenhum país encontrado...</div>';
     }
 }
 
