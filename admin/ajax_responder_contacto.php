@@ -30,7 +30,7 @@ try {
         throw new Exception('Dados em falta para enviar a resposta.');
     }
 
-    $stmt_c = $conn->prepare("SELECT nome, email FROM contactos WHERE id = ? LIMIT 1");
+    $stmt_c = $conn->prepare("SELECT nome, email, respondida FROM contactos WHERE id = ? LIMIT 1");
     $stmt_c->bind_param("i", $id_contacto);
     $stmt_c->execute();
     $contacto_db = $stmt_c->get_result()->fetch_assoc();
@@ -39,6 +39,11 @@ try {
     if (!$contacto_db) {
         http_response_code(404);
         throw new Exception('Mensagem de contacto não encontrada.');
+    }
+
+    if ((int)($contacto_db['respondida'] ?? 0) === 1) {
+        http_response_code(409);
+        throw new Exception('Esta mensagem já foi marcada como respondida.');
     }
 
     $email_cliente = filter_var($contacto_db['email'] ?? '', FILTER_VALIDATE_EMAIL);

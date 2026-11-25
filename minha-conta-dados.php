@@ -2,6 +2,7 @@
 require_once __DIR__ . '/config/session.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/csrf.php';
+require_once __DIR__ . '/config/rate_limit.php';
 require_once __DIR__ . '/config/cliente_auth.php';
 
 require_cliente();
@@ -14,6 +15,15 @@ if (!$cliente) {
 $erro = '';
 $sucesso = '';
 
+if (!empty($_SESSION['flash_dados_cliente']) && is_array($_SESSION['flash_dados_cliente'])) {
+    if (($_SESSION['flash_dados_cliente']['tipo'] ?? '') === 'erro') {
+        $erro = (string)($_SESSION['flash_dados_cliente']['msg'] ?? '');
+    } else {
+        $sucesso = (string)($_SESSION['flash_dados_cliente']['msg'] ?? '');
+    }
+    unset($_SESSION['flash_dados_cliente']);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_from_post()) {
         $erro = 'Erro de segurança. Recarregue a página.';
@@ -21,26 +31,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $acao = $_POST['acao'] ?? 'dados';
         try {
             if ($acao === 'dados') {
-                $nome = trim($_POST['nome'] ?? '');
-                $telefone = trim($_POST['telefone'] ?? '');
-                $nif = trim($_POST['nif'] ?? '');
-                if ($nome === '') throw new InvalidArgumentException('O nome é obrigatório.');
+                $nome = trim((string)($_POST['nome'] ?? ''));
+                $telefone = trim((string)($_POST['telefone'] ?? ''));
+                $nif = trim((string)($_POST['nif'] ?? ''));
+                if ($nome === '' || mb_strlen($nome, 'UTF-8') > 120) {
+                    throw new InvalidArgumentException('Indique um nome válido (máx. 120 caracteres).');
+                }
+                if (strlen($telefone) > 30 || strlen($nif) > 30) {
+                    throw new InvalidArgumentException('Telefone ou NIF demasiado longo.');
+                }
+                $telDb = $telefone !== '' ? $telefone : null;
+                $nifDb = $nif !== '' ? $nif : null;
 
                 $stmt = $conn->prepare("UPDATE clientes SET nome = ?, telefone = ?, nif = ?, data_atualizacao = NOW() WHERE id = ?");
-                $stmt->bind_param('sssi', $nome, $telefone, $nif, $cliente['id']);
+                $stmt->bind_param('sssi', $nome, $telDb, $nifDb, $cliente['id']);
                 $stmt->execute();
                 $stmt->close();
                 $_SESSION['cliente_nome'] = $nome;
-                $sucesso = 'Dados atualizados com sucesso.';
+                $_SESSION['flash_dados_cliente'] = ['tipo' => 'sucesso', 'msg' => 'Dados atualizados com sucesso.'];
+                header('Location: /minha-conta/dados');
+                exit;
             } elseif ($acao === 'password') {
-                $atual = $_POST['password_atual'] ?? '';
-                $nova = $_POST['password_nova'] ?? '';
-                $confirm = $_POST['password_confirm'] ?? '';
+                if (!rate_limit_allow('alterar_password_cliente', 5, 600, (string)$cliente['id'])) {
+                    throw new InvalidArgumentException('Demasiadas tentativas. Aguarde alguns minutos e tente novamente.');
+                }
+                $atual = is_string($_POST['password_atual'] ?? null) ? $_POST['password_atual'] : '';
+                $nova = is_string($_POST['password_nova'] ?? null) ? $_POST['password_nova'] : '';
+                $confirm = is_string($_POST['password_confirm'] ?? null) ? $_POST['password_confirm'] : '';
                 if (!password_verify($atual, $cliente['password_hash'])) {
                     throw new InvalidArgumentException('A palavra-passe atual não está correta.');
                 }
                 if (strlen($nova) < 8) {
                     throw new InvalidArgumentException('A nova palavra-passe deve ter pelo menos 8 caracteres.');
+                }
+                if (strlen($nova) > 72) {
+                    throw new InvalidArgumentException('A nova palavra-passe não pode exceder 72 caracteres.');
                 }
                 if ($nova !== $confirm) {
                     throw new InvalidArgumentException('As novas palavras-passe não coincidem.');
@@ -50,14 +75,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param('si', $hash, $cliente['id']);
                 $stmt->execute();
                 $stmt->close();
+                log_seguranca("Palavra-passe alterada na conta pelo cliente #{$cliente['id']} ({$cliente['email']}).", 'minha-conta-dados.php');
+                require_once __DIR__ . '/admin/includes/email_handler.php';
+                enviarEmailTemplate('password_alterada', (string)$cliente['email'], (string)$cliente['nome'], [
+                    '{nome_cliente}' => (string)$cliente['nome'],
+                ]);
                 session_regenerate_id(true);
-                $sucesso = 'Palavra-passe atualizada com sucesso.';
+                $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+                $_SESSION['flash_dados_cliente'] = ['tipo' => 'sucesso', 'msg' => 'Palavra-passe atualizada com sucesso.'];
+                header('Location: /minha-conta/dados');
+                exit;
             }
-            $cliente = cliente_atual($conn);
         } catch (InvalidArgumentException $e) {
             $erro = $e->getMessage();
         } catch (Throwable $e) {
-            log_app($e->getMessage(), 'ERROR', 'minha-conta-dados.php');
+            log_exception($e, 'minha-conta-dados.php');
             $erro = 'Ocorreu um erro interno. Tente novamente.';
         }
     }
@@ -94,7 +126,7 @@ include __DIR__ . '/templates/header.php';
                         <input type="hidden" name="acao" value="dados">
                         <label for="d-nome">
                             <span>Nome completo</span>
-                            <?php echo ui_input('nome', ['id' => 'd-nome', 'required' => true, 'value' => $cliente['nome']]); ?>
+                            <?php echo ui_input('nome', ['id' => 'd-nome', 'required' => true, 'value' => $cliente['nome'], 'attrs' => ['maxlength' => '120']]); ?>
                         </label>
                         <label for="d-email">
                             <span>Email</span>
@@ -102,11 +134,11 @@ include __DIR__ . '/templates/header.php';
                         </label>
                         <label for="d-telefone">
                             <span>Telefone</span>
-                            <?php echo ui_input('telefone', ['type' => 'tel', 'id' => 'd-telefone', 'value' => $cliente['telefone'] ?? '']); ?>
+                            <?php echo ui_input('telefone', ['type' => 'tel', 'id' => 'd-telefone', 'value' => $cliente['telefone'] ?? '', 'attrs' => ['maxlength' => '30']]); ?>
                         </label>
                         <label for="d-nif">
                             <span>NIF</span>
-                            <?php echo ui_input('nif', ['id' => 'd-nif', 'value' => $cliente['nif'] ?? '']); ?>
+                            <?php echo ui_input('nif', ['id' => 'd-nif', 'value' => $cliente['nif'] ?? '', 'attrs' => ['maxlength' => '30']]); ?>
                         </label>
                         <?php echo ui_button('Guardar dados', ['type' => 'submit', 'class' => 'button']); ?>
                     </form>
@@ -121,24 +153,24 @@ include __DIR__ . '/templates/header.php';
                         <input type="hidden" name="acao" value="password">
                         <label for="d-pw-atual" style="grid-column:1/-1;">
                             <span>Palavra-passe atual</span>
-                            <div class="password-wrapper">
+                            <span class="password-wrapper">
                                 <?php echo ui_input('password_atual', ['type' => 'password', 'id' => 'd-pw-atual', 'required' => true, 'autocomplete' => 'current-password']); ?>
-                                <span class="toggle-senha" data-target="d-pw-atual"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></span>
-                            </div>
+                                <button type="button" class="toggle-senha" aria-label="Mostrar ou ocultar palavra-passe" data-target="d-pw-atual" style="background:none;border:none;padding:0;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+                            </span>
                         </label>
                         <label for="d-pw-nova">
                             <span>Nova palavra-passe</span>
-                            <div class="password-wrapper">
-                                <?php echo ui_input('password_nova', ['type' => 'password', 'id' => 'd-pw-nova', 'required' => true, 'autocomplete' => 'new-password']); ?>
-                                <span class="toggle-senha" data-target="d-pw-nova"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></span>
-                            </div>
+                            <span class="password-wrapper">
+                                <?php echo ui_input('password_nova', ['type' => 'password', 'id' => 'd-pw-nova', 'required' => true, 'autocomplete' => 'new-password', 'attrs' => ['maxlength' => '72']]); ?>
+                                <button type="button" class="toggle-senha" aria-label="Mostrar ou ocultar palavra-passe" data-target="d-pw-nova" style="background:none;border:none;padding:0;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+                            </span>
                         </label>
                         <label for="d-pw-confirm">
                             <span>Confirmar nova</span>
-                            <div class="password-wrapper">
-                                <?php echo ui_input('password_confirm', ['type' => 'password', 'id' => 'd-pw-confirm', 'required' => true, 'autocomplete' => 'new-password']); ?>
-                                <span class="toggle-senha" data-target="d-pw-confirm"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></span>
-                            </div>
+                            <span class="password-wrapper">
+                                <?php echo ui_input('password_confirm', ['type' => 'password', 'id' => 'd-pw-confirm', 'required' => true, 'autocomplete' => 'new-password', 'attrs' => ['maxlength' => '72']]); ?>
+                                <button type="button" class="toggle-senha" aria-label="Mostrar ou ocultar palavra-passe" data-target="d-pw-confirm" style="background:none;border:none;padding:0;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+                            </span>
                         </label>
                         <?php echo ui_button('Alterar palavra-passe', ['type' => 'submit', 'class' => 'button']); ?>
                     </form>
@@ -157,12 +189,12 @@ include __DIR__ . '/templates/header.php';
 </main>
 
 <script>
-window.CSRF_TOKEN = "<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>";
+window.CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 </script>
 
-<div id="modal-apagar-conta" class="modal-confirmacao">
+<div id="modal-apagar-conta" class="modal-confirmacao" role="dialog" aria-modal="true" aria-labelledby="modal-apagar-conta-titulo">
     <div class="modal-confirmacao-conteudo" style="max-width:420px;">
-        <h3>Apagar conta</h3>
+        <h3 id="modal-apagar-conta-titulo">Apagar conta</h3>
         <p class="danger-zone-text">Esta ação é permanente e não pode ser desfeita. As tuas encomendas ficam guardadas.</p>
         <div class="cliente-form-grid" style="margin-top:16px;">
             <label for="apagar-conta-password" style="grid-column:1/-1;">
@@ -170,11 +202,11 @@ window.CSRF_TOKEN = "<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QU
                 <?php echo ui_input('', ['type' => 'password', 'id' => 'apagar-conta-password', 'placeholder' => 'Confirma a tua palavra-passe', 'autocomplete' => 'current-password']); ?>
             </label>
         </div>
-        <div id="apagar-conta-erro" class="dados-inline-erro"></div>
+        <div id="apagar-conta-erro" class="dados-inline-erro" role="alert"></div>
         <div class="modal-confirmacao-acoes">
             <?php
-            echo ui_button('Cancelar', ['id' => 'apagar-conta-cancelar', 'class' => 'button voltar-btn']);
-            echo ui_button('Apagar conta', ['id' => 'apagar-conta-confirmar', 'class' => 'button delete-btn']);
+            echo ui_button('Cancelar', ['id' => 'apagar-conta-cancelar']);
+            echo ui_button('Apagar conta', ['id' => 'apagar-conta-confirmar', 'variant' => 'danger']);
             ?>
         </div>
     </div>
@@ -182,12 +214,12 @@ window.CSRF_TOKEN = "<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QU
 
 <script>
 (function () {
-    const btnAbrir    = document.getElementById('btn-abrir-apagar-conta');
-    const modal       = document.getElementById('modal-apagar-conta');
-    const btnCancelar = document.getElementById('apagar-conta-cancelar');
-    const btnConfirmar= document.getElementById('apagar-conta-confirmar');
-    const inputPw     = document.getElementById('apagar-conta-password');
-    const erroEl      = document.getElementById('apagar-conta-erro');
+    const btnAbrir     = document.getElementById('btn-abrir-apagar-conta');
+    const modal        = document.getElementById('modal-apagar-conta');
+    const btnCancelar  = document.getElementById('apagar-conta-cancelar');
+    const btnConfirmar = document.getElementById('apagar-conta-confirmar');
+    const inputPw      = document.getElementById('apagar-conta-password');
+    const erroEl       = document.getElementById('apagar-conta-erro');
 
     function abrir() {
         inputPw.value = '';
@@ -202,6 +234,17 @@ window.CSRF_TOKEN = "<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QU
     btnAbrir.addEventListener('click', abrir);
     btnCancelar.addEventListener('click', fechar);
     modal.addEventListener('click', e => { if (e.target === modal) fechar(); });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && modal.classList.contains('ativo')) {
+            fechar();
+        }
+    });
+    inputPw.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            btnConfirmar.click();
+        }
+    });
 
     btnConfirmar.addEventListener('click', function () {
         erroEl.textContent = '';
@@ -216,10 +259,11 @@ window.CSRF_TOKEN = "<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QU
                 password: inputPw.value
             })
         })
-        .then(r => r.json())
-        .then(data => {
-            if (data.sucesso) {
-                window.location.href = data.redirect;
+        .then(async r => {
+            let data = {};
+            try { data = await r.json(); } catch (_) {}
+            if (r.ok && data.sucesso) {
+                window.location.href = data.redirect || '/';
             } else {
                 erroEl.textContent = data.mensagem || 'Erro desconhecido.';
                 btnConfirmar.disabled = false;

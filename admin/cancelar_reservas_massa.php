@@ -38,32 +38,40 @@ try {
     $ph_validos = implode(',', array_fill(0, count($ids_validos), '?'));
     $types_validos = str_repeat('i', count($ids_validos));
 
-    $stmtItems = $conn->prepare("SELECT variacao_id, quantidade FROM encomenda_itens WHERE encomenda_id IN ($ph_validos) AND variacao_id IS NOT NULL");
+    $stmtItems = $conn->prepare("SELECT variacao_id, SUM(quantidade) AS quantidade FROM encomenda_itens WHERE encomenda_id IN ($ph_validos) AND variacao_id IS NOT NULL GROUP BY variacao_id ORDER BY variacao_id ASC");
     $stmtItems->bind_param($types_validos, ...$ids_validos);
     $stmtItems->execute();
     $items = $stmtItems->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmtItems->close();
 
-    if (!empty($items)) {
+    $stmtDelItems = $conn->prepare("DELETE FROM encomenda_itens WHERE encomenda_id IN ($ph_validos)");
+    $stmtDelItems->bind_param($types_validos, ...$ids_validos);
+    $stmtDelItems->execute();
+    $stmtDelItems->close();
+
+    $stmtDel = $conn->prepare("DELETE FROM encomendas WHERE id IN ($ph_validos) AND estado = 'incompleta'");
+    $stmtDel->bind_param($types_validos, ...$ids_validos);
+    $stmtDel->execute();
+    $cancelados = $stmtDel->affected_rows;
+    $stmtDel->close();
+
+    if ($cancelados > 0 && !empty($items)) {
         $stmtRestore = $conn->prepare("UPDATE produto_variacoes SET quantidade = quantidade + ? WHERE id = ?");
         foreach ($items as $item) {
-            $stmtRestore->bind_param('ii', $item['quantidade'], $item['variacao_id']);
+            $qtd = (int)$item['quantidade'];
+            $vid = (int)$item['variacao_id'];
+            $stmtRestore->bind_param('ii', $qtd, $vid);
             $stmtRestore->execute();
         }
         $stmtRestore->close();
     }
 
-    $stmtCancel = $conn->prepare("UPDATE encomendas SET estado = 'cancelada' WHERE id IN ($ph_validos) AND estado = 'incompleta'");
-    $stmtCancel->bind_param($types_validos, ...$ids_validos);
-    $stmtCancel->execute();
-    $cancelados = $stmtCancel->affected_rows;
-    $stmtCancel->close();
-
     $conn->commit();
+    log_app("{$cancelados} reserva(s) cancelada(s) em massa e stock reposto.", 'INFO', 'cancelar_reservas_massa.php');
     $_SESSION['flash_message'] = ['tipo' => 'sucesso', 'texto' => $cancelados . ' reserva(s) cancelada(s) e stock reposto com sucesso!'];
 } catch (\Throwable $e) {
     $conn->rollback();
-    error_log($e->getMessage());
+    log_exception($e, 'cancelar_reservas_massa.php');
     $_SESSION['flash_message'] = ['tipo' => 'erro', 'texto' => 'Erro ao cancelar reservas.'];
 }
 

@@ -1,5 +1,5 @@
 <?php
-// admin/includes/image_upload.php — Helper DRY para validação e gravação de imagens base64 de produtos
+// admin/includes/image_upload.php - Helper DRY para validação e gravação de imagens base64 de produtos
 
 if (!function_exists('salvar_imagens_base64_produto')) {
     /**
@@ -24,11 +24,24 @@ if (!function_exists('salvar_imagens_base64_produto')) {
 
         $destDir = rtrim($destDir, '/\\') . DIRECTORY_SEPARATOR;
         $mapa = [];
+        $maxBase64Len = (int)ceil($maxBytes * 1.38) + 128;
 
         foreach ($imagensInfo as $imgInfo) {
-            $placeholder = (string)($imgInfo['placeholder'] ?? '');
-            $base64Raw   = preg_replace('#^data:image/\w+;base64,#i', '', (string)($imgInfo['dados'] ?? ''));
-            $binario     = base64_decode($base64Raw, true);
+            if (!is_array($imgInfo)) {
+                throw new Exception('Formato de dados de imagem inválido.');
+            }
+            $placeholder = trim((string)($imgInfo['placeholder'] ?? ''));
+            if ($placeholder === '' || isset($mapa[$placeholder])) {
+                throw new Exception('Identificador de imagem inválido ou duplicado.');
+            }
+
+            $dadosStr = (string)($imgInfo['dados'] ?? '');
+            if ($dadosStr === '' || strlen($dadosStr) > $maxBase64Len) {
+                throw new Exception('Dados de imagem inválidos ou demasiado grandes (máx. 5MB).');
+            }
+
+            $base64Raw = preg_replace('#^data:image/\w+;base64,#i', '', $dadosStr);
+            $binario   = base64_decode($base64Raw, true);
 
             if ($binario === false || strlen($binario) < 12 || strlen($binario) > $maxBytes) {
                 throw new Exception('Dados de imagem inválidos ou demasiado grandes (máx. 5MB).');
@@ -39,12 +52,47 @@ if (!function_exists('salvar_imagens_base64_produto')) {
                 throw new Exception('O ficheiro enviado não é uma imagem válida (JPEG, PNG, WEBP ou GIF).');
             }
 
-            $extReal = $extMap[$infoImagem[2]] ?? 'jpg';
-            $nomeFicheiro = uniqid('img_', true) . '.' . $extReal;
+            $width  = (int)($infoImagem[0] ?? 0);
+            $height = (int)($infoImagem[1] ?? 0);
+            if ($width < 1 || $height < 1 || $width > 6000 || $height > 6000 || ($width * $height) > 25000000) {
+                throw new Exception('Dimensões de imagem inválidas ou excessivas (máx. 6000x6000px).');
+            }
+
+            $imgType = $infoImagem[2];
+            $extReal = $extMap[$imgType] ?? 'jpg';
+            $nomeFicheiro = 'img_' . bin2hex(random_bytes(16)) . '.' . $extReal;
             $caminhoAbsoluto = $destDir . $nomeFicheiro;
 
-            if (file_put_contents($caminhoAbsoluto, $binario) === false) {
-                throw new Exception('Erro ao guardar a imagem. Verifique as permissões da pasta public/images no servidor.');
+            $gravado = false;
+            if (function_exists('imagecreatefromstring')) {
+                $im = @imagecreatefromstring($binario);
+                if ($im === false) {
+                    throw new Exception('Não foi possível processar a imagem enviada.');
+                }
+                try {
+                    if ($imgType === IMAGETYPE_PNG || $imgType === IMAGETYPE_WEBP) {
+                        @imagepalettetotruecolor($im);
+                        @imagealphablending($im, false);
+                        @imagesavealpha($im, true);
+                    }
+                    if ($imgType === IMAGETYPE_JPEG && function_exists('imagejpeg')) {
+                        $gravado = @imagejpeg($im, $caminhoAbsoluto, 90);
+                    } elseif ($imgType === IMAGETYPE_PNG && function_exists('imagepng')) {
+                        $gravado = @imagepng($im, $caminhoAbsoluto, 6);
+                    } elseif ($imgType === IMAGETYPE_WEBP && function_exists('imagewebp')) {
+                        $gravado = @imagewebp($im, $caminhoAbsoluto, 88);
+                    } elseif ($imgType === IMAGETYPE_GIF && function_exists('imagegif')) {
+                        $gravado = @imagegif($im, $caminhoAbsoluto);
+                    }
+                } finally {
+                    @imagedestroy($im);
+                }
+            }
+
+            if (!$gravado) {
+                if (file_put_contents($caminhoAbsoluto, $binario) === false) {
+                    throw new Exception('Erro ao guardar a imagem. Verifique as permissões da pasta public/images no servidor.');
+                }
             }
 
             $ficheirosCriados[] = $caminhoAbsoluto;

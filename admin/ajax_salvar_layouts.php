@@ -1,14 +1,13 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/auth.php';
 header('Content-Type: application/json');
 
 $response = ['sucesso' => false, 'mensagem' => 'Acesso negado.'];
 
-// Acesso permitido a SuperAdmins e Desenvolvedores
+// Acesso permitido apenas a gestores da loja
 if ($_SERVER['REQUEST_METHOD'] !== 'POST'
-    || !isset($_SESSION['admin_logado'])
-    || $_SESSION['admin_logado'] !== true
-    || !in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor'])
+    || !is_admin_manager()
     || !isset($_POST['csrf_token'])
     || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
     echo json_encode($response);

@@ -5,7 +5,7 @@
     width: 100%;
     height: 100%;
     background-color: rgba(15, 23, 42, 0.38);
-    z-index: 10003;
+    z-index: var(--z-overlay, 1000);
     opacity: 0;
     visibility: hidden;
     backdrop-filter: blur(4px);
@@ -26,7 +26,7 @@
     height: 100%;
     background: var(--cor-branco);
     box-shadow: -18px 0 45px rgba(15, 23, 42, 0.18);
-    z-index: 10004;
+    z-index: calc(var(--z-overlay, 1000) + 10);
     transform: translateX(100%);
     transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
@@ -55,7 +55,7 @@
     margin: 0;
     color: var(--cor-gray-900);
     font-size: 1.08rem;
-    font-weight: 760;
+    font-weight: 700;
     line-height: 1.15;
     letter-spacing: 0;
     text-transform: none;
@@ -64,7 +64,7 @@
 .side-cart-header h4 span {
     color: var(--cor-slate-500);
     font-size: 0.78rem;
-    font-weight: 650;
+    font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
@@ -100,7 +100,7 @@
 }
 
 
-/* Os itens do side-cart agora são controlados pelo componente unificado _unified-cart-item.css */
+/* Os itens do side-cart agora sÃƒÂ£o controlados pelo componente unificado _unified-cart-item.css */
 
 .remover-item-btn {
     width: 30px;
@@ -147,7 +147,7 @@
     margin: 0 0 8px;
     color: var(--cor-gray-900);
     font-size: 1rem;
-    font-weight: 750;
+    font-weight: 700;
 }
 
 .side-cart-vazio p {
@@ -186,7 +186,7 @@
 .side-cart-subtotal > span:first-child {
     color: var(--cor-slate-500);
     font-size: 0.82rem;
-    font-weight: 750;
+    font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
@@ -195,7 +195,7 @@
     min-width: 0;
     color: #020617;
     font-size: 1.15rem;
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1.15;
     text-align: right;
 }
@@ -321,7 +321,7 @@
     .side-cart-header h4 {
         color: var(--cor-ink);
         font-size: 1.05rem;
-        font-weight: 750;
+        font-weight: 700;
     }
 
     .btn-fechar-side-cart {

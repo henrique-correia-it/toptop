@@ -11,6 +11,7 @@ if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true || $
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/cliente_auth.php';
+require_once __DIR__ . '/includes/storage_helper.php';
 
 // ── Lógica Conta de Cliente Vinculada ──
 $admin_email = '';
@@ -53,105 +54,66 @@ if (empty($_SESSION['csrf_token'])) {
 $stripe_mode = getLojaConfig('stripe_mode', 'live');
 $is_live     = $stripe_mode === 'live';
 
-// Header dinâmico (esconder no scroll)
-$header_auto_hide = getLojaConfig('header_auto_hide', '1') === '1';
+// ── Lógica Fotos Fantasma & Uso de Disco (fonte única de verdade) ──
+$storage             = dev_calcular_armazenamento();
+$fotos_fantasma_real = count(dev_listar_fantasmas($conn, $storage['galeria']));
+$espaco_disco_real   = format_bytes($storage['total_bytes']);
 
-// ── Lógica Fotos Fantasma (Ficheiros sem registo na BD) ──
-$referenciados = [];
-$queries_f = [
-    "SELECT foto_principal AS f FROM produtos WHERE foto_principal != ''",
-    "SELECT nome_ficheiro AS f FROM produto_imagens WHERE nome_ficheiro != ''",
-    "SELECT foto_snapshot AS f FROM encomenda_itens WHERE foto_snapshot != ''",
-    "SELECT foto_capa AS f FROM categorias WHERE foto_capa != ''",
-];
-foreach ($queries_f as $sql) {
-    $res = $conn->query($sql);
-    if ($res) {
-        while ($row = $res->fetch_assoc()) {
-            $nome = basename($row['f']);
-            $referenciados[$nome] = true;
+// ── Lógica Logs Recentes (agrega todos os logs por data/hora descendente) ──
+function getRecentAppLogs($limit = 5) {
+    $fontes = [
+        'app'       => LOG_DIR . 'app.log',
+        'sql'       => LOG_DIR . 'sql.log',
+        'js'        => LOG_DIR . 'js.log',
+        'stripe'    => LOG_DIR . 'stripe.log',
+        'email'     => LOG_DIR . 'email.log',
+        'seguranca' => LOG_DIR . 'seguranca.log',
+    ];
+    $entries = [];
+
+    foreach ($fontes as $fonte => $file) {
+        if (!file_exists($file)) continue;
+        $fp = @fopen($file, 'rb');
+        if ($fp === false) continue;
+        $size = filesize($file);
+        $readBytes = min($size ?: 0, 8192);
+        if ($readBytes <= 0) { fclose($fp); continue; }
+        fseek($fp, -$readBytes, SEEK_END);
+        $chunk = fread($fp, $readBytes);
+        fclose($fp);
+        if (!is_string($chunk) || $chunk === '') continue;
+
+        $lines = preg_split('/\r\n|\r|\n/', $chunk);
+        if ($size > $readBytes && count($lines) > 1) array_shift($lines);
+
+        foreach ($lines as $line) {
+            if (trim($line) === '') continue;
+            if (preg_match('/^\[(\d{4}-\d{2}-\d{2} .*?)\] \[(.*?)\](?: \[(.*?)\])? (.*)/', $line, $m)) {
+                $ts = strtotime($m[1]) ?: 0;
+                $msgClean = trim(explode(' | ', $m[4], 2)[0]);
+                $entries[] = [
+                    'ts'    => $ts,
+                    'time'  => $ts ? date('H:i', $ts) : '',
+                    'level' => $m[2] . ' · ' . $fonte,
+                    'msg'   => $msgClean,
+                ];
+            } elseif (preg_match('/^\[(\d{2}-\w{3}-\d{4} .*?)\] (.*)/', $line, $m)) {
+                $ts = strtotime($m[1]) ?: 0;
+                $entries[] = [
+                    'ts'    => $ts,
+                    'time'  => $ts ? date('H:i', $ts) : substr($m[1], 12, 5),
+                    'level' => 'PHP-SYS · ' . $fonte,
+                    'msg'   => trim($m[2]),
+                ];
+            }
         }
     }
+
+    usort($entries, fn($a, $b) => $b['ts'] <=> $a['ts']);
+    return array_slice($entries, 0, $limit);
 }
 
-$dirs_scan = [__DIR__ . '/../public/images/', __DIR__ . '/../public/assets/img_categorias/'];
-$exts_allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
-$fotos_fantasma_real = 0;
-
-foreach ($dirs_scan as $dir) {
-    if (is_dir($dir)) {
-        foreach (scandir($dir) as $f) {
-            if ($f === '.' || $f === '..') continue;
-            if (!is_file($dir . $f)) continue;
-            $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
-            if (in_array($ext, $exts_allowed) && !isset($referenciados[$f])) $fotos_fantasma_real++;
-        }
-    }
-}
-
-// ── Lógica Uso de Disco ──
-if (!function_exists('calcFolderSize')) {
-    function calcFolderSize($path) {
-        $size = 0;
-        try {
-            $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS));
-            foreach ($files as $file) { if ($file->isFile()) $size += $file->getSize(); }
-        } catch (Exception $e) {}
-        return $size;
-    }
-}
-$usage_bytes = calcFolderSize(__DIR__ . '/..');
-$espaco_disco_real = format_bytes($usage_bytes);
-
-// ── Lógica Logs Recentes ──
-function getRecentAppLogs($limit = 3) {
-    $file = LOG_DIR . 'app.log';
-    if (!file_exists($file)) return [];
-    
-    // Ler as linhas ignorando vazias
-    $fp = @fopen($file, 'rb');
-    if ($fp === false) return [];
-    $size = filesize($file);
-    $readBytes = min($size ?: 0, 16384);
-    if ($readBytes <= 0) { fclose($fp); return []; }
-    fseek($fp, -$readBytes, SEEK_END);
-    $chunk = fread($fp, $readBytes);
-    fclose($fp);
-    if (!is_string($chunk) || $chunk === '') return [];
-    $lines = preg_split('/\r\n|\r|\n/', $chunk);
-    if ($size > $readBytes && count($lines) > 1) array_shift($lines);
-    $lines = array_values(array_filter($lines, fn($l) => trim($l) !== ''));
-    if (!$lines) return [];
-    
-    // Inverter para processar do mais recente para o mais antigo
-    $lines = array_reverse($lines);
-    $formatted = [];
-    
-    foreach ($lines as $line) {
-        if (count($formatted) >= $limit) break;
-
-        // Formato custom: [timestamp] [LEVEL] [Context] Message
-        if (preg_match('/^\[(\d{4}-\d{2}-\d{2} .*?)\] \[(.*?)\](?: \[(.*?)\])? (.*)/', $line, $m)) {
-            $formatted[] = [
-                'time'  => date('H:i', strtotime($m[1])),
-                'level' => $m[2],
-                'msg'   => trim($m[4])
-            ];
-        } 
-        // Formato PHP nativo: [dd-Mmm-yyyy hh:mm:ss Timezone] PHP message
-        elseif (preg_match('/^\[(\d{2}-\w{3}-\d{4} .*?)\] (.*)/', $line, $m)) {
-            $ts = strtotime($m[1]);
-            $formatted[] = [
-                'time'  => $ts ? date('H:i', $ts) : substr($m[1], 12, 5),
-                'level' => 'PHP-SYS',
-                'msg'   => trim($m[2])
-            ];
-        }
-    }
-    return $formatted;
-}
-
-$recent_logs = getRecentAppLogs(3);
+$recent_logs = getRecentAppLogs(5);
 ?>
 
 <!-- Carregar CSS Próprio -->
@@ -169,37 +131,43 @@ $recent_logs = getRecentAppLogs(3);
             <form id="backup-db-form" method="post" action="ajax_backup_db.php" style="display:inline; margin:0;">
                 <?php echo csrf_input(); ?>
                 <input type="hidden" name="current_password" value="">
-                <?php echo ui_button('Cópia de Segurança (DB)', ['class' => 'action-btn-pill btn-backup', 'title' => 'Gerar dump SQL completo', 'onclick' => "document.getElementById('backup-password-dialog').showModal()", 'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 16px; height: 16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> ']); ?>
+                <?php echo ui_button('Cópia de Segurança (DB)', ['class' => 'action-btn-pill btn-backup', 'title' => 'Gerar dump SQL completo', 'onclick' => "document.getElementById('backup-password-dialog').showModal()", 'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> ']); ?>
             </form>
-            <style>#backup-password-dialog::backdrop, #stripe-password-dialog::backdrop { background:rgba(15,23,42,.48); backdrop-filter:blur(2px); }</style>
-            <dialog id="backup-password-dialog" style="position:fixed; inset:50% auto auto 50%; transform:translate(-50%,-50%); margin:0; border:0; border-radius:16px; padding:0; box-shadow:0 20px 60px rgba(15,23,42,.25); max-width:420px; width:calc(100% - 32px);">
-                <form method="dialog" onsubmit="event.preventDefault(); descarregarBackupDb();" style="padding:24px; display:grid; gap:16px;">
-                    <div>
-                        <h3 style="margin:0 0 8px;">Confirmar backup</h3>
-                        <p style="margin:0; color:#64748b;">Introduza a sua palavra-passe para descarregar a base de dados.</p>
+            <dialog id="backup-password-dialog" class="ui-dialog">
+                <div class="qe-card">
+                    <div class="qe-hd">
+                        <h3>Confirmar backup</h3>
                     </div>
-                    <?php echo ui_input('', ['id' => 'backup-current-password', 'type' => 'password', 'required' => true, 'autocomplete' => 'current-password', 'placeholder' => 'Palavra-passe atual', 'style' => 'width:100%; box-sizing:border-box; padding:12px 14px; border:1px solid #cbd5e1; border-radius:10px;']); ?>
-                    <p id="backup-error" role="alert" style="display:none; margin:0; padding:10px 12px; border-radius:10px; background:#fef2f2; color:#b91c1c;"></p>
-                    <div style="display:flex; justify-content:flex-end; gap:10px;">
-                        <?php echo ui_button('Cancelar', ['class' => 'action-btn-pill', 'onclick' => "document.getElementById('backup-password-dialog').close()"]); echo ui_button('Descarregar backup', ['id' => 'backup-confirm-button', 'class' => 'action-btn-pill btn-backup', 'onclick' => 'descarregarBackupDb()']); ?>
-                    </div>
-                </form>
+                    <form method="dialog" onsubmit="event.preventDefault(); descarregarBackupDb();" class="qe-body">
+                        <p style="margin:0;">Introduza a sua palavra-passe para descarregar a base de dados.</p>
+                        <?php echo ui_input('', ['id' => 'backup-current-password', 'type' => 'password', 'class' => 'qe-in', 'required' => true, 'autocomplete' => 'current-password', 'placeholder' => 'Palavra-passe atual']); ?>
+                        <p id="backup-error" role="alert" style="display:none; margin:0; padding:10px 12px; border-radius:10px; background:var(--cor-perigo-bg); color:#b91c1c; font-size:0.84rem;"></p>
+                        <div class="qe-btns">
+                            <?php
+                            echo ui_button('Cancelar', ['onclick' => "document.getElementById('backup-password-dialog').close()"]);
+                            echo ui_button('Descarregar backup', ['id' => 'backup-confirm-button', 'variant' => 'primary', 'onclick' => 'descarregarBackupDb()']);
+                            ?>
+                        </div>
+                    </form>
+                </div>
             </dialog>
-            <dialog id="stripe-password-dialog" style="position:fixed; inset:50% auto auto 50%; transform:translate(-50%,-50%); margin:0; border:0; border-radius:16px; padding:0; box-shadow:0 20px 60px rgba(15,23,42,.25); max-width:420px; width:calc(100% - 32px);">
-                <form id="stripe-password-form" method="dialog" style="padding:24px; display:grid; gap:16px;">
-                    <div>
-                        <h3 style="margin:0 0 8px;">Confirmar alteração do Stripe</h3>
-                        <p style="margin:0; color:#64748b;">Introduza a sua palavra-passe para alterar o modo do Stripe para <strong id="stripe-target-mode-label" style="color:var(--cor-texto);">LIVE</strong>.</p>
+            <dialog id="stripe-password-dialog" class="ui-dialog">
+                <div class="qe-card">
+                    <div class="qe-hd">
+                        <h3>Confirmar alteração do Stripe</h3>
                     </div>
-                    <?php echo ui_input('', ['id' => 'stripe-current-password', 'type' => 'password', 'required' => true, 'autocomplete' => 'current-password', 'placeholder' => 'Palavra-passe atual', 'style' => 'width:100%; box-sizing:border-box; padding:12px 14px; border:1px solid #cbd5e1; border-radius:10px;']); ?>
-                    <p id="stripe-password-error" role="alert" style="display:none; margin:0; padding:10px 12px; border-radius:10px; background:#fef2f2; color:#b91c1c;"></p>
-                    <div style="display:flex; justify-content:flex-end; gap:10px;">
-                        <?php
-                        echo ui_button('Cancelar', ['class' => 'action-btn-pill', 'onclick' => "document.getElementById('stripe-password-dialog').close()"]);
-                        echo ui_button('Confirmar alteração', ['id' => 'stripe-confirm-button', 'type' => 'submit', 'class' => 'action-btn-pill btn-backup']);
-                        ?>
-                    </div>
-                </form>
+                    <form id="stripe-password-form" method="dialog" class="qe-body">
+                        <p style="margin:0;">Introduza a sua palavra-passe para alterar o modo do Stripe para <strong id="stripe-target-mode-label" style="color:var(--cor-slate-900);">LIVE</strong>.</p>
+                        <?php echo ui_input('', ['id' => 'stripe-current-password', 'type' => 'password', 'class' => 'qe-in', 'required' => true, 'autocomplete' => 'current-password', 'placeholder' => 'Palavra-passe atual']); ?>
+                        <p id="stripe-password-error" role="alert" style="display:none; margin:0; padding:10px 12px; border-radius:10px; background:var(--cor-perigo-bg); color:#b91c1c; font-size:0.84rem;"></p>
+                        <div class="qe-btns">
+                            <?php
+                            echo ui_button('Cancelar', ['onclick' => "document.getElementById('stripe-password-dialog').close()"]);
+                            echo ui_button('Confirmar alteração', ['id' => 'stripe-confirm-button', 'type' => 'submit', 'variant' => 'primary']);
+                            ?>
+                        </div>
+                    </form>
+                </div>
             </dialog>
             <script>
             async function descarregarBackupDb() {
@@ -255,7 +223,7 @@ $recent_logs = getRecentAppLogs(3);
             }
             </script>
             <div class="simulate-wrap" style="position:relative;">
-                <?php echo ui_button('Simular Encomenda', ['id' => 'btn-criar-encomenda-fake', 'class' => 'action-btn-pill btn-simulate', 'title' => 'Gerar encomenda fictícia', 'style' => 'border: 1px solid #e2e8f0;', 'html' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 16px; height: 16px;"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> Simular Encomenda <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px; margin-left: 2px; transition: transform 0.2s;" id="simulate-chevron"><polyline points="6 9 12 15 18 9"/></svg>']); ?>
+                <?php echo ui_button('Simular Encomenda', ['id' => 'btn-criar-encomenda-fake', 'class' => 'action-btn-pill btn-simulate', 'title' => 'Gerar encomenda fictícia', 'html' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> Simular Encomenda <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; margin-left: 2px; transition: transform 0.2s;" id="simulate-chevron"><polyline points="6 9 12 15 18 9"/></svg>']); ?>
                 <div id="simulate-dropdown" class="simulate-dropdown" style="display:none;">
                     <div class="simulate-dropdown-item" data-estado="pago">
                         <span class="sim-dot" style="background:#10b981;"></span>
@@ -282,7 +250,7 @@ $recent_logs = getRecentAppLogs(3);
                         <div><strong>Pronta para Levantamento</strong><span>Aguarda recolha na loja</span></div>
                     </div>
                     <div class="simulate-dropdown-item" data-estado="concluida">
-                        <span class="sim-dot" style="background:#0f766e;"></span>
+                        <span class="sim-dot" style="background:#10b981;"></span>
                         <div><strong>Concluída</strong><span>Entregue e fechada</span></div>
                     </div>
                     <div class="simulate-dropdown-item" data-estado="cancelada">
@@ -318,14 +286,6 @@ $recent_logs = getRecentAppLogs(3);
             'href' => 'uso_armazenamento.php',
             'icon' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
         ]);
-
-        echo ui_stat_card($header_auto_hide ? 'ON' : 'OFF', 'Header Dinâmico', [
-            'class'      => $header_auto_hide ? 'header-hide-on' : 'header-hide-off',
-            'value_id'   => 'header-hide-label',
-            'attrs'      => ['id' => 'header-hide-toggle', 'style' => 'cursor: pointer; position: relative;', 'title' => 'Esconder o cabeçalho ao fazer scroll para baixo'],
-            'icon'       => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline><polyline points="18 21 12 15 6 21"></polyline></svg>',
-            'extra_html' => '<input type="checkbox" id="header-hide-checkbox" style="display:none;"' . ($header_auto_hide ? ' checked' : '') . '>',
-        ]);
         ?>
     </div>
 
@@ -336,10 +296,10 @@ $recent_logs = getRecentAppLogs(3);
                 <div class="dashboard-grid">
                     <?php
                     echo ui_nav_card('Galeria do Servidor', 'Gestão centralizada de todas as imagens.', 'galeria_imagens.php', [
-                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
                     ]);
                     echo ui_nav_card('Uso de Armazenamento', 'Análise detalhada do espaço em disco.', 'uso_armazenamento.php', [
-                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
                     ]);
                     ?>
                 </div>
@@ -350,10 +310,13 @@ $recent_logs = getRecentAppLogs(3);
                 <div class="dashboard-grid">
                     <?php
                     echo ui_nav_card('Registos de Login', 'Histórico de acessos administrativos.', 'login_logs.php', [
-                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>',
+                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>',
                     ]);
-                    echo ui_nav_card('Registos de Erros', 'Logs de App, SQL, Email e Stripe.', 'ver_logs.php', [
-                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+                    echo ui_nav_card('Registos de Erros', 'Logs de App, SQL, Email, Stripe, Segurança e JS.', 'ver_logs.php', [
+                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+                    ]);
+                    echo ui_nav_card('Desenvolvedores', 'Criar e gerir contas de programador.', 'listar_devs.php', [
+                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
                     ]);
                     ?>
                 </div>
@@ -364,10 +327,10 @@ $recent_logs = getRecentAppLogs(3);
                 <div class="dashboard-grid">
                     <?php
                     echo ui_nav_card('Developer Previews', 'Visualizar templates com dados simulados.', 'previews.php', [
-                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
                     ]);
-                    echo ui_nav_card('Design System', 'Tokens, cores e biblioteca de 16 componentes.', 'design_system.php', [
-                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>',
+                    echo ui_nav_card('Emails de Sistema', 'Autenticação, segurança e alertas internos.', 'emails_sistema.php', [
+                        'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
                     ]);
                     ?>
                 </div>
@@ -378,20 +341,21 @@ $recent_logs = getRecentAppLogs(3);
         <div class="activity-col">
             <!-- Área: Logs Sidebar -->
             <aside class="grid-area-logs">
-                <h3 class="dashboard-section-title">Logs Recentes (App)</h3>
+                <h3 class="dashboard-section-title">Logs Recentes</h3>
                 <div class="activity-feed-container">
                     <?php if (empty($recent_logs)): ?>
                         <p style="font-size: 0.8rem; color: #64748b; padding: 10px;">Sem registos recentes.</p>
                     <?php else: ?>
-                        <?php foreach ($recent_logs as $log): 
+                        <?php foreach ($recent_logs as $log):
                             $icon_class = 'dev-terminal';
-                            $is_error = in_array($log['level'], ['ERROR', 'FATAL', 'FATAL-SHUTDOWN']);
+                            $is_error   = (bool)preg_match('/^(ERROR|FATAL|PHP-ERROR|SQL|EMAIL|JS-|HTTP-5)/i', $log['level']);
+                            $is_warn    = !$is_error && (bool)preg_match('/^(WARNING|NOTICE|DEPRECATED|SECURITY|404|PHP-SYS)/i', $log['level']);
                             if ($is_error) $icon_class = 'encomenda'; // Vermelho
-                            elseif (in_array($log['level'], ['WARNING', 'PHP-SYS'])) $icon_class = 'mensagem'; // Azul
+                            elseif ($is_warn) $icon_class = 'mensagem'; // Azul
                         ?>
                             <a href="ver_logs.php" class="activity-item" style="text-decoration: none; color: inherit; cursor: pointer;">
                                 <div class="activity-icon-wrapper <?php echo $icon_class; ?>" style="<?php echo $is_error ? 'background:#fee2e2;color:#ef4444;' : ''; ?>">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
                                 </div>
                                 <div class="activity-content">
                                     <strong><?php echo htmlspecialchars($log['level']); ?></strong>
@@ -503,39 +467,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    // ── Header Dinâmico Toggle (no Card) ──
-    const headerCard = document.getElementById('header-hide-toggle');
-    const headerLabel = document.getElementById('header-hide-label');
-    const headerCheckbox = document.getElementById('header-hide-checkbox');
-
-    if (headerCard) {
-        headerCard.addEventListener('click', function () {
-            const enable = !headerCheckbox.checked;
-
-            const fd = new FormData();
-            fd.append('header_auto_hide', enable ? '1' : '0');
-            fd.append('csrf_token', '<?php echo $_SESSION['csrf_token']; ?>');
-
-            fetch('ajax_toggle_header_scroll.php', { method: 'POST', body: fd })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.sucesso) {
-                        headerCheckbox.checked = enable;
-                        headerLabel.textContent = enable ? 'ON' : 'OFF';
-                        headerCard.classList.toggle('header-hide-on', enable);
-                        headerCard.classList.toggle('header-hide-off', !enable);
-                        mostrarPopup('Header dinâmico ' + (enable ? 'ativado' : 'desativado') + '. A atualizar...', 'sucesso');
-                        // Recarregar para o header da página atual refletir a mudança
-                        setTimeout(() => location.reload(), 900);
-                    } else {
-                        mostrarPopup(data.mensagem || 'Erro ao alterar.', 'erro');
-                    }
-                })
-                .catch(() => { mostrarPopup('Erro de rede ao alterar o header.', 'erro'); });
-        });
-    }
-
-
     // ── Simular Encomenda (dropdown) ──
     const btnFakeEnc = document.getElementById('btn-criar-encomenda-fake');
     const simDropdown = document.getElementById('simulate-dropdown');
@@ -556,7 +487,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (data.sucesso) {
                 mostrarPopup(data.mensagem, 'sucesso');
                 setTimeout(() => {
-                    window.location.href = '/admin/detalhes_encomenda.php?id=' + data.id + '&return_to=dev';
+                    window.location.href = '/admin/detalhes_encomenda.php?id=' + data.id + '&return_to=encomendas';
                 }, 1500);
             } else {
                 mostrarPopup('Erro: ' + data.mensagem, 'erro');

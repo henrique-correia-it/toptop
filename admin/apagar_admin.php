@@ -1,27 +1,27 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/csrf.php';
 include '../config/database.php';
 
-// --- INÍCIO DA CORREÇÃO CSRF ---
+// 1. Apenas gestores de admin (superadmin / dev no painel admin) podem apagar contas da loja
+if (!is_admin_manager()) {
+    http_response_code(403);
+    header("Location: listar_admins.php?erro=1");
+    exit;
+}
 
-// 1. Apenas aceitar pedidos POST
+// 2. Apenas aceitar pedidos POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    header('Allow: POST');
     exit('Acesso inválido.');
 }
 
-// 2. Validar o token CSRF
-if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+// 3. Validar o token CSRF
+if (!csrf_from_post()) {
+    http_response_code(403);
     exit('Erro de validação de segurança. Ação não permitida.');
-}
-// --- FIM DA CORREÇÃO CSRF ---
-
-
-// --- (PASSOS DE SEGURANÇA CRUCIAIS) ---
-
-// 1. Apenas superadmins e desenvolvedores podem apagar
-if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true || !in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor'])) {
-    header("Location: listar_admins.php?erro=1"); // Erro: Sem permissão
-    exit;
 }
 
 // 2. Valida o ID recebido (agora do POST)
@@ -37,7 +37,7 @@ if ($id_a_apagar == $_SESSION['admin_id']) {
     exit;
 }
 
-// 4. Verificação atómica (transação + FOR UPDATE) para proteger o último superadmin/desenvolvedor
+// 4. Verificação atómica (transação + FOR UPDATE) para proteger o último superadmin e contas fora da loja
 $conn->begin_transaction();
 try {
     $stmt_count = $conn->prepare("SELECT role FROM administradores WHERE id = ? FOR UPDATE");
@@ -47,24 +47,11 @@ try {
     $stmt_count->close();
 
     if ($result_role) {
-        if ($result_role['role'] === 'desenvolvedor') {
-            // Proteção: Apenas desenvolvedores podem apagar desenvolvedores
-            if ($_SESSION['admin_role'] !== 'desenvolvedor') {
-                $conn->rollback();
-                header("Location: listar_admins.php?erro=protecao_dev");
-                exit;
-            }
-            
-            // Não permitir apagar o último desenvolvedor
-            $stmt_total = $conn->prepare("SELECT id FROM administradores WHERE role = 'desenvolvedor' FOR UPDATE");
-            $stmt_total->execute();
-            $total_devs = $stmt_total->get_result()->num_rows;
-            $stmt_total->close();
-            if ($total_devs <= 1) {
-                $conn->rollback();
-                header("Location: listar_admins.php?erro=ultimo_dev");
-                exit;
-            }
+        if (!in_array(($result_role['role'] ?? ''), ['admin', 'superadmin'], true)) {
+            // Contas fora dos roles de loja nunca são geridas ou apagadas através do /admin
+            $conn->rollback();
+            header("Location: listar_admins.php?erro=1");
+            exit;
         } elseif ($result_role['role'] === 'superadmin') {
             $stmt_total = $conn->prepare("SELECT id FROM administradores WHERE role = 'superadmin' FOR UPDATE");
             $stmt_total->execute();
@@ -87,6 +74,7 @@ try {
 
     if ($ok) {
         $conn->commit();
+        log_seguranca("Administrador #{$id_a_apagar} eliminado.", 'apagar_admin.php');
         header("Location: listar_admins.php?sucesso=3"); // Sucesso: Utilizador apagado
         exit;
     }
@@ -96,7 +84,7 @@ try {
     exit;
 } catch (\Throwable $e) {
     $conn->rollback();
-    error_log('Erro em apagar_admin.php: ' . $e->getMessage());
+    log_exception($e, 'apagar_admin.php');
     header("Location: listar_admins.php?erro=4");
     exit;
 }

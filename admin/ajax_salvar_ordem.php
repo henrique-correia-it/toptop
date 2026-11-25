@@ -1,9 +1,10 @@
 <?php
 include '../config/database.php';
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/csrf.php';
 
-if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true || !in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor'])) {
+if (!is_admin_manager()) {
     header('Content-Type: application/json');
     echo json_encode(['sucesso' => false, 'mensagem' => 'Acesso negado.']);
     exit;
@@ -18,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_from_post()) {
 
 $response = ['sucesso' => false];
 
-if (isset($_SESSION['admin_logado']) && in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor'])) {
+if (is_admin_manager()) {
     $ordem_ids = json_decode($_POST['ordem'] ?? '[]', true);
     if (is_array($ordem_ids) && !empty($ordem_ids)) {
         try {

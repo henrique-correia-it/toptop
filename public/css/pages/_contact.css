@@ -1,4 +1,4 @@
-/* ===== PÁGINA DE CONTACTO — design editorial alinhado com a homepage ===== */
+/* ===== PÃGINA DE CONTACTO â€” design editorial alinhado com a homepage ===== */
 
 .pagina-contacto {
     /* Tokens espelhados da homepage (editorial premium) */
@@ -62,14 +62,14 @@
     text-align: center;
 }
 
-/* ---- GRID (dois cartões) ---- */
+/* ---- GRID (dois cartÃµes) ---- */
 .pagina-contacto .contacto-grid {
     display: grid;
     grid-template-columns: 1fr 1.4fr;
     gap: clamp(1.1rem, 2vw, 1.6rem);
     align-items: stretch;
     margin-top: 0;
-    /* reset da antiga caixa única */
+    /* reset da antiga caixa Ãºnica */
     border: 0;
     border-radius: 0;
     overflow: visible;
@@ -85,7 +85,7 @@
     box-shadow: 0 14px 38px -28px rgba(28, 28, 28, .35);
 }
 
-/* títulos de coluna (kicker discreto) */
+/* tÃ­tulos de coluna (kicker discreto) */
 .pagina-contacto .info-coluna h3,
 .pagina-contacto .form-coluna h3 {
     font-size: .72rem;
@@ -210,7 +210,7 @@
     gap: .45rem;
     color: var(--c-ink);
     font-size: .84rem;
-    font-weight: 650;
+    font-weight: 600;
     line-height: 1.25;
 }
 
@@ -254,7 +254,7 @@
     margin: 0;
 }
 
-/* ---- REDES SOCIAIS (botões circulares) ---- */
+/* ---- REDES SOCIAIS (botÃµes circulares) ---- */
 .pagina-contacto .contacto-social-links {
     display: flex;
     flex-wrap: wrap;
@@ -291,7 +291,7 @@
 .pagina-contacto .contacto-social-link.ig:hover { background: #E1306C; }
 .pagina-contacto .contacto-social-link.fb:hover { background: #1877F2; }
 
-/* ---- FORMULÁRIO ---- */
+/* ---- FORMULÃRIO ---- */
 .pagina-contacto .form-coluna label {
     font-size: .7rem;
     font-weight: 700;
@@ -336,7 +336,7 @@
     color: var(--c-muted);
 }
 
-/* botão pílula (igual aos da home, com seta a deslizar) */
+/* botÃ£o pÃ­lula (igual aos da home, com seta a deslizar) */
 .pagina-contacto .contacto-submit {
     width: 100%;
     margin-top: 1.2rem;
@@ -371,6 +371,8 @@
 }
 
 /* ---- MAPA ---- */
+.footer-editable-contacto svg { display: none !important; }
+.footer-editable-contacto { display: inline-block; border-radius: 4px; }
 .contacto-mapa-head {
     margin: clamp(3rem, 5vw, 4.2rem) 0 clamp(1.4rem, 2.5vw, 2rem);
     text-align: center;
@@ -395,7 +397,7 @@
     filter: grayscale(0);
 }
 
-/* ---- REVEAL ON SCROLL (progressive enhancement, igual à home) ---- */
+/* ---- REVEAL ON SCROLL (progressive enhancement, igual Ã  home) ---- */
 .pagina-contacto.reveal-armed [data-reveal] {
     opacity: 0;
     transform: translateY(26px);

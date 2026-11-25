@@ -7,7 +7,7 @@ require_once __DIR__ . '/../config/loja_config.php';
 
 header('Content-Type: application/json');
 
-if (!admin_has_role(['superadmin', 'desenvolvedor'])) {
+if (!is_admin_manager()) {
     http_response_code(403);
     echo json_encode(['sucesso' => false, 'mensagem' => 'Acesso negado.']);
     exit;
@@ -109,7 +109,7 @@ if ($isMultipart && $chave === 'home_hero_bg') {
     exit;
 }
 
-// Lógica para Texto (JSON) — whitelist estrita de chaves da homepage
+// Lógica para Texto (JSON) - whitelist estrita de chaves da homepage
 $chaves_home_permitidas = [
     'home_hero_title',
     'home_hero_subtitle',

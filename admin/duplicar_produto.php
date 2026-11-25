@@ -1,17 +1,22 @@
 <?php
 // admin/duplicar_produto.php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/csrf.php';
 include '../config/database.php';
 
 // --- VALIDAÇÃO DE SEGURANÇA (MÉTODO, SESSÃO, CSRF) ---
+if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true) {
+    http_response_code(403);
+    exit('Acesso não autorizado.');
+}
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    header('Allow: POST');
     exit('Acesso inválido.');
 }
-if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+if (!csrf_from_post()) {
+    http_response_code(403);
     exit('Erro de validação de segurança. Ação não permitida.');
-}
-if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true) {
-    exit('Acesso não autorizado.');
 }
 
 $id_original = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
@@ -57,27 +62,49 @@ try {
         $contador++;
     }
 
-    // Garante que a referência também é sempre única
-    $ref_base = preg_replace('/-COPIA-\d+$/', '', $produto_original['referencia']);
-    $nova_referencia = $ref_base . '-COPIA-' . time();
+    // Garante que a referência também é sempre única (verificada na BD)
+    $ref_base = preg_replace('/-COPIA-[A-Za-z0-9]+$/', '', (string)$produto_original['referencia']);
+    $nova_referencia = '';
+    for ($tentativa = 0; $tentativa < 10; $tentativa++) {
+        $candidata = $ref_base . '-COPIA-' . strtoupper(bin2hex(random_bytes(3)));
+        $stmt_check_ref = $conn->prepare("SELECT id FROM produtos WHERE referencia = ? LIMIT 1");
+        $stmt_check_ref->bind_param("s", $candidata);
+        $stmt_check_ref->execute();
+        $existe_ref = $stmt_check_ref->get_result()->num_rows > 0;
+        $stmt_check_ref->close();
+        if (!$existe_ref) {
+            $nova_referencia = $candidata;
+            break;
+        }
+    }
+    if ($nova_referencia === '') {
+        $nova_referencia = $ref_base . '-COPIA-' . strtoupper(bin2hex(random_bytes(6)));
+    }
 
     // --- FIM DA CORREÇÃO ---
 
-    // 2. OBTER IMAGENS ORIGINAIS E PREPARAR NOVOS NOMES
+    // 2. OBTER IMAGENS ORIGINAIS EXISTENTES EM DISCO E PREPARAR NOVOS NOMES
     $stmt_imgs = $conn->prepare("SELECT * FROM produto_imagens WHERE produto_id = ? ORDER BY id");
     $stmt_imgs->bind_param("i", $id_original);
     $stmt_imgs->execute();
     $imagens_originais = $stmt_imgs->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt_imgs->close();
 
+    $images_base_dir = __DIR__ . '/../public/images/';
     $mapa_imagens_antigas_para_novas = [];
     $nova_foto_principal_nome = '';
     $novos_nomes_ficheiros = [];
+    $imagens_existentes = [];
 
     foreach ($imagens_originais as $imagem) {
-        $extensao = pathinfo($imagem['nome_ficheiro'], PATHINFO_EXTENSION);
-        $novo_nome_ficheiro = uniqid() . '.' . $extensao;
+        $nome_orig = basename((string)$imagem['nome_ficheiro']);
+        if ($nome_orig === '' || !is_file($images_base_dir . $nome_orig)) {
+            continue;
+        }
+        $extensao = strtolower(pathinfo($nome_orig, PATHINFO_EXTENSION)) ?: 'jpg';
+        $novo_nome_ficheiro = bin2hex(random_bytes(16)) . '.' . $extensao;
         $novos_nomes_ficheiros[$imagem['id']] = $novo_nome_ficheiro;
+        $imagens_existentes[] = $imagem;
 
         if ($imagem['nome_ficheiro'] == $produto_original['foto_principal']) {
             $nova_foto_principal_nome = $novo_nome_ficheiro;
@@ -112,21 +139,19 @@ try {
     $id_novo_produto = $conn->insert_id;
     $stmt_insert_prod->close();
 
-    // 4. COPIAR FICHEIROS E INSERIR REGISTOS DE IMAGENS
+    // 4. COPIAR FICHEIROS E INSERIR REGISTOS DE IMAGENS (apenas ficheiros existentes no disco)
     $ficheiros_copiados = [];
-    if (!empty($imagens_originais)) {
+    if (!empty($imagens_existentes)) {
         $stmt_insert_img = $conn->prepare("INSERT INTO produto_imagens (produto_id, nome_ficheiro) VALUES (?, ?)");
-        foreach ($imagens_originais as $imagem) {
+        foreach ($imagens_existentes as $imagem) {
             $novo_nome_ficheiro = $novos_nomes_ficheiros[$imagem['id']];
-            $caminho_original = __DIR__ . '/../public/images/' . $imagem['nome_ficheiro'];
-            $caminho_novo = __DIR__ . '/../public/images/' . $novo_nome_ficheiro;
+            $caminho_original = $images_base_dir . basename((string)$imagem['nome_ficheiro']);
+            $caminho_novo = $images_base_dir . $novo_nome_ficheiro;
 
-            if (file_exists($caminho_original)) {
-                if (!copy($caminho_original, $caminho_novo)) {
-                    throw new Exception("Erro ao copiar a imagem '{$imagem['nome_ficheiro']}'.");
-                }
-                $ficheiros_copiados[] = $caminho_novo;
+            if (!copy($caminho_original, $caminho_novo)) {
+                throw new Exception("Erro ao copiar a imagem '{$imagem['nome_ficheiro']}'.");
             }
+            $ficheiros_copiados[] = $caminho_novo;
 
             $stmt_insert_img->bind_param("is", $id_novo_produto, $novo_nome_ficheiro);
             $stmt_insert_img->execute();
@@ -180,6 +205,7 @@ try {
     }
 
     $conn->commit();
+    log_app("Produto #{$id} duplicado para #{$novo_produto_id}.", 'INFO', 'duplicar_produto.php');
     $_SESSION['flash_message'] = ['tipo' => 'sucesso', 'texto' => 'Produto duplicado com sucesso! O novo produto foi criado como "Oculto".'];
 
 } catch (Exception $e) {
@@ -187,7 +213,7 @@ try {
     foreach ($ficheiros_copiados ?? [] as $caminho) {
         if (file_exists($caminho)) @unlink($caminho);
     }
-    error_log("Erro ao duplicar produto: " . $e->getMessage());
+    log_exception($e, "duplicar_produto.php produto#{$id}");
     $_SESSION['flash_message'] = ['tipo' => 'erro', 'texto' => 'Ocorreu um erro ao duplicar o produto.'];
 }
 

@@ -42,13 +42,6 @@ $variacoes_guardadas_json = json_encode(is_array($_variacoes_dec) ? $_variacoes_
 
 <main class="dashboard-container animate-entry">
 
-<!-- Bloquear scroll automático no refresh -->
-<script>
-    if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-    }
-    window.scrollTo(0, 0);
-</script>
     <?php echo ui_page_header($titulo_pagina, ['layout' => 'admin', 'back_url' => $return_url, 'back_title' => 'Voltar']); ?>
 
     <form id="formProduto" action="<?php echo $action_url; ?>" method="post" class="admin-form-container" style="max-width: 1200px;" novalidate>
@@ -119,7 +112,8 @@ $variacoes_guardadas_json = json_encode(is_array($_variacoes_dec) ? $_variacoes_
                 <div class="form-group">
                     <label for="guia_tamanho_id">Guia de Tamanhos</label>
                     <?php
-                    $guias = $conn->query("SELECT id, titulo FROM guias_tamanho ORDER BY titulo ASC")->fetch_all(MYSQLI_ASSOC);
+                    $_guias_r = $conn->query("SELECT id, titulo FROM guias_tamanho ORDER BY titulo ASC");
+                    $guias = ($_guias_r !== false && $_guias_r->num_rows > 0) ? $_guias_r->fetch_all(MYSQLI_ASSOC) : [];
                     $opcoes_guias_prod = ['' => 'Nenhum guia selecionado'];
                     foreach ($guias as $guia) {
                         $opcoes_guias_prod[(string)$guia['id']] = $guia['titulo'];
@@ -170,13 +164,13 @@ $variacoes_guardadas_json = json_encode(is_array($_variacoes_dec) ? $_variacoes_
                     $opcoes_grupos_std[(string)$grupo['id']] = $grupo['nome'];
                 }
                 echo ui_select('', $opcoes_grupos_std, '', ['id' => 'select-grupo-standard']);
-                echo ui_button('Adicionar Grupo', ['id' => 'btn-add-grupo-standard', 'class' => 'btn-with-plus btn-with-plus-text', 'raw_class' => true]);
+                echo ui_button('Adicionar Grupo', ['id' => 'btn-add-grupo-standard', 'class' => 'button btn-with-plus btn-with-plus-text']);
                 ?>
             </div>
             <div id="atributos-standard-container"></div>
             <hr class="atributos-divisor">
             <div id="atributos-personalizados-container"></div>
-            <?php echo ui_button('Adicionar Atributo Personalizado', ['id' => 'btn-add-atributo-personalizado', 'class' => 'btn-add-full btn-with-plus btn-with-plus-text']); ?>
+            <?php echo ui_button('Adicionar Atributo Personalizado', ['id' => 'btn-add-atributo-personalizado', 'class' => 'button btn-add-full btn-with-plus btn-with-plus-text']); ?>
         </div>
         <input type="hidden" name="atributos_json" id="hidden-atributos-json">
         <?php
@@ -188,14 +182,18 @@ $variacoes_guardadas_json = json_encode(is_array($_variacoes_dec) ? $_variacoes_
         ?>
 
         <?php ob_start(); ?>
-        <div id="stock-simples-container">
-            <label for="stock_simples">Disponibilidade</label>
+        <div id="variacoes-bloco">
+            <div id="variacoes-container" class="variacoes-wrapper"></div>
+        </div>
+        <div id="stock-simples-container" class="stock-simples-box">
+            <div class="stock-simples-copy">
+                <label for="stock_simples">Stock Disponível</label>
+                <span class="stock-simples-hint">Usado quando o produto não tem variações de stock selecionadas.</span>
+            </div>
             <div class="stock-input-wrapper">
                 <?php echo ui_input('stock_simples', ['type' => 'number', 'id' => 'stock_simples', 'min' => '0', 'step' => '1', 'placeholder' => '0']); ?>
+                <span class="stock-unit">un.</span>
             </div>
-        </div>
-        <div id="variacoes-bloco">
-            <div id="variacoes-container" class="variacoes-wrapper" style="padding: 0; border: none; background: none;"></div>
         </div>
         <input type="hidden" name="variacoes_json" id="hidden-variacoes-json">
         <?php
@@ -207,16 +205,19 @@ $variacoes_guardadas_json = json_encode(is_array($_variacoes_dec) ? $_variacoes_
         ?>
 
         <div class="form-actions">
-            <?php echo ui_button((string)$texto_botao, ['type' => 'submit', 'class' => 'button add-btn']); ?>
+            <?php echo ui_button((string)$texto_botao, ['type' => 'submit', 'variant' => 'primary']); ?>
         </div>
     </form>
 </main>
 
-<div id="cropperModal" class="modal-cropper">
-    <div class="modal-cropper-conteudo">
-        <p>Ajuste a imagem e recorte</p>
-        <div class="cropper-container"><img id="imagemParaCortar" src=""></div>
-        <?php echo ui_button('Guardar Corte', ['id' => 'guardarCorteBtn', 'class' => 'add-btn']); ?>
+<div id="cropperModal" class="modal-cropper" role="dialog" aria-modal="true" aria-labelledby="cropperModalTitle">
+    <div class="qe-card modal-cropper-conteudo">
+        <div class="qe-hd"><h3 id="cropperModalTitle">Recortar Imagem</h3></div>
+        <div class="cropper-container"><img id="imagemParaCortar" src="" alt="Imagem para recortar"></div>
+        <div class="qe-btns">
+            <?php echo ui_button('Cancelar', ['id' => 'cancelarCorteBtn', 'class' => 'qe-btn-cancel']); ?>
+            <?php echo ui_button('Guardar Corte', ['id' => 'guardarCorteBtn', 'variant' => 'primary']); ?>
+        </div>
     </div>
 </div>
 
@@ -256,17 +257,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const stockSimplesInput = document.getElementById('stock_simples');
 
     function toggleStockVisibility() {
-        const hasVariationControls = document.querySelector('.variacao-control-checkbox') !== null;
-        stockSimplesContainer.style.display = hasVariationControls ? 'none' : 'block';
-        variacoesBloco.style.display = hasVariationControls ? 'block' : 'none';
-        
-        if (variacoesBloco.style.display !== 'none') {
-            stockSimplesContainer.style.marginBottom = '0';
-        } else {
-            stockSimplesContainer.style.marginBottom = '';
-        }
+        const hasCheckedVariations = document.querySelector('.variacao-control-checkbox:checked') !== null;
+        const hasAnyControls = document.querySelector('.variacao-control-checkbox') !== null;
+        variacoesBloco.style.display = hasAnyControls ? 'block' : 'none';
+        stockSimplesContainer.style.display = hasCheckedVariations ? 'none' : 'flex';
     }
 
+    document.getElementById('variacoes-container').addEventListener('change', toggleStockVisibility);
     new MutationObserver(toggleStockVisibility).observe(document.getElementById('variacoes-container'), {
       childList: true,
       subtree: true
@@ -308,6 +305,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             const response = await fetch('ajax_validar_produto.php', { method: 'POST', body: formData });
+            if (!response.ok) {
+                throw new Error('Erro HTTP ' + response.status);
+            }
             const data = await response.json();
 
             if (data.valido === false) {
@@ -323,14 +323,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.compilarAtributosParaJSON();
                 }
                 if (stockSimplesContainer.style.display !== 'none') {
-                    const stockSimplesValor = stockSimplesInput.value;
-                    if (stockSimplesValor === '' || isNaN(parseInt(stockSimplesValor))) {
-                        mostrarPopup('Por favor, preencha o campo de Stock.', 'erro');
+                    const stockSimplesValor = stockSimplesInput.value.trim();
+                    const stockInt = Number(stockSimplesValor);
+                    if (stockSimplesValor === '' || !Number.isInteger(stockInt) || stockInt < 0) {
+                        mostrarPopup('Por favor, preencha o campo de Stock com um número inteiro válido (>= 0).', 'erro');
                         return;
                     }
                     const variacaoSimples = [{
                         atributos: {},
-                        quantidade: parseInt(stockSimplesValor),
+                        quantidade: stockInt,
                         preco: null,
                         referencia: null,
                         imagens_associadas: []

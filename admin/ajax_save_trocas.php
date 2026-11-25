@@ -4,8 +4,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/csrf.php';
 require_once __DIR__ . '/../config/http.php';
 
-// Segurança: apenas Superadmin ou Desenvolvedor
-if (!admin_has_role(['superadmin', 'desenvolvedor'])) {
+if (!is_admin_manager()) {
     json_error('Acesso negado.', 403);
 }
 
@@ -19,7 +18,6 @@ if (!$data || !isset($data['conteudo']) || !isset($data['csrf_token'])) {
     json_error('Dados incompletos.', 400);
 }
 
-// Validar CSRF
 if (!csrf_from_array($data)) {
     json_error('Erro de segurança (CSRF).', 403);
 }
@@ -29,10 +27,10 @@ if (!is_array($conteudo)) {
     json_error('Estrutura inválida.', 400);
 }
 
-// Ícones permitidos — tem de coincidir com o mapa em trocas.php.
+// Ícones permitidos - tem de coincidir com o mapa em trocas.php.
 $icones_validos = ['exchange', 'clock', 'shield', 'package', 'card', 'truck'];
 
-// Normalizar/sanitizar a estrutura (guardamos texto simples — escapado no output).
+// Normalizar/sanitizar a estrutura (guardamos texto simples - escapado no output).
 $limpo = [
     'kicker' => trim((string) ($conteudo['kicker'] ?? '')),
     'titulo' => trim((string) ($conteudo['titulo'] ?? '')),

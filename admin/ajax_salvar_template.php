@@ -1,14 +1,13 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/csrf.php';
 header('Content-Type: application/json; charset=utf-8');
 
 $response = ['sucesso' => false, 'mensagem' => 'Acesso negado.'];
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST'
-    || !isset($_SESSION['admin_logado'])
-    || $_SESSION['admin_logado'] !== true
-    || !in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor'])
+    || !is_admin_manager()
     || !csrf_from_post()) {
 
     http_response_code(403);
@@ -17,42 +16,72 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST'
 }
 
 $template_key = trim((string)($_POST['template_key'] ?? ''));
-$nome         = trim((string)($_POST['nome']         ?? ''));
-$descricao    = trim((string)($_POST['descricao']    ?? ''));
 $assunto      = trim((string)($_POST['assunto']      ?? ''));
 $corpo        = (string)($_POST['corpo']             ?? '');
 
-if ($template_key === '' || $nome === '' || $assunto === '' || trim($corpo) === '') {
+if ($template_key === '' || $assunto === '' || trim($corpo) === '') {
     http_response_code(400);
     $response['mensagem'] = 'Dados incompletos.';
     echo json_encode($response);
     exit;
 }
 
+$system_keys = [
+    'verificacao_email',
+    'recuperacao_cliente',
+    'recuperacao_admin',
+    'password_alterada',
+    'conta_eliminada',
+    'nova_encomenda_loja',
+    'novo_contacto_loja',
+];
+
 include '../config/database.php';
 
 try {
-    $stmt_chk = $conn->prepare("SELECT 1 FROM email_templates WHERE template_key = ? LIMIT 1");
+    $has_scope_col = false;
+    if ($res_col = $conn->query("SHOW COLUMNS FROM email_templates LIKE 'scope'")) {
+        $has_scope_col = $res_col->num_rows > 0;
+        $res_col->free();
+    }
+
+    $select_sql = $has_scope_col
+        ? "SELECT scope FROM email_templates WHERE template_key = ? LIMIT 1"
+        : "SELECT template_key FROM email_templates WHERE template_key = ? LIMIT 1";
+
+    $stmt_chk = $conn->prepare($select_sql);
     $stmt_chk->bind_param("s", $template_key);
     $stmt_chk->execute();
-    $existe = $stmt_chk->get_result()->num_rows > 0;
+    $row = $stmt_chk->get_result()->fetch_assoc();
     $stmt_chk->close();
 
-    if (!$existe) {
+    if (!$row) {
         http_response_code(404);
         $response['mensagem'] = 'O template especificado não existe.';
         echo json_encode($response);
         exit;
     }
 
-    $stmt = $conn->prepare("UPDATE email_templates SET template_name = ?, description = ?, subject = ?, body = ? WHERE template_key = ?");
-    $stmt->bind_param("sssss", $nome, $descricao, $assunto, $corpo, $template_key);
+    $isSystemTpl = $has_scope_col
+        ? (($row['scope'] ?? 'loja') === 'sistema')
+        : in_array($template_key, $system_keys, true);
+
+    if ($isSystemTpl) {
+        http_response_code(403);
+        $response['mensagem'] = 'Este template não pode ser editado no painel da loja.';
+        echo json_encode($response);
+        exit;
+    }
+
+    $stmt = $conn->prepare("UPDATE email_templates SET subject = ?, body = ? WHERE template_key = ?");
+    $stmt->bind_param("sss", $assunto, $corpo, $template_key);
     $stmt->execute();
     $stmt->close();
 
+    log_app("Template de email '{$template_key}' atualizado.", 'INFO', 'ajax_salvar_template.php');
     $response = ['sucesso' => true];
 } catch (\Throwable $e) {
-    error_log('Erro em ajax_salvar_template.php: ' . $e->getMessage());
+    log_exception($e, 'ajax_salvar_template.php');
     http_response_code(500);
     $response['mensagem'] = 'Erro interno ao atualizar o template.';
 }

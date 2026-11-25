@@ -3,25 +3,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('voltarAoTopoBtn');
     if (!btn) return;
 
+    const atualizarVisibilidade = () => {
+        btn.classList.toggle('ativo', window.scrollY > 300);
+    };
+
+    atualizarVisibilidade();
+
     // Throttle para não correr a cada pixel de scroll
     let ticking = false;
     window.addEventListener('scroll', () => {
         if (!ticking) {
             window.requestAnimationFrame(() => {
-                if (window.scrollY > 300) {
-                    btn.classList.add('ativo');
-                } else {
-                    btn.classList.remove('ativo');
-                }
+                atualizarVisibilidade();
                 ticking = false;
             });
             ticking = true;
         }
     }, { passive: true });
 
-    // Scroll suave ao clicar
+    // Scroll suave ao clicar (respeita prefers-reduced-motion)
     btn.addEventListener('click', (e) => {
         e.preventDefault();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
     });
 });

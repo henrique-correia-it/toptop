@@ -38,22 +38,27 @@ try {
     }
     $stmt->close();
 
-    $stmtCancel = $conn->prepare("UPDATE encomendas SET estado = 'cancelada' WHERE id = ? AND estado = 'incompleta'");
-    $stmtCancel->bind_param('i', $id);
-    $stmtCancel->execute();
-    $atualizada = $stmtCancel->affected_rows === 1;
-    $stmtCancel->close();
-
-    if (!$atualizada) {
-        $conn->rollback();
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Reserva já foi processada.']); exit;
-    }
-
-    $stmtItems = $conn->prepare("SELECT variacao_id, quantidade FROM encomenda_itens WHERE encomenda_id = ? AND variacao_id IS NOT NULL");
+    $stmtItems = $conn->prepare("SELECT variacao_id, quantidade FROM encomenda_itens WHERE encomenda_id = ? AND variacao_id IS NOT NULL ORDER BY variacao_id ASC");
     $stmtItems->bind_param('i', $id);
     $stmtItems->execute();
     $items = $stmtItems->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmtItems->close();
+
+    $stmtDelItems = $conn->prepare("DELETE FROM encomenda_itens WHERE encomenda_id = ?");
+    $stmtDelItems->bind_param('i', $id);
+    $stmtDelItems->execute();
+    $stmtDelItems->close();
+
+    $stmtDel = $conn->prepare("DELETE FROM encomendas WHERE id = ? AND estado = 'incompleta'");
+    $stmtDel->bind_param('i', $id);
+    $stmtDel->execute();
+    $removida = $stmtDel->affected_rows === 1;
+    $stmtDel->close();
+
+    if (!$removida) {
+        $conn->rollback();
+        echo json_encode(['sucesso' => false, 'mensagem' => 'Reserva já foi processada.']); exit;
+    }
 
     if (!empty($items)) {
         $stmtRestore = $conn->prepare("UPDATE produto_variacoes SET quantidade = quantidade + ? WHERE id = ?");
@@ -65,10 +70,11 @@ try {
     }
 
     $conn->commit();
+    log_app("Reserva da encomenda #{$id} cancelada e stock reposto.", 'INFO', 'cancelar_reserva.php');
     echo json_encode(['sucesso' => true, 'mensagem' => 'Reserva cancelada e stock reposto.']);
 } catch (\Throwable $e) {
     $conn->rollback();
-    error_log($e->getMessage());
+    log_exception($e, "cancelar_reserva.php enc#{$id}");
     http_response_code(500);
     echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao cancelar reserva.']);
 }

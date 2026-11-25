@@ -11,24 +11,24 @@ $_ld = [
     '@graph' => [
         [
             '@type' => 'WebSite',
-            '@id' => 'https://www.toptop.pt/#website',
-            'url' => 'https://www.toptop.pt/',
+            '@id' => 'https://toptop.pt/#website',
+            'url' => 'https://toptop.pt/',
             'name' => 'TopTop',
             'description' => $descricao_pagina,
             'inLanguage' => 'pt-PT',
             'potentialAction' => [
                 '@type' => 'SearchAction',
-                'target' => ['@type' => 'EntryPoint', 'urlTemplate' => 'https://www.toptop.pt/produtos.php?q={search_term_string}'],
+                'target' => ['@type' => 'EntryPoint', 'urlTemplate' => 'https://toptop.pt/produtos?q={search_term_string}'],
                 'query-input' => 'required name=search_term_string',
             ],
         ],
         [
             '@type' => 'Organization',
-            '@id' => 'https://www.toptop.pt/#organization',
+            '@id' => 'https://toptop.pt/#organization',
             'name' => 'TopTop',
-            'url' => 'https://www.toptop.pt/',
-            'logo' => ['@type' => 'ImageObject', 'url' => 'https://www.toptop.pt/public/assets/logo1.jpg'],
-            'contactPoint' => ['@type' => 'ContactPoint', 'contactType' => 'customer service', 'url' => 'https://www.toptop.pt/contacto.php'],
+            'url' => 'https://toptop.pt/',
+            'logo' => ['@type' => 'ImageObject', 'url' => 'https://toptop.pt/public/assets/logo1.jpg'],
+            'contactPoint' => ['@type' => 'ContactPoint', 'contactType' => 'customer service', 'url' => 'https://toptop.pt/contacto'],
         ],
     ],
 ];
@@ -179,12 +179,13 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
 <main class="main-home animate-entry">
 
     <!-- HERO SECTION -->
+    <?php $heroBgUrl = getHeroBgUrl(); ?>
     <section class="hero-section <?php echo $isGlobalEditMode ? 'home-editable' : ''; ?>" data-chave="home_hero_bg">
-        <div class="hero-bg" style="background-image: url('<?php echo getLojaConfig('home_hero_bg', '/public/assets/hero.avif'); ?>?v=<?php echo $versao_global; ?>');"></div>
+        <div class="hero-bg" style="background-image: url('<?php echo htmlspecialchars($heroBgUrl, ENT_QUOTES, 'UTF-8'); ?>?v=<?php echo $versao_global; ?>');"></div>
         <div class="hero-content">
             <h1 class="home-editable" data-chave="home_hero_title"><?php echo htmlspecialchars(getLojaConfig('home_hero_title', 'O Teu Estilo Começa Aqui')); ?></h1>
             <p class="home-editable" data-chave="home_hero_subtitle"><?php echo htmlspecialchars(getLojaConfig('home_hero_subtitle', 'Descubra peças exclusivas para um look inconfundível. Alta qualidade, design moderno e conforto em cada detalhe.')); ?></p>
-            <?php echo ui_button(getLojaConfig('home_hero_btn', 'Ver Nova Coleção'), ['href' => 'produtos.php', 'class' => 'button-hero']); ?>
+            <?php echo ui_button(getLojaConfig('home_hero_btn', 'Ver Nova Coleção'), ['href' => '/produtos', 'class' => 'button-hero']); ?>
         </div>
         <div class="hero-scroll" aria-hidden="true">
             <span class="hero-scroll-line"></span>
@@ -202,7 +203,7 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
 
     <!-- TRUST BADGES -->
     <section class="trust-badges" data-reveal>
-        <a href="/envios.php" class="trust-badge trust-badge--shipping" aria-label="<?php echo $portes_gratis_ativo ? 'Consultar condições dos portes grátis' : 'Consultar prazos e tarifas de envio'; ?>">
+        <a href="/envios" class="trust-badge trust-badge--shipping" aria-label="<?php echo $portes_gratis_ativo ? 'Consultar condições dos portes grátis' : 'Consultar prazos e tarifas de envio'; ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
             <div class="trust-badge-info">
                 <?php if ($portes_gratis_ativo): ?>
@@ -254,7 +255,7 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
             <?php foreach ($cats_visiveis as $i => $cat):
                 $card_class  = $bento_card_classes[$i] ?? '';
                 $cat_nome    = $cat['nome'];
-                $cat_url     = 'produtos.php?q=&categorias%5B%5D=' . urlencode($cat_nome);
+                $cat_url     = '/produtos?categorias%5B%5D=' . rawurlencode($cat_nome);
                 $cat_foto    = $cat['foto_capa'] ? '/public/' . htmlspecialchars($cat['foto_capa']) : '';
                 $cat_pos     = $cat['foto_posicao'] ?? '50% 50%';
                 $card_tag    = $isGlobalEditMode ? 'div' : 'a';
@@ -265,14 +266,6 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
                data-cat-id="<?php echo (int)$cat['id']; ?>"
                data-pos="<?php echo htmlspecialchars($cat_pos, ENT_QUOTES, 'UTF-8'); ?>"
                data-zoom="<?php echo htmlspecialchars($cat['foto_zoom'] ?? '1.0', ENT_QUOTES, 'UTF-8'); ?>">
-                <style>
-                    @media (max-width: 768px) {
-                        .cat-img-<?php echo $i; ?> {
-                            object-position: <?php echo $cat['foto_mobile_posicao'] ?? '50% 50%'; ?> !important;
-                            transform: scale(<?php echo $cat['foto_mobile_zoom'] ?? '1.0'; ?>) !important;
-                        }
-                    }
-                </style>
                 <?php if ($isGlobalEditMode): ?>
                     <?php echo ui_button('Ajustar', ['class' => 'btn-edit-framing', 'attrs' => ['data-cat-id' => (int)$cat['id']]]); ?>
                 <?php endif; ?>
@@ -281,10 +274,10 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
                          alt="<?php echo htmlspecialchars($cat_nome); ?>"
                          loading="lazy"
                          width="800" height="600"
-                         class="cat-img-<?php echo $i; ?>"
-                         style="object-position: <?php echo $cat_pos; ?>; transform: scale(<?php echo $cat['foto_zoom'] ?? '1.0'; ?>);">
+                         class="cat-cover-img"
+                         style="--cat-pos: <?php echo htmlspecialchars($cat_pos, ENT_QUOTES, 'UTF-8'); ?>; --cat-zoom: <?php echo htmlspecialchars($cat['foto_zoom'] ?? '1.0', ENT_QUOTES, 'UTF-8'); ?>; --cat-mob-pos: <?php echo htmlspecialchars($cat['foto_mobile_posicao'] ?? '50% 50%', ENT_QUOTES, 'UTF-8'); ?>; --cat-mob-zoom: <?php echo htmlspecialchars($cat['foto_mobile_zoom'] ?? '1.0', ENT_QUOTES, 'UTF-8'); ?>;">
                 <?php else: ?>
-                    <div style="width:100%;height:100%;background:#e2e8f0;"></div>
+                    <div class="category-card-placeholder"></div>
                 <?php endif; ?>
                 <div class="category-title <?php echo $isGlobalEditMode ? 'category-name-editable' : ''; ?>" data-cat-id="<?php echo (int)$cat['id']; ?>">
                     <h3><?php echo htmlspecialchars($cat_nome); ?></h3>
@@ -313,7 +306,7 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
             endforeach; ?>
         </div>
         <div class="btn-ver-mais-container" data-reveal>
-            <?php echo ui_button('Ver Todos os Produtos', ['href' => 'produtos.php', 'class' => 'btn-ver-mais']); ?>
+            <?php echo ui_button('Ver Todos os Produtos', ['href' => '/produtos', 'class' => 'btn-ver-mais']); ?>
         </div>
     </section>
     <?php endif; ?>
@@ -321,7 +314,7 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
 </main>
 
 <script>
-// Reveal on scroll — apenas design (progressive enhancement, desativado no modo de edição)
+// Reveal on scroll - apenas design (progressive enhancement, desativado no modo de edição)
 (function () {
     var main = document.querySelector('.main-home');
     if (!main) return;
@@ -343,7 +336,7 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
 })();
 </script>
 
-<?php if (isset($_SESSION['admin_logado']) && $_SESSION['admin_logado'] === true && in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor']) && isset($_SESSION['global_edit_mode']) && $_SESSION['global_edit_mode'] === true): ?>
+<?php if ($isGlobalEditMode): ?>
     <div id="modalEditorHome" class="qe-modal footer-editor-modal">
         <div class="qe-card">
             <?php echo ui_close_button(['class' => 'qe-close', 'onclick' => 'fecharEditorHome()']); ?>
@@ -362,7 +355,7 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
                     <div class="form-group">
                         <label class="custom-file-upload" style="display: block; border: 2px dashed #cbd5e1; border-radius: 8px; padding: 25px 20px; text-align: center; cursor: pointer; background: #f8fafc; transition: all 0.2s ease;">
                             <input type="file" id="home-edit-imagem" accept="image/jpeg,image/png,image/webp,image/avif" style="display: none;">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="margin-bottom: 10px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block; margin: 0 auto 10px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                             <div style="font-weight: 500; color: #334155; font-size: 0.95rem;">Clique para escolher a nova imagem</div>
                             <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 6px;">Formatos suportados: JPG, PNG, WebP, AVIF. Max: 5MB</div>
                         </label>
@@ -379,7 +372,7 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
             echo ui_card(ob_get_clean(), [
                 'variant'     => 'form',
                 'style'       => 'border:0; box-shadow:none; margin:0;',
-                'header_html' => '<div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div><h3>Editar Texto Inicial</h3>',
+                'header_html' => '<div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div><h3>Editar Texto Inicial</h3>',
             ]);
             ?>
         </div>
@@ -404,7 +397,7 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
             echo ui_card(ob_get_clean(), [
                 'variant'     => 'form',
                 'style'       => 'border:0; box-shadow:none; margin:0;',
-                'header_html' => '<div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div><h3>Editar Categoria</h3>',
+                'header_html' => '<div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div><h3>Editar Categoria</h3>',
             ]);
             ?>
         </div>
@@ -534,10 +527,10 @@ $recentes = $recentes_query ? $recentes_query->fetch_all(MYSQLI_ASSOC) : [];
                     formData.append('csrf_token', csrf_token);
                     formData.append('imagem', input.files[0]);
 
-                    response = await fetch('/dev/ajax_save_home.php', { method: 'POST', body: formData });
+                    response = await fetch('/admin/ajax_save_home.php', { method: 'POST', body: formData });
                 } else {
                     const conteudo = document.getElementById('home-edit-conteudo').value.trim();
-                    response = await fetch('/dev/ajax_save_home.php', {
+                    response = await fetch('/admin/ajax_save_home.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ chave, conteudo, csrf_token })

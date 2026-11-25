@@ -6,8 +6,14 @@ include 'templates/header.php';
 ?> 
 <main class="pagina-carrinho">
     <div class="cart-header">
-        <h2>O Meu Carrinho</h2>
+        <h1>O Meu Carrinho</h1>
     </div>
+
+    <noscript>
+        <div class="ui-alert ui-alert--warning" role="alert" style="max-width:900px;margin:0 auto 20px;">
+            O JavaScript está desativado no teu navegador. Ativa-o para veres os artigos do carrinho e finalizares a tua encomenda.
+        </div>
+    </noscript>
 
     <div class="cart-container">
         <!-- Lista de Itens -->

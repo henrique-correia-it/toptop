@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- 2. NAVEGAÇÃO POR DUPLO CLIQUE ---
     document.addEventListener('dblclick', function(e) {
         const row = e.target.closest('tr[data-id]');
-        if (!row || e.target.closest('.acoes-tabela') || e.target.closest('.no-click')) return;
+        if (!row || row.closest('.sel-mode') || e.target.closest('.acoes-tabela') || e.target.closest('.no-click')) return;
 
         const editUrl = row.dataset.editUrl;
         if (editUrl) {
@@ -123,6 +123,119 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// --- Utilitário reutilizável de seleção em massa para tabelas admin/dev ---
+window.initAdminBulkSelection = function(opts) {
+    opts = opts || {};
+    const btnSelMode  = document.getElementById(opts.btnSelModeId || 'btn-sel-mode');
+    const btnSelAll   = document.getElementById(opts.btnSelAllId || 'btn-sel-all');
+    const bulkBar     = document.getElementById(opts.bulkBarId || 'bulk-bar');
+    const bulkCountEl = document.getElementById(opts.bulkCountId || 'bulk-count');
+    const bulkCancel  = document.getElementById(opts.bulkCancelId || 'bulk-cancel');
+    const bulkDel     = document.getElementById(opts.bulkActionId || 'bulk-del');
+    const tableWrap   = document.getElementById(opts.tableWrapId || 'table-wrapper');
+    if (!btnSelMode || !tableWrap) return null;
+
+    let selMode = false;
+    const selected = new Set();
+    const rowSelector      = opts.rowSelector || 'tbody tr[data-id]';
+    const rowFilter        = typeof opts.rowFilter === 'function' ? opts.rowFilter : null;
+    const selectAllLabel   = opts.selectAllLabel || 'Selecionar todos';
+    const deselectAllLabel = opts.deselectAllLabel || 'Desselecionar todos';
+
+    const getRows = () => {
+        const rows = Array.from(tableWrap.querySelectorAll(rowSelector));
+        return rowFilter ? rows.filter(rowFilter) : rows;
+    };
+
+    const updateUI = () => {
+        const n = selected.size;
+        const total = getRows().length;
+        if (bulkCountEl) bulkCountEl.textContent = n;
+        if (btnSelAll) btnSelAll.textContent = (total > 0 && n === total) ? deselectAllLabel : selectAllLabel;
+        if (bulkBar) bulkBar.classList.toggle('visible', selMode);
+        if (bulkDel) bulkDel.disabled = (n === 0);
+    };
+
+    const setMode = (active) => {
+        selMode = Boolean(active);
+        tableWrap.classList.toggle('sel-mode', selMode);
+        btnSelMode.classList.toggle('active', selMode);
+        if (!selMode) {
+            selected.clear();
+            getRows().forEach(r => r.classList.remove('selecionado'));
+        }
+        updateUI();
+    };
+
+    const submitForm = (ids) => {
+        const form = opts.formId ? document.getElementById(opts.formId) : null;
+        const container = document.getElementById(opts.idsContainerId || 'form-ids');
+        if (!form || !container) return;
+        const inputName = opts.inputName || 'ids[]';
+        container.innerHTML = '';
+        ids.forEach(id => {
+            const inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = inputName;
+            inp.value = id;
+            container.appendChild(inp);
+        });
+        form.submit();
+    };
+
+    btnSelMode.addEventListener('click', () => setMode(!selMode));
+    if (bulkCancel) bulkCancel.addEventListener('click', () => setMode(false));
+
+    const tbody = tableWrap.querySelector('tbody');
+    if (tbody) {
+        tbody.addEventListener('click', function(e) {
+            if (!selMode || e.target.closest('.acoes-tabela')) return;
+            const tr = e.target.closest('tr[data-id]');
+            if (!tr || (rowFilter && !rowFilter(tr))) return;
+            const id = tr.dataset.id;
+            if (selected.has(id)) { selected.delete(id); tr.classList.remove('selecionado'); }
+            else                  { selected.add(id);    tr.classList.add('selecionado'); }
+            updateUI();
+        });
+    }
+
+    if (btnSelAll) {
+        btnSelAll.addEventListener('click', () => {
+            const rows = getRows();
+            if (!rows.length) return;
+            const allSel = rows.every(r => selected.has(r.dataset.id));
+            rows.forEach(r => {
+                if (allSel) { selected.delete(r.dataset.id); r.classList.remove('selecionado'); }
+                else        { selected.add(r.dataset.id);    r.classList.add('selecionado'); }
+            });
+            updateUI();
+        });
+    }
+
+    if (bulkDel) {
+        bulkDel.addEventListener('click', () => {
+            const ids = Array.from(selected);
+            if (!ids.length) return;
+            if (typeof opts.onAction === 'function') {
+                opts.onAction(ids);
+            } else if (opts.formId) {
+                const msg = typeof opts.confirmMessage === 'function'
+                    ? opts.confirmMessage(ids)
+                    : (opts.confirmMessage || `Confirmar ação para ${ids.length} item(ns)?`);
+                mostrarModalConfirmacao(opts.confirmTitle || 'Confirmar', msg, () => submitForm(ids));
+            }
+        });
+    }
+
+    return {
+        isSelMode: () => selMode,
+        getSelected: () => Array.from(selected),
+        setMode,
+        submitForm,
+        updateUI,
+    };
+};
 
 // --- Utilitário global para popups de feedback (Toast) ---
 // Captura a função original definida em popup.js para evitar que seja perdida

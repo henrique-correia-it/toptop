@@ -94,6 +94,7 @@ try {
     $stmtCheckGallery->close();
 
     $conn->commit();
+    log_app("{$deleted} encomenda(s) eliminada(s) permanentemente em massa.", 'INFO', 'apagar_encomendas_massa.php');
 
     $imagesDir = realpath(__DIR__ . '/../public/images');
     if ($imagesDir && !empty($photosToDelete)) {
@@ -111,7 +112,7 @@ try {
     ];
 } catch (\Throwable $e) {
     $conn->rollback();
-    error_log($e->getMessage());
+    log_exception($e, 'apagar_encomendas_massa.php');
     $_SESSION['flash_message'] = ['tipo' => 'erro', 'texto' => 'Ocorreu um erro ao apagar as encomendas selecionadas.'];
 }
 

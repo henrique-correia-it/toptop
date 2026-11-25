@@ -15,7 +15,6 @@ if (empty($_SESSION['csrf_token'])) {
 // --- LÓGICA DE PAGINAÇÃO ---
 $resultados_por_pagina = 15;
 $pagina_atual = filter_input(INPUT_GET, 'pagina', FILTER_VALIDATE_INT, ['options' => ['default' => 1, 'min_range' => 1]]);
-$offset = ($pagina_atual - 1) * $resultados_por_pagina;
 
 // --- LÓGICA DE FILTRAGEM E PESQUISA ---
 $filtro_estado = $_GET['estado'] ?? 'todos';
@@ -36,19 +35,20 @@ if ($filtro_estado === 'por_enviar') {
 }
 
 if (!empty($termo_pesquisa)) {
+    $termo_like = "%" . $termo_pesquisa . "%";
     if (is_numeric($termo_pesquisa)) {
-        // Se o termo for numérico, pesquisa no nome OU no ID
-        $condicoes[] = "(cliente_nome LIKE ? OR id = ?)";
-        $termo_like = "%" . $termo_pesquisa . "%";
+        $condicoes[] = "(cliente_nome LIKE ? OR cliente_email LIKE ? OR codigo_tracking LIKE ? OR id = ?)";
+        $params[] = $termo_like;
+        $params[] = $termo_like;
         $params[] = $termo_like;
         $params[] = (int)$termo_pesquisa;
-        $types .= "si";
+        $types .= "sssi";
     } else {
-        // Se não for numérico, pesquisa apenas no nome
-        $condicoes[] = "cliente_nome LIKE ?";
-        $termo_like = "%" . $termo_pesquisa . "%";
+        $condicoes[] = "(cliente_nome LIKE ? OR cliente_email LIKE ? OR codigo_tracking LIKE ?)";
         $params[] = $termo_like;
-        $types .= "s";
+        $params[] = $termo_like;
+        $params[] = $termo_like;
+        $types .= "sss";
     }
 }
 
@@ -60,9 +60,23 @@ if (!empty($params)) {
     $stmt_count->bind_param($types, ...$params);
 }
 $stmt_count->execute();
-$total_resultados = $stmt_count->get_result()->fetch_assoc()['total'];
-$total_paginas = ceil($total_resultados / $resultados_por_pagina);
+$total_resultados = (int)$stmt_count->get_result()->fetch_assoc()['total'];
+$total_paginas = max(1, (int)ceil($total_resultados / $resultados_por_pagina));
+$pagina_atual = min($pagina_atual, $total_paginas);
+$offset = ($pagina_atual - 1) * $resultados_por_pagina;
 $stmt_count->close();
+
+$sort_map = [
+    'id'      => 'id',
+    'cliente' => 'cliente_nome',
+    'data'    => 'data_encomenda',
+    'total'   => "(total + CASE WHEN LOWER(TRIM(COALESCE(metodo_entrega, ''))) = 'recolha' THEN 0 ELSE portes_envio END)",
+    'entrega' => 'metodo_entrega',
+    'estado'  => 'estado',
+];
+$sort_by  = isset($_GET['sort']) && array_key_exists($_GET['sort'], $sort_map) ? $_GET['sort'] : 'data';
+$sort_dir = (isset($_GET['dir']) && strtolower((string)$_GET['dir']) === 'asc') ? 'asc' : (isset($_GET['dir']) ? 'desc' : 'desc');
+$order_sql = $sort_map[$sort_by] . ' ' . strtoupper($sort_dir) . ', id DESC';
 
 // OBTER OS RESULTADOS PARA A PÁGINA ATUAL
 $params_paginacao = $params;
@@ -71,7 +85,7 @@ $types_paginacao .= "ii";
 $params_paginacao[] = $resultados_por_pagina;
 $params_paginacao[] = $offset;
 
-$stmt = $conn->prepare("SELECT id, cliente_nome, data_encomenda, total, portes_envio, estado, metodo_entrega, metodo_pagamento " . $sql_base . $where_clause . " ORDER BY data_encomenda DESC LIMIT ? OFFSET ?");
+$stmt = $conn->prepare("SELECT id, cliente_nome, data_encomenda, total, portes_envio, estado, metodo_entrega, metodo_pagamento " . $sql_base . $where_clause . " ORDER BY {$order_sql} LIMIT ? OFFSET ?");
 $stmt->bind_param($types_paginacao, ...$params_paginacao);
 $stmt->execute();
 $encomendas = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -90,17 +104,17 @@ $map_nomes_estados = [
 ];
 
 $map_badge_estados = [
-    'pendente'                 => 'badge-amarelo',
-    'a aguardar pagamento'     => 'badge-amarelo',
-    'incompleta'               => 'badge-amarelo',
-    'pago'                     => 'badge-verde',
-    'em processamento'         => 'badge-azul',
-    'enviada'                  => 'badge-azul',
-    'pronta para levantamento' => 'badge-azul',
-    'concluida'                => 'badge-teal',
-    'entregue'                 => 'badge-teal',
-    'cancelada'                => 'badge-vermelho',
-    'pagamento na entrega'     => 'badge-roxo',
+    'pendente'                 => 'warning',
+    'a aguardar pagamento'     => 'warning',
+    'incompleta'               => 'warning',
+    'pago'                     => 'success',
+    'em processamento'         => 'info',
+    'enviada'                  => 'info',
+    'pronta para levantamento' => 'info',
+    'concluida'                => 'success',
+    'entregue'                 => 'success',
+    'cancelada'                => 'danger',
+    'pagamento na entrega'     => 'purple',
 ];
 
 $estados_existentes = [];
@@ -128,13 +142,6 @@ include '../templates/header.php';
 
 <main class="dashboard-container animate-entry">
 
-<!-- Bloquear scroll automático no refresh -->
-<script>
-    if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-    }
-    window.scrollTo(0, 0);
-</script>
     <?php echo ui_page_header("Gerir Encomendas", ['layout' => 'admin', 'back_url' => '/admin', 'back_title' => 'Voltar ao Painel']); ?>
 
     <?php if (isset($_SESSION['flash_message'])): ?>
@@ -146,31 +153,25 @@ include '../templates/header.php';
         <?php unset($_SESSION['flash_message']); ?>
     <?php endif; ?>
 
-    <div class="prod-toolbar">
-        <div class="prod-toolbar-right">
-            <form method="GET" style="display:flex; align-items:center; gap:10px;">
-                <?php
-                $opcoes_estado_filtro = [
-                    'todos'      => 'Todos os estados',
-                    'por_enviar' => 'Por Enviar',
-                ];
-                foreach ($estados_filtro as $estado) {
-                    $opcoes_estado_filtro[$estado] = $map_nomes_estados[$estado] ?? ucfirst($estado);
-                }
-                echo ui_select('estado', $opcoes_estado_filtro, $filtro_estado, ['variant' => 'toolbar', 'onchange' => 'this.form.submit()']);
-                echo ui_search_input('q', 'Pesquisar cliente ou ID...', ['value' => $termo_pesquisa]);
-                ?>
-            </form>
-            <?php echo ui_select_mode_button(); ?>
-        </div>
-    </div>
+    <?php
+    $opcoes_estado_filtro = [
+        'todos'      => 'Todos os estados',
+        'por_enviar' => 'Por Enviar',
+    ];
+    foreach ($estados_filtro as $estado) {
+        $opcoes_estado_filtro[$estado] = $map_nomes_estados[$estado] ?? ucfirst($estado);
+    }
+    echo ui_table_toolbar([
+        'filter' => ['name' => 'estado', 'options' => $opcoes_estado_filtro, 'value' => $filtro_estado, 'title' => 'Filtrar por estado'],
+        'search' => ['name' => 'q', 'value' => $termo_pesquisa],
+    ]);
+    ?>
 
     <?php
-    echo ui_selection_bar(['unit' => 'selecionada(s)', 'all_label' => 'Selecionar todas', 'spacer' => true]);
-
     $encRows = [];
     foreach ($encomendas as $enc) {
-        $total_final = (float)$enc['total'] + (float)$enc['portes_envio'];
+        $portes_enc  = (strtolower(trim((string)($enc['metodo_entrega'] ?? ''))) === 'recolha') ? 0.0 : (float)$enc['portes_envio'];
+        $total_final = (float)$enc['total'] + $portes_enc;
         $mp = $enc['metodo_pagamento'] ?? 'Stripe';
         $acoes = '<div class="acoes-tabela">'
             . ui_icon_button('edit', ['href' => 'detalhes_encomenda.php?id=' . (int)$enc['id'] . '&return_to=encomendas', 'title' => 'Gerir encomenda'])
@@ -187,6 +188,9 @@ include '../templates/header.php';
             ])
             . '</form></div>';
 
+        $isRecolha = strtolower(trim((string)($enc['metodo_entrega'] ?? ''))) === 'recolha';
+        $entregaBadge = ui_badge($isRecolha ? 'Recolha' : 'Envio', $isRecolha ? 'purple' : 'neutral');
+
         $encRows[] = [
             'attrs' => [
                 'data-id'       => (int)$enc['id'],
@@ -197,24 +201,38 @@ include '../templates/header.php';
                 ui_e($enc['cliente_nome']),
                 date('d/m/Y H:i', strtotime($enc['data_encomenda'])),
                 format_money($total_final),
-                ui_badge($map_nomes_estados[$enc['estado']] ?? ucfirst($enc['estado']), 'neutral', ['class' => 'badge ' . ($map_badge_estados[$enc['estado']] ?? 'badge-cinzento')]),
-                ui_badge($mp, 'neutral', ['class' => 'badge badge-cinzento']),
+                $entregaBadge,
+                ui_badge($map_nomes_estados[$enc['estado']] ?? ucfirst($enc['estado']), $map_badge_estados[$enc['estado']] ?? 'neutral'),
                 $acoes,
             ],
         ];
     }
 
-    echo ui_table(['ID', 'Cliente', 'Data', 'Total', 'Estado', 'Pagamento', 'Ações'], $encRows, [
+    echo ui_table([
+        ['label' => 'ID', 'sort' => ['key' => 'id', 'default_dir' => 'desc']],
+        ['label' => 'Cliente', 'sort' => 'cliente'],
+        ['label' => 'Data', 'sort' => ['key' => 'data', 'default_dir' => 'desc']],
+        ['label' => 'Total', 'sort' => ['key' => 'total', 'default_dir' => 'desc']],
+        ['label' => 'Entrega', 'sort' => 'entrega'],
+        ['label' => 'Estado', 'sort' => 'estado'],
+        'Ações',
+    ], $encRows, [
         'selectable'    => true,
         'wrap_id'       => 'table-wrapper',
         'wrap_style'    => 'max-width: 1200px; width: 100%;',
         'table_class'   => 'admin-table tabela-encomendas',
         'empty_message' => 'Não foram encontradas encomendas com os critérios selecionados.',
+        'sort'          => ['by' => $sort_by, 'dir' => $sort_dir, 'page_param' => 'pagina'],
     ]);
     ?>
 
     <?php
-    $query_params = ['estado' => $filtro_estado, 'q' => $termo_pesquisa];
+    $query_params = [
+        'estado' => $filtro_estado,
+        'q'      => $termo_pesquisa,
+        'sort'   => isset($_GET['sort']) ? $sort_by : null,
+        'dir'    => isset($_GET['sort']) ? $sort_dir : null,
+    ];
     echo ui_pagination((int)$pagina_atual, (int)$total_paginas, function ($p) use ($query_params) {
         $params = array_merge($query_params, ['pagina' => $p]);
         return '?' . http_build_query(array_filter($params, fn($v) => $v !== '' && $v !== null));
@@ -250,106 +268,13 @@ renderContextMenu([
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const wrapper = document.getElementById('table-wrapper');
-    const btnSelMode = document.getElementById('btn-sel-mode');
-    const selModeBar = document.getElementById('sel-mode-bar');
-    const selCountEl = document.getElementById('sel-count');
-    const btnSelAll = document.getElementById('btn-sel-all');
-    const bulkBar = document.getElementById('bulk-bar');
-    const bulkCountEl = document.getElementById('bulk-count');
-    const bulkCancel = document.getElementById('bulk-cancel');
-    const bulkDel = document.getElementById('bulk-del');
-    const formDelete = document.getElementById('form-delete');
-    const formIds = document.getElementById('form-ids');
-    const tbody = document.querySelector('.tabela-encomendas tbody');
-
-    let selMode = false;
-    let selected = new Set();
-
-    function getRows() {
-        return [...document.querySelectorAll('.tabela-encomendas tbody tr[data-id]')];
-    }
-
-    function updateUI() {
-        const n = selected.size;
-        selCountEl.textContent = n;
-        bulkCountEl.textContent = n;
-        const rows = getRows();
-        btnSelAll.textContent = rows.length > 0 && selected.size === rows.length ? 'Desselecionar todas' : 'Selecionar todas';
-        bulkBar.classList.toggle('visible', n > 0);
-    }
-
-    function clearSelection() {
-        selected.clear();
-        getRows().forEach(row => row.classList.remove('selecionado'));
-        updateUI();
-    }
-
-    function toggleSelectionMode(force = null) {
-        selMode = force === null ? !selMode : force;
-        wrapper.classList.toggle('sel-mode', selMode);
-        btnSelMode.classList.toggle('active', selMode);
-        selModeBar.classList.toggle('visible', selMode);
-
-        if (!selMode) clearSelection();
-        else updateUI();
-    }
-
-    function submitDelete(ids) {
-        formIds.innerHTML = '';
-        ids.forEach(id => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'ids_encomendas[]';
-            input.value = id;
-            formIds.appendChild(input);
-        });
-        formDelete.submit();
-    }
-
-    btnSelMode?.addEventListener('click', () => toggleSelectionMode());
-    bulkCancel?.addEventListener('click', () => toggleSelectionMode(false));
-
-    tbody?.addEventListener('click', function (e) {
-        if (!selMode || e.target.closest('.acoes-tabela')) return;
-        const row = e.target.closest('tr[data-id]');
-        if (!row) return;
-
-        const id = row.dataset.id;
-        if (selected.has(id)) {
-            selected.delete(id);
-            row.classList.remove('selecionado');
-        } else {
-            selected.add(id);
-            row.classList.add('selecionado');
-        }
-        updateUI();
-    });
-
-    btnSelAll?.addEventListener('click', () => {
-        const rows = getRows();
-        const allSelected = rows.length > 0 && rows.every(row => selected.has(row.dataset.id));
-
-        rows.forEach(row => {
-            if (allSelected) {
-                selected.delete(row.dataset.id);
-                row.classList.remove('selecionado');
-            } else {
-                selected.add(row.dataset.id);
-                row.classList.add('selecionado');
-            }
-        });
-        updateUI();
-    });
-
-    bulkDel?.addEventListener('click', () => {
-        const ids = [...selected];
-        if (!ids.length) return;
-        mostrarModalConfirmacao(
-            'Apagar Encomendas',
-            `Apagar permanentemente ${ids.length} encomenda(s)? Esta acao nao repoe o stock.`,
-            () => submitDelete(ids)
-        );
+    window.initAdminBulkSelection({
+        formId: 'form-delete',
+        inputName: 'ids_encomendas[]',
+        selectAllLabel: 'Selecionar todas',
+        deselectAllLabel: 'Desselecionar todas',
+        confirmTitle: 'Apagar Encomendas',
+        confirmMessage: ids => `Apagar permanentemente ${ids.length} encomenda(s)? Esta ação não repõe o stock.`,
     });
 
     document.addEventListener('admin:contextmenu', function(e) {

@@ -49,15 +49,16 @@ if ($token_raw === '') {
                     throw new RuntimeException('Token de verificação já utilizado.');
                 }
 
-                $stmt = $conn->prepare("UPDATE clientes SET ativo = 1 WHERE id = ?");
+                $stmt = $conn->prepare("UPDATE clientes SET ativo = 1, email_verificado_em = NOW() WHERE id = ?");
                 $stmt->bind_param('i', $cliente_id);
                 $stmt->execute();
                 $stmt->close();
 
                 $conn->commit();
+                log_app("Email verificado e conta ativada para cliente #{$cliente_id}.", 'INFO', 'verificar-email.php');
             } catch (Throwable $e) {
                 $conn->rollback();
-                log_app($e->getMessage(), 'ERROR', 'verificar-email.php');
+                log_exception($e, 'verificar-email.php');
                 $erro = 'Erro interno. Tenta novamente mais tarde.';
             }
 
@@ -65,6 +66,10 @@ if ($token_raw === '') {
                 $customer = customer_find_by_id($conn, $cliente_id);
                 if ($customer) {
                     login_cliente_session($customer);
+                    require_once __DIR__ . '/admin/includes/email_handler.php';
+                    enviarEmailTemplate('boas_vindas', (string)$customer['email'], (string)$customer['nome'], [
+                        '{nome_cliente}' => (string)$customer['nome'],
+                    ]);
                 }
                 $sucesso = true;
             }
@@ -97,7 +102,7 @@ include __DIR__ . '/templates/header.php';
                 <form method="post" action="/verificar-email.php">
                     <?php echo csrf_input(); ?>
                     <input type="hidden" name="token" value="<?php echo htmlspecialchars($token_raw, ENT_QUOTES, 'UTF-8'); ?>">
-                    <?php echo ui_button('Confirmar a minha conta', ['type' => 'submit', 'variant' => 'primary', 'full' => true]); ?>
+                    <?php echo ui_button('Confirmar a minha conta', ['type' => 'submit', 'class' => 'button add-btn', 'full' => true]); ?>
                 </form>
             <?php else: ?>
                 <?php echo ui_alert($erro, 'danger'); ?>

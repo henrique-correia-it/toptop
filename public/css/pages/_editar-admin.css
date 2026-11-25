@@ -1,11 +1,11 @@
 /* public/css/pages/_editar-admin.css */
+/* .form-card e .form-group estão centralizados em ui/_primitives.css */
 
 .profile-edit-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 30px;
+    gap: 24px;
     align-items: flex-start;
-    margin-top: 20px;
 }
 
 @media (max-width: 992px) {
@@ -14,110 +14,26 @@
     }
 }
 
-/* Card Styling */
-.form-card {
-    background: var(--cor-branco);
-    border: 1px solid var(--cor-borda-subtil);
-    border-radius: 20px;
-    overflow: visible;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.02);
-    margin-bottom: 25px;
-}
-
-.form-card-header {
-    background: var(--cor-slate-50);
-    padding: 20px 25px;
-    border-bottom: 1px solid var(--cor-borda-subtil);
-    border-radius: 19px 19px 0 0;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.form-card-header h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--cor-preto);
-}
-
-.card-icon {
-    width: 36px;
-    height: 36px;
-    background: var(--cor-branco);
-    border: 1px solid var(--cor-borda-subtil);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--cor-slate-500);
-}
-
-.form-card-body {
-    padding: 25px;
-}
-
-/* Helper Text */
 .helper-text {
     font-size: 0.85rem;
     color: var(--cor-slate-500);
-    margin-bottom: 20px;
+    margin: 0 0 18px;
     display: block;
 }
 
 .helper-text.warning {
     color: #b45309;
     background: #fffbeb;
-    padding: 10px;
-    border-radius: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
     border: 1px solid #fef3c7;
     margin-top: 10px;
+    margin-bottom: 0;
 }
 
-/* Actions */
 .form-footer-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 15px;
-    margin-top: 10px;
-    padding: 10px 0;
-}
-
-.button-primary {
-    background: var(--cor-preto);
-    color: var(--cor-branco);
-    border: none;
-    padding: 14px 28px;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.button-primary:hover {
-    background: var(--cor-cinza-escuro);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-}
-
-.button-secondary {
-    background: var(--cor-branco);
-    color: var(--cor-slate-500);
-    border: 1px solid var(--cor-borda-subtil);
-    padding: 14px 28px;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    transition: all 0.3s;
-}
-
-.button-secondary:hover {
-    background: var(--cor-slate-50);
-    color: var(--cor-preto);
-    border-color: var(--cor-preto);
+    gap: 12px;
+    margin-top: 4px;
 }

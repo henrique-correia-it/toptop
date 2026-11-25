@@ -20,6 +20,7 @@
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    font-family: var(--font-sans);
 }
 
 .admin-table th, .admin-table td {
@@ -27,6 +28,13 @@
     border-bottom: 1px solid var(--cor-slate-100);
     vertical-align: middle;
     text-align: center; /* Centrar tudo por defeito */
+    font-family: var(--font-sans);
+}
+
+.admin-table td {
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--cor-slate-800);
 }
 
 .admin-table th {
@@ -58,8 +66,33 @@
 
 
 /* --- RESPONSIVIDADE --- */
-@media (max-width: 1200px) {
+@media (max-width: 992px) {
+    .table-wrapper {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 28px;
+    }
+    .admin-table {
+        min-width: 680px;
+    }
     .tabela-produtos {
-        width: 1200px;
+        min-width: 820px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-table th,
+    .admin-table td {
+        padding: 11px 12px;
+    }
+    .admin-table td {
+        font-size: 0.84rem;
+    }
+    .admin-table th {
+        font-size: 0.68rem;
+    }
+    .acoes-tabela {
+        gap: 6px;
     }
 }

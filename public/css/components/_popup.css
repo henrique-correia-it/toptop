@@ -11,7 +11,7 @@
     overflow: hidden;
     transform: translateX(calc(100% + 20px));
     transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-    z-index: 20001;
+    z-index: var(--z-toast, 3000);
 }
 .popup.ativo {
     transform: translateX(0);

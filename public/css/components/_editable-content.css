@@ -1,8 +1,8 @@
 /* Inline editors for header/footer content */
 
-/* ── Edição INLINE (sem modal): escreve-se direto no elemento ──
-   Aplica-se aos elementos de texto que não são links/imagens. Não mostra
-   o lápis (não há modal a abrir); contorno azul no hover e sólido no foco. */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ EdiÃƒÂ§ÃƒÂ£o INLINE (sem modal): escreve-se direto no elemento Ã¢â€â‚¬Ã¢â€â‚¬
+   Aplica-se aos elementos de texto que nÃƒÂ£o sÃƒÂ£o links/imagens. NÃƒÂ£o mostra
+   o lÃƒÂ¡pis (nÃƒÂ£o hÃƒÂ¡ modal a abrir); contorno azul no hover e sÃƒÂ³lido no foco. */
 .global-edit-mode-active .inline-editavel {
     cursor: text;
 }
@@ -93,7 +93,7 @@
     border-color: var(--cor-info);
 }
 
-/* Ajustes específicos para o Logo (evita transbordar o cabeçalho) */
+/* Ajustes especÃƒÂ­ficos para o Logo (evita transbordar o cabeÃƒÂ§alho) */
 .logo.header-editable:hover {
     outline-offset: -3px;
     background-color: rgba(37, 99, 235, 0.04);
@@ -124,7 +124,7 @@
     display: flex !important;
     opacity: 1 !important;
     visibility: visible !important;
-    z-index: 10001 !important;
+    z-index: calc(var(--z-modal, 2000) + 10) !important;
 }
 
 .footer-editor-modal {
@@ -139,7 +139,7 @@
     -webkit-backdrop-filter: blur(8px);
     justify-content: center;
     align-items: center;
-    z-index: 10000;
+    z-index: var(--z-modal, 2000);
     padding: 20px;
 }
 
@@ -148,8 +148,9 @@
     max-width: 520px;
     max-height: calc(100vh - 40px);
     overflow: auto;
+    padding: 0;
     border: 1px solid rgba(226, 232, 240, 0.9);
-    border-radius: 12px;
+    border-radius: 16px;
     background: var(--cor-branco);
     box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
     animation: editorCardIn 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -161,24 +162,41 @@
 }
 
 .footer-editor-modal .form-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     padding: 18px 22px;
     border-bottom: 1px solid var(--cor-slate-200);
     background: var(--cor-branco);
+    border-radius: 16px 16px 0 0;
 }
 
 .footer-editor-modal .form-card-header h3 {
     margin: 0;
     font-size: 1.05rem;
+    font-weight: 700;
     line-height: 1.25;
+    text-transform: none;
+    letter-spacing: -0.01em;
     color: var(--cor-slate-900);
 }
 
 .footer-editor-modal .card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
     width: 38px;
     height: 38px;
     border-radius: 10px;
     background: var(--cor-slate-900);
     color: var(--cor-branco);
+}
+
+.footer-editor-modal .card-icon svg {
+    display: block;
+    width: 18px;
+    height: 18px;
 }
 
 .footer-editor-modal .form-card-body {
@@ -200,18 +218,33 @@
     border-top: 1px solid var(--cor-slate-200);
 }
 
+.footer-editor-modal .custom-file-upload svg {
+    display: block;
+    margin: 0 auto 10px;
+}
+
 .admin-warning-box {
-    margin-bottom: 15px;
-    padding: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 12px 14px;
     background: #fffbeb;
+    border: 1px solid #fde68a;
     border-left: 4px solid #f59e0b;
+    border-radius: 10px;
     font-size: 0.85rem;
+    line-height: 1.45;
     color: #92400e;
 }
 
 .admin-warning-icon {
-    vertical-align: middle;
-    margin-right: 5px;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+    color: #d97706;
+    display: block;
 }
 
 #footer-sync-warning,
@@ -245,7 +278,7 @@
 
 .horario-editor-row {
     display: grid;
-    grid-template-columns: 130px 108px minmax(280px, 320px) minmax(180px, 1fr);
+    grid-template-columns: 130px 108px minmax(240px, 320px) minmax(160px, 1fr);
     gap: 10px;
     align-items: center;
     padding: 10px;
@@ -261,7 +294,7 @@
 .horario-editor-day {
     color: var(--cor-slate-900);
     font-size: 0.9rem;
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .horario-editor-toggle {

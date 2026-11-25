@@ -1,0 +1,14 @@
+Options -Indexes -ExecCGI
+
+# Allowlist estrita para uploads de capas de categorias (apenas imagens raster seguras).
+<FilesMatch "\.(?!(?i:jpe?g|png|gif|webp|avif|ico)$)[^.]+$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>

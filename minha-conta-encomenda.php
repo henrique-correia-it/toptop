@@ -80,9 +80,17 @@ include __DIR__ . '/templates/header.php';
                     ]); ?>
                 </div>
                 <?php foreach ($itens as $item): ?>
-                    <?php $attrs = json_decode($item['selecoes_atributos'] ?? '{}', true) ?: []; ?>
+                    <?php
+                    $attrs = json_decode($item['selecoes_atributos'] ?? '{}', true) ?: [];
+                    $fotoBase = basename((string)($item['foto_exibicao'] ?? ''));
+                    $temFoto = ($fotoBase !== '' && $fotoBase !== '.' && $fotoBase !== '..' && is_file(__DIR__ . '/public/images/' . $fotoBase));
+                    ?>
                     <div class="cliente-order-item">
-                        <img src="/public/images/<?php echo htmlspecialchars($item['foto_exibicao'] ?: 'default.jpg'); ?>" alt="<?php echo htmlspecialchars($item['nome_produto']); ?>">
+                        <?php if ($temFoto): ?>
+                            <img src="/public/images/<?php echo htmlspecialchars($fotoBase); ?>" alt="<?php echo htmlspecialchars($item['nome_produto']); ?>">
+                        <?php else: ?>
+                            <?php echo ui_product_placeholder_svg(['label' => (string)$item['nome_produto']]); ?>
+                        <?php endif; ?>
                         <div>
                             <strong><?php echo htmlspecialchars($item['nome_produto']); ?></strong>
                             <span>

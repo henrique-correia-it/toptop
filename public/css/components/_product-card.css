@@ -1,5 +1,5 @@
 /* ===================================================
-   CSS FINAL PARA O CARTÃO DE PRODUTO - VERSÃO DEFINITIVA
+   CSS FINAL PARA O CARTÃƒO DE PRODUTO - VERSÃƒO DEFINITIVA
    =================================================== */
 
 .produto {
@@ -142,7 +142,7 @@
     opacity: 0;
     transform: translateX(-50%) translateY(10px);
     pointer-events: none;
-    transition: all 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .btn-adicionar-rapido:hover {
@@ -152,9 +152,9 @@
 }
 
 
-/* --- CORREÇÃO FINAL E DEFINITIVA PARA MOBILE/DESKTOP --- */
+/* --- CORREÃ‡ÃƒO FINAL E DEFINITIVA PARA MOBILE/DESKTOP --- */
 
-/* Regra para MOBILE: A visibilidade é controlada APENAS pela classe do JavaScript */
+/* Regra para MOBILE: A visibilidade Ã© controlada APENAS pela classe do JavaScript */
 .produto.mobile-actions-visible .btn-adicionar-rapido {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -165,16 +165,18 @@
     opacity: 1;
 }
 
-/* Regra para DESKTOP: A visibilidade é controlada APENAS pelo hover do rato.
-   A media query garante que estas regras são ignoradas em dispositivos de toque. */
+/* Regra para DESKTOP: A visibilidade Ã© controlada APENAS pelo hover do rato.
+   A media query garante que estas regras sÃ£o ignoradas em dispositivos de toque. */
 @media (hover: hover) and (pointer: fine) {
-    .produto:hover .btn-adicionar-rapido {
+    .produto:hover .btn-adicionar-rapido,
+    .produto:focus-within .btn-adicionar-rapido {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
         pointer-events: auto;
     }
 
-    .produto:hover .produto-imagem-container .imagem-secundaria {
+    .produto:hover .produto-imagem-container .imagem-secundaria,
+    .produto:focus-within .produto-imagem-container .imagem-secundaria {
         opacity: 1;
     }
 }

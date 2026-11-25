@@ -30,10 +30,16 @@ function getFooterText($seccao, $fallback = '') {
 
     if ($cache === null) {
         $cache = [];
-        $res = $conn->query("SELECT seccao, conteudo FROM footer_config");
-        if ($res) {
-            while ($row = $res->fetch_assoc()) {
-                $cache[$row['seccao']] = limparTextoConfigLegado($row['conteudo']);
+        try {
+            $res = $conn->query("SELECT seccao, conteudo FROM footer_config");
+            if ($res) {
+                while ($row = $res->fetch_assoc()) {
+                    $cache[$row['seccao']] = limparTextoConfigLegado($row['conteudo']);
+                }
+            }
+        } catch (Throwable $e) {
+            if (function_exists('log_sql')) {
+                log_sql('Erro ao carregar footer_config: ' . $e->getMessage(), 'footer_functions.php');
             }
         }
     }
@@ -87,8 +93,8 @@ function normalizarHorarioFuncionamento($raw = '') {
     foreach ($config['dias'] as $idx => $diaBase) {
         $diaGuardado = $diasPorKey[$diaBase['key']] ?? [];
         $config['dias'][$idx]['fechado'] = !empty($diaGuardado['fechado']);
-        $config['dias'][$idx]['inicio'] = preg_match('/^\d{2}:\d{2}$/', (string) ($diaGuardado['inicio'] ?? '')) ? $diaGuardado['inicio'] : '';
-        $config['dias'][$idx]['fim'] = preg_match('/^\d{2}:\d{2}$/', (string) ($diaGuardado['fim'] ?? '')) ? $diaGuardado['fim'] : '';
+        $config['dias'][$idx]['inicio'] = preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', (string) ($diaGuardado['inicio'] ?? '')) ? $diaGuardado['inicio'] : '';
+        $config['dias'][$idx]['fim'] = preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', (string) ($diaGuardado['fim'] ?? '')) ? $diaGuardado['fim'] : '';
         $config['dias'][$idx]['texto'] = trim((string) ($diaGuardado['texto'] ?? ''));
     }
 
@@ -97,7 +103,7 @@ function normalizarHorarioFuncionamento($raw = '') {
 }
 
 function formatarHoraHorario($hora) {
-    if (!preg_match('/^(\d{2}):(\d{2})$/', (string) $hora, $m)) {
+    if (!preg_match('/^([01]\d|2[0-3]):([0-5]\d)$/', (string) $hora, $m)) {
         return '';
     }
 
@@ -133,18 +139,29 @@ function textoHorarioDia(array $dia) {
 }
 
 function renderHorarioFuncionamento($fallback = 'Por consulta (temporário)') {
-    $raw = getFooterText('horario_funcionamento', '');
-    $decoded = json_decode(trim((string) $raw), true);
+    $raw = trim((string) getFooterText('horario_funcionamento', ''));
+    $decoded = $raw !== '' ? json_decode($raw, true) : null;
 
     if (!is_array($decoded) || (($decoded['tipo'] ?? '') !== 'horario_semana')) {
-        $texto = trim((string) $raw);
-        if ($texto === '') {
-            $texto = $fallback;
-        }
+        $texto = $raw !== '' ? $raw : $fallback;
         return '<p class="horario-texto-simples">' . nl2br(htmlspecialchars($texto, ENT_QUOTES, 'UTF-8')) . '</p>';
     }
 
-    $config = normalizarHorarioFuncionamento($raw);
+    $base = getHorarioSemanaBase();
+    $diasPorKey = [];
+    foreach (($decoded['dias'] ?? []) as $dia) {
+        if (is_array($dia) && isset($dia['key'])) {
+            $diasPorKey[$dia['key']] = $dia;
+        }
+    }
+    $config = ['dias' => $base, 'nota' => trim((string) ($decoded['nota'] ?? ''))];
+    foreach ($config['dias'] as $idx => $diaBase) {
+        $diaGuardado = $diasPorKey[$diaBase['key']] ?? [];
+        $config['dias'][$idx]['fechado'] = !empty($diaGuardado['fechado']);
+        $config['dias'][$idx]['inicio'] = preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', (string) ($diaGuardado['inicio'] ?? '')) ? $diaGuardado['inicio'] : '';
+        $config['dias'][$idx]['fim'] = preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', (string) ($diaGuardado['fim'] ?? '')) ? $diaGuardado['fim'] : '';
+        $config['dias'][$idx]['texto'] = trim((string) ($diaGuardado['texto'] ?? ''));
+    }
     $mapaHoje = [
         1 => 'segunda',
         2 => 'terca',

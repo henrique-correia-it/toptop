@@ -1,14 +1,10 @@
 <?php
 
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/auth.php';
 include '../config/database.php';
 
-
-// Apenas superadmins e desenvolvedores podem aceder
-if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true || !in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor'])) {
-    header("Location: /admin");
-    exit;
-}
+require_admin_manager('/admin');
 
 $mensagem = "";
 $username_valor = "";
@@ -19,9 +15,7 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-$roles_validos = (($_SESSION['admin_role'] ?? '') === 'desenvolvedor')
-    ? ['admin', 'superadmin', 'desenvolvedor']
-    : ['admin', 'superadmin'];
+$roles_validos = ['admin', 'superadmin'];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
@@ -83,11 +77,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // --- FIM DA CORREÇÃO ---
         
         if ($stmt_insert->execute()) {
+            log_seguranca("Novo administrador criado: '{$username}' ({$role}).", 'adicionar_admin.php');
             header("Location: listar_admins.php?sucesso=1");
             exit;
         } else {
             $mensagem = "Ocorreu um erro inesperado ao criar o administrador.";
-            error_log("Erro ao adicionar admin: " . $conn->error); 
+            log_sql("Erro ao adicionar admin: " . $conn->error, 'adicionar_admin.php');
         }
         $stmt_insert->close();
     } else {
@@ -100,15 +95,9 @@ include '../templates/header.php';
 
 <main class="dashboard-container animate-entry">
 
-<!-- Bloquear scroll automático no refresh -->
-<script>
-    if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-    }
-    window.scrollTo(0, 0);
-</script>
+    <?php echo ui_page_header('Novo Administrador', ['layout' => 'admin', 'back_url' => 'listar_admins.php', 'back_title' => 'Voltar']); ?>
+
     <div class="admin-container large">
-        <?php echo ui_page_header('Novo Administrador', ['layout' => 'admin', 'back_url' => 'listar_admins.php', 'back_title' => 'Voltar']); ?>
 
         <?php if ($mensagem): ?>
             <?php echo ui_alert(strip_tags(str_replace('<br>', ' · ', $mensagem)), 'danger'); ?>
@@ -124,9 +113,6 @@ include '../templates/header.php';
                     'admin'      => 'Administrador Normal',
                     'superadmin' => 'Super-Administrador',
                 ];
-                if ($_SESSION['admin_role'] === 'desenvolvedor') {
-                    $roles_opcoes['desenvolvedor'] = 'Desenvolvedor';
-                }
                 ob_start();
                 ?>
                 <div class="form-group">
@@ -143,8 +129,8 @@ include '../templates/header.php';
                 </div>
                 <?php
                 echo ui_card(ob_get_clean(), [
-                    'variant'     => 'form',
-                    'header_html' => '<div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div><h3>Identidade</h3>',
+                    'variant'    => 'form',
+                    'title_html' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 12px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Identidade',
                 ]);
                 ?>
             </div>
@@ -157,22 +143,22 @@ include '../templates/header.php';
                     <label for="password">Senha Provisória (mín. 8 caracteres)</label>
                     <div class="password-wrapper">
                         <?php echo ui_input('password', ['type' => 'password', 'id' => 'password', 'required' => true, 'placeholder' => 'Crie uma senha forte', 'autocomplete' => 'new-password']); ?>
-                        <span class="toggle-senha" data-target="password">
+                        <button type="button" class="toggle-senha" aria-label="Mostrar ou ocultar palavra-passe" data-target="password" style="background:none;border:none;padding:0;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        </span>
+                        </button>
                     </div>
                 </div>
                 <?php
                 echo ui_card(ob_get_clean(), [
-                    'variant'     => 'form',
-                    'header_html' => '<div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div><h3>Segurança Inicial</h3>',
+                    'variant'    => 'form',
+                    'title_html' => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 12px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Segurança Inicial',
                 ]);
                 ?>
 
                 <div class="form-footer-actions">
                     <?php
-                    echo ui_button('Cancelar', ['href' => 'listar_admins.php', 'class' => 'button-secondary']);
-                    echo ui_button('Criar Administrador', ['type' => 'submit', 'class' => 'button-primary']);
+                    echo ui_button('Cancelar', ['href' => 'listar_admins.php']);
+                    echo ui_button('Criar Administrador', ['type' => 'submit', 'variant' => 'primary']);
                     ?>
                 </div>
             </div>

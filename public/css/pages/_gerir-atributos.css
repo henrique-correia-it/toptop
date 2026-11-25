@@ -1,294 +1,273 @@
-/* ===================================================
-   PÁGINA: GERIR ATRIBUTOS (REFORMULAÇÃO COMPLETA)
-   Sistema de Cards e Listas Flexíveis
-   =================================================== */
+/* public/css/pages/_gerir-atributos.css */
 
-.admin-main-content.full-width {
-    max-width: none;
-    padding: 30px 20px;
-}
-
-.admin-container.large {
-    max-width: 1200px;
-    width: 100%;
-    margin: 0 auto;
-}
-
-/* --- Formulário de Adicionar Grupo (Novo Estilo) --- */
-.add-group-card {
-    background: var(--cor-branco);
-    border: 1px solid var(--cor-borda-subtil);
-    border-radius: 12px;
-    padding: 25px;
-    margin-bottom: 40px;
-    box-shadow: var(--sombra-subtil);
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.add-group-card form {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    align-items: center;
-}
-
-.add-group-card .input-group {
-    flex-grow: 2;
-    min-width: 250px;
-}
-
-.add-group-card .checkbox-group {
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
+.tabela-atributos tbody tr[data-id] {
     cursor: pointer;
-    user-select: none;
 }
 
-.add-group-card .btn-add {
-    flex-shrink: 0;
+.tabela-atributos tbody tr.is-expanded td {
+    background: #f8fafc !important;
+    border-bottom: 1px solid var(--cor-slate-200) !important;
 }
 
-/* --- Grid de Cards de Atributos --- */
-.attributes-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 25px;
+.tabela-atributos .attr-vals-preview {
+    color: var(--cor-slate-600);
 }
 
-.attribute-card {
-    background: var(--cor-branco);
-    border: 1px solid var(--cor-borda-subtil);
-    border-radius: 12px;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-}
-
-.attribute-card:hover {
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
-    border-color: #ddd;
-}
-
-/* Header do Card */
-.attribute-card-header {
-    padding: 20px 25px;
-    background: var(--cor-branco);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #f1f1f1;
-}
-
-.attribute-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    /* Indica que o header é clicável para colapsar */
-    flex-grow: 1;
-}
-
-.attribute-title {
-    font-size: 1.1rem;
+.tabela-atributos .attr-vals-more {
+    color: var(--cor-slate-400);
     font-weight: 600;
-    color: var(--cor-texto);
+    font-size: 0.82rem;
 }
 
-.attribute-card .chevron-icon {
-    transition: transform 0.3s ease;
-    color: var(--cor-cinza-medio);
+.tabela-atributos .attr-vals-empty {
+    color: var(--cor-slate-400);
+    font-size: 0.85rem;
 }
 
-.attribute-card.collapsed .chevron-icon {
-    transform: rotate(-90deg);
+.sel-mode .attr-filtravel-check,
+.sel-mode .value-drag-handle {
+    pointer-events: none;
 }
 
-.attribute-card.collapsed .values-container,
-.attribute-card.collapsed .attribute-card-footer {
-    display: none;
+/* Subtabela integrada diretamente na tabela (sem caixa dentro de caixa) */
+.tabela-atributos tr.attr-subrow > td.attr-subrow-cell {
+    padding: 0 !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid transparent;
+    text-align: left !important;
+    transition: border-color 0.28s ease;
 }
 
-.attribute-badge {
-    font-size: 0.65rem;
-    padding: 3px 8px;
-    border-radius: 4px;
-    background: #f1f3f5;
-    color: var(--cor-cinza-texto);
-    text-transform: uppercase;
-    font-weight: 700;
+.tabela-atributos tr.attr-subrow.is-open > td.attr-subrow-cell {
+    border-bottom-color: var(--cor-slate-200);
 }
 
-.attribute-badge.filterable {
-    background: #e7f5ff;
-    color: #1c7ed6;
+.attr-subrow-collapse {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease;
 }
 
-.filter-toggle-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-left: 10px;
-}
-
-.attribute-actions {
-    display: flex;
-    gap: 8px;
-}
-
-
-/* Lista de Valores (Flex-based) */
-.values-container {
-    padding: 10px 0;
-}
-
-.value-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 25px;
-    border-bottom: 1px solid #f8f9fa;
-    transition: background-color 0.2s ease;
-}
-
-.value-item:last-child {
-    border-bottom: none;
-}
-
-.value-item:hover {
-    background-color: #fcfcfc;
-}
-
-.value-drag-handle {
-    width: 30px;
-    color: #ced4da;
-    cursor: grab;
-    font-size: 1.2rem;
-    user-select: none;
-}
-
-.value-name {
-    flex-grow: 1;
-    font-size: 0.95rem;
-    color: #444;
-}
-
-.value-actions {
-    display: flex;
-    gap: 8px;
-    opacity: 0.3;
-    transition: opacity 0.2s ease;
-}
-
-
-.value-item:hover .value-actions {
+.tabela-atributos tr.attr-subrow.is-open .attr-subrow-collapse {
+    grid-template-rows: 1fr;
     opacity: 1;
 }
 
-/* Footer do Card (Add Value) */
-.attribute-card-footer {
-    padding: 20px 25px;
-    background: #f9fafb;
-    border-top: 1px solid #f1f1f1;
+.attr-subrow-inner {
+    min-height: 0;
+    overflow: hidden;
+    padding: 0 24px;
+    transition: padding 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.add-value-form {
-    display: flex;
-    gap: 10px;
+.tabela-atributos tr.attr-subrow.is-open .attr-subrow-inner {
+    padding: 14px 24px 18px 24px;
 }
 
-.add-value-form input {
-    flex-grow: 1;
-    padding: 10px 15px;
-    font-size: 0.9rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+.attr-subtable-panel {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    transform: translateY(-4px);
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Sortable Specifics */
-.ghost-class {
-    opacity: 0.4;
-    background-color: #e9ecef !important;
+.tabela-atributos tr.attr-subrow.is-open .attr-subtable-panel {
+    transform: translateY(0);
 }
 
-/* --- Edição Inline Simplificada --- */
-.editable-container-wrapper {
-    position: relative;
-    padding: 5px;
-    margin: -5px;
-    background-color: var(--cor-branco);
-    border: 1px solid var(--cor-texto);
-    border-radius: 8px;
-    z-index: 100;
-}
-
-.editable-container {
+.attr-subtable-head {
     display: flex;
     align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 4px 0 12px;
+    background: transparent;
+}
+
+.attr-subtable-body {
+    padding: 2px 2px 4px 2px;
+    background: transparent;
+}
+
+.attr-sub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
     gap: 8px;
 }
 
-.editable-container .edit-input {
-    flex-grow: 1;
-    padding: 8px 12px;
-    font-size: 0.9rem;
-    border: 1px solid #eee;
-    border-radius: 6px;
-    outline: none;
-}
-
-.editable-container .edit-input:focus {
-    border-color: #ccc;
-}
-
-.editable-container .save-btn,
-.editable-container .cancel-btn {
-    width: 32px;
-    height: 32px;
+.attr-sub-val-row {
     display: flex;
     align-items: center;
+    gap: 6px;
+    height: 42px;
+    padding: 0 6px 0 8px;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-slate-200);
+    border-radius: 10px;
+    box-sizing: border-box;
+    transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.attr-sub-val-row:hover {
+    border-color: var(--cor-slate-300);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.attr-sub-val-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--cor-slate-800);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.attr-sub-val-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.attr-sub-val-actions .btn-edit-single,
+.attr-sub-val-actions .btn-del-single {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 8px !important;
+}
+
+.attr-sub-val-actions .btn-edit-single::after,
+.attr-sub-val-actions .btn-del-single::after {
+    width: 14px;
+    height: 14px;
+}
+
+.attr-sub-empty {
+    padding: 20px 16px;
+    text-align: center;
+    color: var(--cor-slate-400);
+    font-size: 0.86rem;
+}
+
+.value-drag-handle {
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
+    width: 24px;
+    height: 24px;
     border-radius: 6px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s;
+    cursor: grab;
+    color: var(--cor-slate-300);
+    flex-shrink: 0;
+    user-select: none;
+    touch-action: none;
+    transition: background-color 0.14s ease, color 0.14s ease;
 }
 
-.editable-container .save-btn {
-    background: var(--cor-texto);
-    color: var(--cor-branco);
-    border: none;
+.attr-sub-val-row:hover .value-drag-handle {
+    color: var(--cor-slate-500);
 }
 
-.editable-container .cancel-btn {
-    background: #f8f9fa;
-    color: var(--cor-cinza-texto);
-    border: 1px solid #ddd;
+.value-drag-handle:hover {
+    background: var(--cor-slate-100);
+    color: var(--cor-slate-700);
 }
 
+.value-drag-handle:active {
+    cursor: grabbing;
+}
 
-/* Responsividade */
-@media (max-width: 600px) {
-    .add-group-card form {
-        flex-direction: column;
-        align-items: stretch;
+.attr-val-ghost {
+    opacity: 0.4;
+    background: #eff6ff !important;
+    border-color: #93c5fd !important;
+}
+
+.attr-val-fallback {
+    opacity: 0.96 !important;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16) !important;
+    border-color: var(--cor-preto-suave) !important;
+    cursor: grabbing !important;
+    z-index: 3000 !important;
+}
+
+/* Modais simples de Atributos */
+.attr-modal .qe-card {
+    max-width: 440px;
+    width: calc(100% - 24px);
+}
+
+.attr-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.attr-switch-box {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--cor-slate-50);
+    border: 1px solid var(--cor-slate-200);
+    border-radius: var(--button-radius, 14px);
+}
+
+@media (max-width: 768px) {
+    .tabela-atributos {
+        min-width: 0 !important;
+        width: 100% !important;
     }
 
-    .attribute-card-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
+    /* No mobile esconde a coluna de preview (os valores abrem logo abaixo com a seta) para caber sem scroll lateral */
+    .tabela-atributos thead th:nth-child(2),
+    .tabela-atributos tbody tr[data-id] td:nth-child(2) {
+        display: none;
     }
 
-    .attribute-actions {
-        width: 100%;
-        justify-content: flex-end;
+    .tabela-atributos thead th:first-child,
+    .tabela-atributos tbody tr[data-id] td:first-child {
+        text-align: left;
     }
 
-    .value-actions {
-        opacity: 1;
+    .attr-subrow-inner {
+        padding: 0 12px;
+    }
+
+    .tabela-atributos tr.attr-subrow.is-open .attr-subrow-inner {
+        padding: 12px 12px 16px 12px;
+    }
+
+    .attr-subtable-head {
+        display: flex;
+        gap: 8px;
+        padding: 2px 0 10px;
+    }
+
+    .attr-subtable-head .ui-btn {
+        flex: 1 1 0;
+        min-width: 0;
+        justify-content: center;
+    }
+
+    .attr-sub-grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .attr-sub-val-row {
+        height: 44px;
+        padding: 0 8px;
+    }
+
+    .value-drag-handle {
+        width: 30px;
+        height: 30px;
+        color: var(--cor-slate-400);
     }
 }

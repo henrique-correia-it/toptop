@@ -75,6 +75,7 @@ if (!isset($_SESSION['last_cleanup']) || (time() - $_SESSION['last_cleanup'] > 3
                             $stmt_up->close();
 
                             if ($foi_primeiro) {
+                                log_stripe("Encomenda abandonada #{$enc_id} recuperada como PAGA ({$metodo_real}, PI:{$pi_id}).", 'INFO', 'limpar_abandonadas.php');
                                 try {
                                     $template_email = ($row['metodo_entrega'] === 'recolha') ? 'recolha_paga' : 'confirmacao_stripe';
                                     enviarEmailEncomenda($template_email, [
@@ -88,7 +89,7 @@ if (!isset($_SESSION['last_cleanup']) || (time() - $_SESSION['last_cleanup'] > 3
                                         'metodo_pagamento' => $metodo_real,
                                     ]);
                                 } catch (\Throwable $e) {
-                                    error_log("limpar_abandonadas: falha no email ao cliente enc #{$enc_id}: " . $e->getMessage());
+                                    log_email("limpar_abandonadas: falha no email ao cliente enc #{$enc_id}: " . $e->getMessage(), 'limpar_abandonadas.php', 'ERROR');
                                 }
 
                                 try {
@@ -101,7 +102,7 @@ if (!isset($_SESSION['last_cleanup']) || (time() - $_SESSION['last_cleanup'] > 3
                                         'metodo_pagamento' => $metodo_real,
                                     ]);
                                 } catch (\Throwable $e) {
-                                    error_log("limpar_abandonadas: falha no email a loja enc #{$enc_id}: " . $e->getMessage());
+                                    log_email("limpar_abandonadas: falha no email a loja enc #{$enc_id}: " . $e->getMessage(), 'limpar_abandonadas.php', 'ERROR');
                                 }
                             }
                         } elseif (!in_array($pi_status, ['canceled', 'succeeded'], true)) {
@@ -114,8 +115,9 @@ if (!isset($_SESSION['last_cleanup']) || (time() - $_SESSION['last_cleanup'] > 3
                     if ($deve_apagar) {
                         try {
                             release_incomplete_order_reservation($conn, $enc_id, (string)$row['token']);
+                            log_app("Reserva expirada libertada automaticamente: enc#{$enc_id}.", 'INFO', 'limpar_abandonadas.php');
                         } catch (\Throwable $e_cleanup) {
-                            error_log("limpar_abandonadas: falha ao apagar enc #{$enc_id}: " . $e_cleanup->getMessage());
+                            log_exception($e_cleanup, "limpar_abandonadas.php enc#{$enc_id}");
                         }
                     }
                 }

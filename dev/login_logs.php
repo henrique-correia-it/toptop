@@ -13,7 +13,6 @@ include '../templates/header.php';
 
 $por_pagina = 50;
 $pagina     = max(1, (int)($_GET['p'] ?? 1));
-$offset     = ($pagina - 1) * $por_pagina;
 
 $filtro_resultado = $_GET['resultado'] ?? '';
 $filtro_username  = trim($_GET['username'] ?? '');
@@ -29,9 +28,11 @@ if ($filtro_resultado === 'sucesso' || $filtro_resultado === 'falha') {
 }
 if ($filtro_username !== '') {
     $like     = '%' . $filtro_username . '%';
-    $where[]  = 'username LIKE ?';
+    $where[]  = '(username LIKE ? OR ip LIKE ? OR motivo_falha LIKE ?)';
     $params[] = $like;
-    $types   .= 's';
+    $params[] = $like;
+    $params[] = $like;
+    $types   .= 'sss';
 }
 
 $where_sql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
@@ -39,11 +40,25 @@ $where_sql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 $total_stmt = $conn->prepare("SELECT COUNT(*) FROM admin_login_logs $where_sql");
 if ($params) { $total_stmt->bind_param($types, ...$params); }
 $total_stmt->execute();
-$total = $total_stmt->get_result()->fetch_row()[0];
+$total = (int)$total_stmt->get_result()->fetch_row()[0];
 $total_stmt->close();
-$total_paginas = max(1, ceil($total / $por_pagina));
+$total_paginas = max(1, (int)ceil($total / $por_pagina));
+$pagina = min($pagina, $total_paginas);
+$offset = ($pagina - 1) * $por_pagina;
 
-$stmt = $conn->prepare("SELECT * FROM admin_login_logs $where_sql ORDER BY created_at DESC LIMIT ? OFFSET ?");
+$sort_map = [
+    'data'        => 'created_at',
+    'username'    => 'username',
+    'role'        => 'role',
+    'resultado'   => 'resultado',
+    'dispositivo' => 'user_agent',
+    'ip'          => 'ip',
+];
+$sort_by   = isset($_GET['sort']) && array_key_exists($_GET['sort'], $sort_map) ? $_GET['sort'] : 'data';
+$sort_dir  = (isset($_GET['dir']) && strtolower((string)$_GET['dir']) === 'asc') ? 'asc' : (isset($_GET['dir']) ? 'desc' : 'desc');
+$order_sql = $sort_map[$sort_by] . ' ' . strtoupper($sort_dir) . ', id DESC';
+
+$stmt = $conn->prepare("SELECT * FROM admin_login_logs $where_sql ORDER BY {$order_sql} LIMIT ? OFFSET ?");
 $p_exec  = $params;
 $t_exec  = $types . 'ii';
 $p_exec[] = $por_pagina;
@@ -75,19 +90,14 @@ function parseUserAgent(string $ua): array {
 $qs_base = http_build_query(array_filter([
     'resultado' => $filtro_resultado,
     'username'  => $filtro_username,
+    'sort'      => isset($_GET['sort']) ? $sort_by : null,
+    'dir'       => isset($_GET['sort']) ? $sort_dir : null,
 ]));
 ?>
 
 
 <main class="dashboard-container animate-entry">
     
-<!-- Bloquear scroll automático no refresh -->
-<script>
-    if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-    }
-    window.scrollTo(0, 0);
-</script>
     <?php echo ui_page_header("Registos de Login", ['layout' => 'admin', 'back_url' => '/dev', 'back_title' => 'Painel Dev']); ?>
 
     <?php if (isset($_SESSION['flash_message'])): ?>
@@ -99,58 +109,62 @@ $qs_base = http_build_query(array_filter([
         <?php unset($_SESSION['flash_message']); ?>
     <?php endif; ?>
 
-    <div class="prod-toolbar">
-        <div class="prod-toolbar-right">
-            <form method="GET" style="display:flex; align-items:center; gap:10px;">
-                <?php echo ui_select('resultado', [
-                    ''        => 'Todos os resultados',
-                    'sucesso' => 'Sucesso',
-                    'falha'   => 'Falhados',
-                ], $filtro_resultado, ['variant' => 'toolbar', 'onchange' => 'this.form.submit()']); ?>
-                <?php echo ui_search_input('username', 'Filtrar utilizador...', ['value' => $filtro_username]); ?>
-            </form>
-            <?php echo ui_select_mode_button(); ?>
-        </div>
-    </div>
+    <?php echo ui_table_toolbar([
+        'filter' => ['name' => 'resultado', 'options' => ['' => 'Todos os resultados', 'sucesso' => 'Sucesso', 'falha' => 'Falhados'], 'value' => $filtro_resultado, 'title' => 'Filtrar por resultado'],
+        'search' => ['name' => 'username', 'value' => $filtro_username],
+    ]); ?>
 
     <?php
-        echo ui_selection_bar();
-
         $logRows = [];
         foreach ($logs as $log) {
             $device         = parseUserAgent($log['user_agent'] ?? '');
             $data_formatada = date('d/m/Y H:i:s', strtotime($log['created_at']));
-            $relativo       = format_time_ago($log['created_at'], 'short');
-            $iniciais       = strtoupper(substr($log['username'], 0, 2));
 
-            $userCell = '<div class="user-cell"><div class="user-avatar">' . ui_e($iniciais) . '</div><div>'
-                . '<span style="font-weight:700; color:var(--cor-slate-800);">' . ui_e($log['username']) . '</span>'
-                . ($log['role'] ? '<br><span style="font-size:.7rem; color:var(--cor-slate-400); text-transform:uppercase; font-weight:700; letter-spacing:.05em;">' . ui_e($log['role']) . '</span>' : '')
-                . '</div></div>';
+            $roleVal = trim((string)($log['role'] ?? ''));
+            if ($roleVal !== '') {
+                $roleTone = match ($roleVal) {
+                    'superadmin'    => 'danger',
+                    'admin'         => 'success',
+                    'desenvolvedor' => 'accent',
+                    default         => 'neutral',
+                };
+                $roleCell = ui_badge($roleVal, $roleTone);
+            } else {
+                $roleCell = '-';
+            }
 
             $resCell = ($log['resultado'] === 'sucesso')
-                ? ui_badge('Sucesso', 'success', ['class' => 'badge badge-verde'])
-                : ui_badge('Falha', 'danger', ['class' => 'badge badge-vermelho']) . ($log['motivo_falha'] ? '<span class="motivo">' . ui_e($log['motivo_falha']) . '</span>' : '');
+                ? ui_badge('Sucesso', 'success')
+                : ui_badge('Falha', 'danger') . ($log['motivo_falha'] ? '<span class="motivo">' . ui_e($log['motivo_falha']) . '</span>' : '');
 
             $logRows[] = [
                 'attrs' => ['data-id' => (int)$log['id']],
                 'cells' => [
-                    '<div class="time-cell"><span class="date">' . ui_e($data_formatada) . '</span><span class="rel">' . ui_e($relativo) . '</span></div>',
-                    $userCell,
+                    ['style' => 'white-space:nowrap;', 'html' => ui_e($data_formatada)],
+                    ui_e($log['username']),
+                    $roleCell,
                     $resCell,
                     '<div class="device-info"><span class="browser">' . ui_e($device['browser']) . '</span><span class="os">' . ui_e($device['os']) . '</span></div>',
-                    ui_badge((string)$log['ip'], 'neutral', ['class' => 'ip-pill']),
+                    ui_e((string)$log['ip']),
                 ],
             ];
         }
 
-        echo ui_table(['Data / Hora', 'Utilizador', 'Resultado', 'Dispositivo', 'IP'], $logRows, [
+        echo ui_table([
+            ['label' => 'Data / Hora', 'sort' => ['key' => 'data', 'default_dir' => 'desc']],
+            ['label' => 'Utilizador', 'sort' => 'username'],
+            ['label' => 'Cargo', 'sort' => 'role'],
+            ['label' => 'Resultado', 'sort' => 'resultado'],
+            ['label' => 'Dispositivo', 'sort' => 'dispositivo'],
+            ['label' => 'IP', 'sort' => 'ip'],
+        ], $logRows, [
             'selectable'        => true,
             'sel_hidden_inline' => true,
             'wrap_id'           => 'table-wrapper',
             'wrap_style'        => 'max-width: 1200px; width: 100%;',
             'table_class'       => 'admin-table logs-table',
             'empty_message'     => 'Nenhum registo encontrado para os filtros selecionados.',
+            'sort'              => ['by' => $sort_by, 'dir' => $sort_dir, 'page_param' => 'p'],
         ]);
         ?>
 
@@ -163,88 +177,10 @@ $qs_base = http_build_query(array_filter([
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const btnSelMode   = document.getElementById('btn-sel-mode');
-    const selModeBar   = document.getElementById('sel-mode-bar');
-    const selCountEl   = document.getElementById('sel-count');
-    const btnSelAll    = document.getElementById('btn-sel-all');
-    const bulkBar      = document.getElementById('bulk-bar');
-    const bulkCountEl  = document.getElementById('bulk-count');
-    const bulkCancel   = document.getElementById('bulk-cancel');
-    const bulkDel      = document.getElementById('bulk-del');
-    const tableWrap    = document.getElementById('table-wrapper');
-    
-    let selMode = false;
-    let selected = new Set();
-
-    function updateUI() {
-        const n = selected.size;
-        selCountEl.textContent = n;
-        bulkCountEl.textContent = n;
-        const total = document.querySelectorAll('.logs-table tbody tr[data-id]').length;
-        btnSelAll.textContent = (n === total && total > 0) ? 'Desselecionar todos' : 'Selecionar todos';
-        bulkBar.classList.toggle('visible', n > 0);
-    }
-
-    btnSelMode.addEventListener('click', () => {
-        selMode = !selMode;
-        tableWrap.classList.toggle('sel-mode', selMode);
-        btnSelMode.classList.toggle('active', selMode);
-        selModeBar.classList.toggle('visible', selMode);
-        if (!selMode) {
-            selected.clear();
-            document.querySelectorAll('.logs-table tbody tr[data-id]').forEach(r => r.classList.remove('selecionado'));
-        }
-        updateUI();
-    });
-
-    bulkCancel.addEventListener('click', () => btnSelMode.click());
-
-    document.querySelector('.logs-table tbody')?.addEventListener('click', function(e) {
-        if (!selMode) return;
-        const tr = e.target.closest('tr');
-        if (!tr) return;
-        const id = tr.dataset.id;
-        if (selected.has(id)) {
-            selected.delete(id);
-            tr.classList.remove('selecionado');
-        } else {
-            selected.add(id);
-            tr.classList.add('selecionado');
-        }
-        updateUI();
-    });
-
-    btnSelAll.addEventListener('click', () => {
-        const rows = document.querySelectorAll('.logs-table tbody tr[data-id]');
-        const allSel = [...rows].every(r => selected.has(r.dataset.id));
-        rows.forEach(r => {
-            if (allSel) {
-                selected.delete(r.dataset.id);
-                r.classList.remove('selecionado');
-            } else {
-                selected.add(r.dataset.id);
-                r.classList.add('selecionado');
-            }
-        });
-        updateUI();
-    });
-
-    function submitDelete(ids) {
-        const form = document.getElementById('form-delete-logs');
-        const container = document.getElementById('form-ids');
-        container.innerHTML = '';
-        ids.forEach(id => {
-            const inp = document.createElement('input');
-            inp.type = 'hidden'; inp.name = 'ids[]'; inp.value = id;
-            container.appendChild(inp);
-        });
-        form.submit();
-    }
-
-    bulkDel.addEventListener('click', () => {
-        const ids = [...selected];
-        if (!ids.length) return;
-        mostrarModalConfirmacao('Limpar Registos', `Apagar permanentemente ${ids.length} registo(s) selecionado(s)?`, () => submitDelete(ids));
+    window.initAdminBulkSelection({
+        formId: 'form-delete-logs',
+        confirmTitle: 'Limpar Registos',
+        confirmMessage: ids => `Apagar permanentemente ${ids.length} registo(s) selecionado(s)?`,
     });
 });
 </script>

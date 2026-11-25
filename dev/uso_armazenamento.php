@@ -1,118 +1,95 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/formatters.php';
+require_once __DIR__ . '/includes/storage_helper.php';
 
-// 1. VERIFICA A SESSÃO E PERMISSÕES PRIMEIRO
-if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true) {
-    header("Location: /entrar");
-    exit;
-}
-if (($_SESSION['admin_role'] ?? '') !== 'desenvolvedor') {
-    header("Location: /admin");
-    exit;
-}
+require_developer('/admin');
 
-// 2. SÓ DEPOIS DE VALIDAR, INCLUI O CABEÇALHO
+$titulo_pagina = 'Uso de Armazenamento';
 include '../templates/header.php';
 
-// Função para calcular o tamanho de um diretório
-function getDirectorySize($path) {
-    $total_size = 0;
-    try {
-        $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS));
-        foreach ($files as $file) {
-            if ($file->isFile()) {
-                $total_size += $file->getSize();
-            }
-        }
-    } catch (Exception $e) {
-        // Ignora erros de permissão, etc.
-    }
-    return $total_size;
-}
+// Cálculos centralizados (fonte única de verdade partilhada com /dev e /dev/galeria_imagens.php)
+$storage          = dev_calcular_armazenamento();
+$total_size_bytes = (int)$storage['total_bytes'];
+$size_images      = (int)$storage['imagens_bytes'];
+$size_code        = (int)$storage['codigo_bytes'];
+$size_other       = (int)$storage['outros_bytes'];
+$gal              = $storage['galeria'];
 
-// Caminhos
-$base_dir = __DIR__ . '/..';
-$images_dir = $base_dir . '/public/images';
-$assets_dir = $base_dir . '/public/assets';
-$code_dirs = [
-    $base_dir . '/admin', $base_dir . '/config', $base_dir . '/phpmailer',
-    $base_dir . '/public/css', $base_dir . '/public/js', $base_dir . '/templates'
-];
-$root_files = glob($base_dir . '/*.php');
-
-// Cálculos
-$size_images = file_exists($images_dir) ? getDirectorySize($images_dir) : 0;
-$size_assets = file_exists($assets_dir) ? getDirectorySize($assets_dir) : 0;
-$size_code = 0;
-foreach ($code_dirs as $dir) { if (file_exists($dir)) $size_code += getDirectorySize($dir); }
-foreach ($root_files as $file) { $size_code += filesize($file); }
-$total_size_bytes = $size_images + $size_assets + $size_code;
-$limite_gb = 5; // Limite de 5 GB
-$limite_bytes = $limite_gb * 1024 * 1024 * 1024;
+$limite_gb         = 5;
+$limite_bytes      = $limite_gb * 1024 * 1024 * 1024;
+$livre_bytes       = max(0, $limite_bytes - $total_size_bytes);
 $percentagem_total = ($limite_bytes > 0) ? ($total_size_bytes / $limite_bytes) * 100 : 0;
 
-$bar_class = 'success';
-if ($percentagem_total > 85) $bar_class = 'danger';
-elseif ($percentagem_total > 60) $bar_class = 'warning';
+$pct_images = $total_size_bytes > 0 ? ($size_images / $total_size_bytes) * 100 : 0;
+$pct_code   = $total_size_bytes > 0 ? ($size_code   / $total_size_bytes) * 100 : 0;
+$pct_other  = $total_size_bytes > 0 ? ($size_other  / $total_size_bytes) * 100 : 0;
 
+$rows = [
+    [
+        'cells' => [
+            'Imagens',
+            (int)$gal['total_count'] . ' ficheiros',
+            '<span class="storage-num">' . ui_e(format_bytes($size_images)) . '</span>',
+            '<span class="storage-num">' . number_format($pct_images, 1) . '%</span>',
+            '<div class="acoes-tabela">' . ui_icon_button('view', ['href' => 'galeria_imagens.php', 'title' => 'Ver galeria']) . '</div>',
+        ],
+    ],
+    [
+        'cells' => [
+            'Código e Scripts',
+            'PHP, CSS e JS',
+            '<span class="storage-num">' . ui_e(format_bytes($size_code)) . '</span>',
+            '<span class="storage-num">' . number_format($pct_code, 1) . '%</span>',
+            '-',
+        ],
+    ],
+    [
+        'cells' => [
+            'Logs e Outros',
+            'Registos e auxiliares',
+            '<span class="storage-num">' . ui_e(format_bytes($size_other)) . '</span>',
+            '<span class="storage-num">' . number_format($pct_other, 1) . '%</span>',
+            '<div class="acoes-tabela">' . ui_icon_button('view', ['href' => 'ver_logs.php', 'title' => 'Ver logs']) . '</div>',
+        ],
+    ],
+];
 ?>
 
-
 <main class="dashboard-container animate-entry">
-    
-<!-- Bloquear scroll automático no refresh -->
-<script>
-    if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-    }
-    window.scrollTo(0, 0);
-</script>
-    <?php echo ui_page_header("Uso de Armazenamento", ['layout' => 'admin', 'back_url' => '/dev', 'back_title' => 'Painel Dev']); ?>
+    <div class="storage-page">
+        <?php echo ui_page_header('Uso de Armazenamento', [
+            'layout'     => 'admin',
+            'back_url'   => '/dev',
+            'back_title' => 'Voltar ao Painel Dev',
+        ]); ?>
 
-    <div class="storage-container">
-
-        <div class="storage-total-card">
-            <p class="total-label">Espaço Total Utilizado</p>
-            <div class="total-value"><?php echo format_bytes($total_size_bytes); ?></div>
-            <?php echo ui_progress_bar(min(100, $percentagem_total), $bar_class); ?>
-            <p class="progress-info">Ocupa <strong><?php echo number_format($percentagem_total, 2); ?>%</strong> do seu limite de <?php echo $limite_gb; ?> GB.</p>
+        <div class="stats-grid">
+            <?php
+            echo ui_stat_card(format_bytes($total_size_bytes), 'Espaço Usado', [
+                'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+            ]);
+            echo ui_stat_card(format_bytes($livre_bytes), 'Livre de ' . $limite_gb . ' GB', [
+                'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+            ]);
+            echo ui_stat_card(number_format($percentagem_total, 2) . '%', 'Ocupação', [
+                'icon' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>',
+            ]);
+            ?>
         </div>
 
-        <h3 class="dashboard-section-title" style="margin-top: 40px; text-align: left;">Detalhes por Categoria</h3>
-        <div class="storage-breakdown">
-            <div class="breakdown-item">
-                <div class="breakdown-icon images"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>
-                <div class="breakdown-info">
-                    <div class="breakdown-info-header">
-                        <span class="label">Imagens de Produtos</span>
-                        <span class="size"><?php echo format_bytes($size_images); ?></span>
-                    </div>
-                    <?php echo ui_progress_bar($total_size_bytes > 0 ? ($size_images / $total_size_bytes * 100) : 0, 'info'); ?>
-                </div>
-            </div>
-            <div class="breakdown-item">
-                <div class="breakdown-icon code"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg></div>
-                <div class="breakdown-info">
-                    <div class="breakdown-info-header">
-                        <span class="label">Código e Scripts</span>
-                        <span class="size"><?php echo format_bytes($size_code); ?></span>
-                    </div>
-                    <?php echo ui_progress_bar($total_size_bytes > 0 ? ($size_code / $total_size_bytes * 100) : 0, 'accent'); ?>
-                </div>
-            </div>
-            <div class="breakdown-item">
-                <div class="breakdown-icon assets"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg></div>
-                <div class="breakdown-info">
-                    <div class="breakdown-info-header">
-                        <span class="label">Outros Ativos</span>
-                        <span class="size"><?php echo format_bytes($size_assets); ?></span>
-                    </div>
-                    <?php echo ui_progress_bar($total_size_bytes > 0 ? ($size_assets / $total_size_bytes * 100) : 0, 'success'); ?>
-                </div>
-            </div>
-        </div>
-
+        <?php
+        echo ui_table([
+            ['label' => 'Categoria', 'attrs' => ['style' => 'text-align: left;']],
+            ['label' => 'Conteúdo', 'attrs' => ['style' => 'text-align: left;']],
+            'Tamanho',
+            'Peso',
+            'Ações',
+        ], $rows, [
+            'table_class' => 'admin-table storage-table',
+        ]);
+        ?>
     </div>
 </main>
 

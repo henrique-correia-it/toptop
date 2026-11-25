@@ -82,6 +82,9 @@ if (!function_exists('customer_save_address')) {
         $phone = trim($data['telefone'] ?? '');
         $nif = trim($data['nif'] ?? '');
         $country = strtoupper(trim($data['pais_regiao'] ?? 'PT'));
+        if (!preg_match('/^[A-Z]{2}$/', $country)) {
+            $country = 'PT';
+        }
         $street = trim($data['rua'] ?? '');
         $postal = trim($data['codigo_postal'] ?? '');
         $city = trim($data['localidade'] ?? '');
@@ -92,48 +95,56 @@ if (!function_exists('customer_save_address')) {
             throw new InvalidArgumentException('Preencha a rua, codigo postal e localidade da morada.');
         }
 
-        if ($principal) {
-            $stmtReset = $conn->prepare("UPDATE cliente_moradas SET principal = 0 WHERE cliente_id = ?");
-            if (!$stmtReset) {
-                throw new RuntimeException('Erro interno ao atualizar morada principal: ' . $conn->error);
+        $conn->begin_transaction();
+        try {
+            if ($principal) {
+                $stmtReset = $conn->prepare("UPDATE cliente_moradas SET principal = 0 WHERE cliente_id = ?");
+                if (!$stmtReset) {
+                    throw new RuntimeException('Erro interno ao atualizar morada principal: ' . $conn->error);
+                }
+                $stmtReset->bind_param('i', $customerId);
+                $stmtReset->execute();
+                $stmtReset->close();
             }
-            $stmtReset->bind_param('i', $customerId);
-            $stmtReset->execute();
-            $stmtReset->close();
-        }
 
-        $stmt = $conn->prepare(
-            "INSERT INTO cliente_moradas
-                (cliente_id, nome, telefone, nif, pais_regiao, rua, codigo_postal, localidade, provincia, principal, data_criacao)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        );
-        if (!$stmt) {
-            throw new RuntimeException('Erro interno ao guardar morada: ' . $conn->error);
+            $stmt = $conn->prepare(
+                "INSERT INTO cliente_moradas
+                    (cliente_id, nome, telefone, nif, pais_regiao, rua, codigo_postal, localidade, provincia, principal, data_criacao)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            );
+            if (!$stmt) {
+                throw new RuntimeException('Erro interno ao guardar morada: ' . $conn->error);
+            }
+            $stmt->bind_param(
+                'issssssssis',
+                $customerId,
+                $name,
+                $phone,
+                $nif,
+                $country,
+                $street,
+                $postal,
+                $city,
+                $state,
+                $principalValue,
+                $now
+            );
+            $stmt->execute();
+            $id = (int)$conn->insert_id;
+            $stmt->close();
+            $conn->commit();
+            return $id;
+        } catch (Throwable $e) {
+            $conn->rollback();
+            throw $e;
         }
-        $stmt->bind_param(
-            'issssssssis',
-            $customerId,
-            $name,
-            $phone,
-            $nif,
-            $country,
-            $street,
-            $postal,
-            $city,
-            $state,
-            $principalValue,
-            $now
-        );
-        $stmt->execute();
-        $id = (int)$conn->insert_id;
-        $stmt->close();
-        return $id;
     }
 }
 
 if (!function_exists('customer_orders')) {
     function customer_orders(mysqli $conn, int $customerId, int $limit = 50): array
     {
+        $limit = max(1, min(500, $limit));
         $stmt = $conn->prepare(
             "SELECT id, token, data_encomenda, estado, total, portes_envio, metodo_entrega, metodo_pagamento, codigo_tracking
              FROM encomendas
@@ -158,20 +169,33 @@ if (!function_exists('customer_create_reset_token')) {
         $expires = date('Y-m-d H:i:s', time() + 3600);
         $now = date('Y-m-d H:i:s');
 
-        $stmtDelete = $conn->prepare("DELETE FROM cliente_password_resets WHERE cliente_id = ? AND usado_em IS NULL");
-        $stmtDelete->bind_param('i', $customerId);
-        $stmtDelete->execute();
-        $stmtDelete->close();
+        $conn->begin_transaction();
+        try {
+            $stmtDelete = $conn->prepare("DELETE FROM cliente_password_resets WHERE cliente_id = ? AND usado_em IS NULL");
+            if (!$stmtDelete) {
+                throw new RuntimeException('Erro interno ao limpar tokens de recuperação: ' . $conn->error);
+            }
+            $stmtDelete->bind_param('i', $customerId);
+            $stmtDelete->execute();
+            $stmtDelete->close();
 
-        $stmt = $conn->prepare(
-            "INSERT INTO cliente_password_resets (cliente_id, token_hash, expira_em, data_criacao)
-             VALUES (?, ?, ?, ?)"
-        );
-        $stmt->bind_param('isss', $customerId, $hash, $expires, $now);
-        $stmt->execute();
-        $stmt->close();
+            $stmt = $conn->prepare(
+                "INSERT INTO cliente_password_resets (cliente_id, token_hash, expira_em, data_criacao)
+                 VALUES (?, ?, ?, ?)"
+            );
+            if (!$stmt) {
+                throw new RuntimeException('Erro interno ao criar token de recuperação: ' . $conn->error);
+            }
+            $stmt->bind_param('isss', $customerId, $hash, $expires, $now);
+            $stmt->execute();
+            $stmt->close();
 
-        return $token;
+            $conn->commit();
+            return $token;
+        } catch (Throwable $e) {
+            $conn->rollback();
+            throw $e;
+        }
     }
 }
 
@@ -183,19 +207,32 @@ if (!function_exists('customer_create_email_verification_token')) {
         $expires = date('Y-m-d H:i:s', time() + 86400); // 24 horas
         $now = date('Y-m-d H:i:s');
 
-        $stmt = $conn->prepare("DELETE FROM cliente_email_verifications WHERE cliente_id = ?");
-        $stmt->bind_param('i', $customerId);
-        $stmt->execute();
-        $stmt->close();
+        $conn->begin_transaction();
+        try {
+            $stmt = $conn->prepare("DELETE FROM cliente_email_verifications WHERE cliente_id = ?");
+            if (!$stmt) {
+                throw new RuntimeException('Erro interno ao limpar tokens de verificação: ' . $conn->error);
+            }
+            $stmt->bind_param('i', $customerId);
+            $stmt->execute();
+            $stmt->close();
 
-        $stmt = $conn->prepare(
-            "INSERT INTO cliente_email_verifications (cliente_id, token_hash, expira_em, data_criacao)
-             VALUES (?, ?, ?, ?)"
-        );
-        $stmt->bind_param('isss', $customerId, $hash, $expires, $now);
-        $stmt->execute();
-        $stmt->close();
+            $stmt = $conn->prepare(
+                "INSERT INTO cliente_email_verifications (cliente_id, token_hash, expira_em, data_criacao)
+                 VALUES (?, ?, ?, ?)"
+            );
+            if (!$stmt) {
+                throw new RuntimeException('Erro interno ao criar token de verificação: ' . $conn->error);
+            }
+            $stmt->bind_param('isss', $customerId, $hash, $expires, $now);
+            $stmt->execute();
+            $stmt->close();
 
-        return $token;
+            $conn->commit();
+            return $token;
+        } catch (Throwable $e) {
+            $conn->rollback();
+            throw $e;
+        }
     }
 }

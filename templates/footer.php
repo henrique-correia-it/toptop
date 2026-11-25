@@ -7,11 +7,12 @@ if (!isset($versao_global)) {
 
 // Carregar funções do footer e garantir base de dados
 require_once __DIR__ . '/../config/footer_functions.php';
+require_once __DIR__ . '/../config/auth.php';
 if (!isset($conn)) {
     require_once __DIR__ . '/../config/database.php';
 }
 
-$isAdminFooter = isset($_SESSION['admin_logado']) && $_SESSION['admin_logado'] === true && in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor']) && isset($_SESSION['global_edit_mode']) && $_SESSION['global_edit_mode'] === true;
+$isAdminFooter = is_global_edit_mode();
 $isGlobalEditMode = $isAdminFooter; // Helper para legibilidade
 $isAdminHeader = isset($isAdminHeader) ? $isAdminHeader : $isAdminFooter;
 
@@ -20,11 +21,9 @@ $fallback_sobre = 'O teu destino de moda preferido, onde o estilo se une ao conf
 $fallback_contactos = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> <span>Edifício Chafariz<br>Rua dos Fontenários<br>4535-221 Lourosa, Portugal</span>';
 $fallback_pagamento = 'Garantimos a total segurança das tuas compras. Utilizamos a plataforma Stripe, líder mundial em pagamentos online, para processar cartões de débito, crédito e MB WAY com encriptação avançada.';
 $fallback_copyright = '© ' . date("Y") . ' TopTop - Todos os direitos reservados.';
-$footerBackgroundColor = strtoupper((string) ($siteBackgroundColor ?? getLojaConfig('site_background_color', '#FAF8F4')));
-$footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
 ?>
 
-<footer class="site-footer site-footer-home<?php echo $footerHasWhiteBackground ? ' site-footer-white-bg' : ''; ?>">
+<footer class="site-footer site-footer-home">
     <div class="footer-grid">
         <div class="footer-coluna">
             <h4 class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="titulo_sobre"><?php echo htmlspecialchars(getFooterText('titulo_sobre', 'Sobre a TopTop'), ENT_QUOTES, 'UTF-8'); ?></h4>
@@ -36,13 +35,13 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
             <h4 class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="titulo_info"><?php echo htmlspecialchars(getFooterText('titulo_info', 'Informações'), ENT_QUOTES, 'UTF-8'); ?></h4>
             <ul class="footer-links">
                 <li class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="link_label_trocas">
-                    <a href="/trocas.php"><?php echo htmlspecialchars(getFooterText('link_label_trocas', 'Trocas e Devoluções'), ENT_QUOTES, 'UTF-8'); ?></a>
+                    <a href="/trocas"><?php echo htmlspecialchars(getFooterText('link_label_trocas', 'Trocas e Devoluções'), ENT_QUOTES, 'UTF-8'); ?></a>
                 </li>
                 <li class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="link_label_envios">
-                    <a href="/envios.php"><?php echo htmlspecialchars(getFooterText('link_label_envios', 'Portes e Envios'), ENT_QUOTES, 'UTF-8'); ?></a>
+                    <a href="/envios"><?php echo htmlspecialchars(getFooterText('link_label_envios', 'Portes e Envios'), ENT_QUOTES, 'UTF-8'); ?></a>
                 </li>
                 <li class="<?php echo $isGlobalEditMode ? 'footer-editable' : ''; ?>" data-seccao="link_label_encomenda">
-                    <a href="/consultar-encomenda.php"><?php echo htmlspecialchars(getFooterText('link_label_encomenda', 'Acompanhar Encomenda'), ENT_QUOTES, 'UTF-8'); ?></a>
+                    <a href="/consultar-encomenda"><?php echo htmlspecialchars(getFooterText('link_label_encomenda', 'Acompanhar Encomenda'), ENT_QUOTES, 'UTF-8'); ?></a>
                 </li>
             </ul>
         </div>
@@ -73,7 +72,7 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
                  data-wa="<?php echo htmlspecialchars(getFooterText('link_whatsapp', 'https://chat.whatsapp.com/K7IhtBOBJNtHRGysYttqnY?fbclid=PAZXh0bgNhZW0CMTEAAafGr0PtcF54B-Xs-3vTdfud9IjlLX7_8aIYPl4AbcuzcyR6YggHigJmb1gQ0g_aem_FI_fPyaedJRcm1Ctl243uA'), ENT_QUOTES, 'UTF-8'); ?>"
                  data-ig="<?php echo htmlspecialchars(getFooterText('link_instagram', 'https://www.instagram.com/toptop_clothingstore'), ENT_QUOTES, 'UTF-8'); ?>"
                  data-fb="<?php echo htmlspecialchars(getFooterText('link_facebook', 'https://www.facebook.com/share/1AqqQZ8YmL/'), ENT_QUOTES, 'UTF-8'); ?>">
-                <a href="<?php echo htmlspecialchars(getFooterText('link_whatsapp', 'https://chat.whatsapp.com/K7IhtBOBJNtHRGysYttqnY?fbclid=PAZXh0bgNhZW0CMTEAAafGr0PtcF54B-Xs-3vTdfud9IjlLX7_8aIYPl4AbcuzcyR6YggHigJmb1gQ0g_aem_FI_fPyaedJRcm1Ctl243uA'), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" title="WhatsApp" class="footer-social-link wa"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></a>
+                <a href="<?php echo htmlspecialchars(getFooterText('link_whatsapp', 'https://chat.whatsapp.com/K7IhtBOBJNtHRGysYttqnY?fbclid=PAZXh0bgNhZW0CMTEAAafGr0PtcF54B-Xs-3vTdfud9IjlLX7_8aIYPl4AbcuzcyR6YggHigJmb1gQ0g_aem_FI_fPyaedJRcm1Ctl243uA'), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" title="WhatsApp" class="footer-social-link wa"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65 -3.8a9 9 0 1 1 3.4 2.9l-5.05 .9" /><path d="M9 10a.5 .5 0 0 0 1 0v-1a.5 .5 0 0 0 -1 0v1a5 5 0 0 0 5 5h1a.5 .5 0 0 0 0 -1h-1a.5 .5 0 0 0 0 1" /></svg></a>
                 <a href="<?php echo htmlspecialchars(getFooterText('link_instagram', 'https://www.instagram.com/toptop_clothingstore'), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" title="Instagram" class="footer-social-link ig"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
                 <a href="<?php echo htmlspecialchars(getFooterText('link_facebook', 'https://www.facebook.com/share/1AqqQZ8YmL/'), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" title="Facebook" class="footer-social-link fb"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
             </div>
@@ -92,7 +91,7 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
     </div>
 </footer>
 
-<div id="popupMensagem" class="popup">
+<div id="popupMensagem" class="popup" role="status" aria-live="polite" aria-atomic="true">
     <div class="popup-barra"></div>
     <div class="popup-conteudo">
         <span id="popupTitulo"></span>
@@ -101,14 +100,14 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
     <?php echo ui_close_button(['id' => 'popupFechar', 'class' => 'popup-fechar']); ?>
 </div>
 
-<div id="modalConfirmacao" class="modal-confirmacao">
+<div id="modalConfirmacao" class="modal-confirmacao" role="dialog" aria-modal="true" aria-labelledby="modalConfirmacaoTitulo">
     <div class="modal-confirmacao-conteudo">
         <h3 id="modalConfirmacaoTitulo">Tem a certeza?</h3>
         <p id="modalConfirmacaoTexto">Esta ação não pode ser revertida.</p>
         <div class="modal-confirmacao-acoes">
             <?php
-            echo ui_button('Cancelar', ['id' => 'modalConfirmacaoBtnCancelar', 'class' => 'button voltar-btn']);
-            echo ui_button('Confirmar', ['id' => 'modalConfirmacaoBtnConfirmar', 'class' => 'button delete-btn']);
+            echo ui_button('Cancelar', ['id' => 'modalConfirmacaoBtnCancelar']);
+            echo ui_button('Confirmar', ['id' => 'modalConfirmacaoBtnConfirmar', 'variant' => 'danger']);
             ?>
         </div>
     </div>
@@ -130,8 +129,8 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
         <?php echo ui_close_button(['class' => 'qe-close', 'onclick' => 'fecharEditorFooter()']); ?>
         <?php ob_start(); ?>
             <div class="admin-warning-box" id="footer-sync-warning">
-                <svg class="admin-warning-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                <strong>Sincronização Ativa:</strong> Esta alteração será refletida automaticamente noutras áreas do site.
+                <svg class="admin-warning-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span><strong>Sincronização Ativa:</strong> Esta alteração será refletida automaticamente noutras áreas do site.</span>
             </div>
             <input type="hidden" id="footer-edit-seccao">
             
@@ -193,7 +192,7 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
         echo ui_card(ob_get_clean(), [
             'variant'     => 'form',
             'style'       => 'border:0; box-shadow:none; margin:0;',
-            'header_html' => '<div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div><h3>Editar Elemento </h3>',
+            'header_html' => '<div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div><h3>Editar Elemento</h3>',
         ]);
         ?>
     </div>
@@ -209,7 +208,7 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
 
             <div id="header-edit-text-fields">
                 <div class="form-group">
-                    <label id="header-edit-label">Conteudo</label>
+                    <label id="header-edit-label">Conteúdo</label>
                     <?php echo ui_input('', ['id' => 'header-edit-conteudo', 'class' => 'admin-input-style']); ?>
                 </div>
             </div>
@@ -235,7 +234,7 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
                 <div class="form-group">
                     <label class="custom-file-upload" style="display: block; border: 2px dashed #cbd5e1; border-radius: 8px; padding: 25px 20px; text-align: center; cursor: pointer; background: #f8fafc; transition: all 0.2s ease;">
                         <input type="file" id="header-edit-logo" accept="image/jpeg,image/png,image/webp,image/avif" style="display: none;">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="margin-bottom: 10px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-bottom: 10px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                         <div style="font-weight: 500; color: #334155; font-size: 0.95rem;">Clique para escolher a nova foto</div>
                         <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 6px;">Formatos suportados: JPG, PNG, WebP. Max: 2MB</div>
                     </label>
@@ -245,14 +244,14 @@ $footerHasWhiteBackground = $footerBackgroundColor === '#FFFFFF';
             <div class="form-footer-actions">
                 <?php
                 echo ui_button('Cancelar', ['class' => 'button voltar-btn', 'onclick' => 'fecharEditorHeader()']);
-                echo ui_button('Guardar Alteracoes', ['class' => 'button add-btn', 'onclick' => 'guardarAlteracaoHeader()']);
+                echo ui_button('Guardar Alterações', ['class' => 'button add-btn', 'onclick' => 'guardarAlteracaoHeader()']);
                 ?>
             </div>
         <?php
         echo ui_card(ob_get_clean(), [
             'variant'     => 'form',
             'style'       => 'border:0; box-shadow:none; margin:0;',
-            'header_html' => '<div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div><h3>Editar Elemento do Cabecalho</h3>',
+            'header_html' => '<div class="card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L18.5 2.5z"></path></svg></div><h3>Editar Elemento do Cabeçalho</h3>',
         ]);
         ?>
     </div>
@@ -383,7 +382,7 @@ async function guardarAlteracaoHeader() {
                 formData.append('logo', blob, 'logo_cropped.' + ext);
 
                 try {
-                    const response = await fetch('/dev/ajax_save_header.php', { method: 'POST', body: formData });
+                    const response = await fetch('/admin/ajax_save_header.php', { method: 'POST', body: formData });
                     const data = await response.json();
 
                     if (data.sucesso) {
@@ -415,7 +414,7 @@ async function guardarAlteracaoHeader() {
     }
 
     const conteudo = document.getElementById('header-edit-conteudo').value.trim();
-    const response = await fetch('/dev/ajax_save_header.php', {
+    const response = await fetch('/admin/ajax_save_header.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ seccao, conteudo, csrf_token })
@@ -619,7 +618,7 @@ function abrirEditorFooter() {
     // Warning de sincronização
     const warning = document.getElementById('footer-sync-warning');
     const seccoesSincronizadas = ['telefone', 'email', 'contactos_info'];
-    if (warning) warning.style.display = seccoesSincronizadas.includes(seccao) ? 'block' : 'none';
+    if (warning) warning.style.display = seccoesSincronizadas.includes(seccao) ? 'flex' : 'none';
 
     document.getElementById('footer-edit-seccao').value = seccao;
 
@@ -630,7 +629,7 @@ function abrirEditorFooter() {
         document.getElementById('footer-edit-schedule-fields').style.display = 'none';
         document.getElementById('footer-edit-address-fields').style.display = 'block';
         
-        fetch('/dev/ajax_get_footer_address.php')
+        fetch('/admin/ajax_get_footer_address.php')
             .then(r => r.json())
             .then(data => {
                 document.getElementById('footer-edit-rua').value = data.rua || '';
@@ -761,9 +760,9 @@ async function guardarAlteracaoFooter() {
             } else if (seccao.startsWith('link_label_')) {
                 // Manter o link intacto na atualização visual em tempo real
                 let href = "/";
-                if(seccao === 'link_label_trocas') href = "/trocas.php";
-                if(seccao === 'link_label_envios') href = "/envios.php";
-                if(seccao === 'link_label_encomenda') href = "/consultar-encomenda.php";
+                if(seccao === 'link_label_trocas') href = "/trocas";
+                if(seccao === 'link_label_envios') href = "/envios";
+                if(seccao === 'link_label_encomenda') href = "/consultar-encomenda";
                 conteudoFinal = `<a href="${href}">${conteudoFormatado}</a>`;
             } else if (seccao.startsWith('titulo_')) {
                 // Títulos não envolvem com <p>
@@ -782,7 +781,7 @@ async function guardarAlteracaoFooter() {
 }
 
 function gravarCampo(seccao, conteudo, csrf_token) {
-    return fetch('/dev/ajax_save_footer.php', {
+    return fetch('/admin/ajax_save_footer.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ seccao, conteudo, csrf_token })
@@ -790,11 +789,11 @@ function gravarCampo(seccao, conteudo, csrf_token) {
 }
 
 /* ============================================================
-   EDIÇÃO INLINE (sem modal) — para elementos de TEXTO que não são
+   EDIÇÃO INLINE (sem modal) - para elementos de TEXTO que não são
    links/botões/imagens. Reaproveita os endpoints existentes:
-     .home-editable   -> /dev/ajax_save_home.php   (chave)
-     .footer-editable -> /dev/ajax_save_footer.php (seccao)
-     .header-editable -> /dev/ajax_save_header.php (seccao)
+     .home-editable   -> /admin/ajax_save_home.php   (chave)
+     .footer-editable -> /admin/ajax_save_footer.php (seccao)
+     .header-editable -> /admin/ajax_save_header.php (seccao)
    Os elementos que SÃO links/imagens/multi-campo continuam com modal.
    ============================================================ */
 (function () {
@@ -814,9 +813,9 @@ function gravarCampo(seccao, conteudo, csrf_token) {
     }
 
     function rota(el) {
-        if (el.classList.contains('home-editable'))   return { url: '/dev/ajax_save_home.php',   campo: 'chave',  valor: el.dataset.chave };
-        if (el.classList.contains('header-editable')) return { url: '/dev/ajax_save_header.php', campo: 'seccao', valor: el.dataset.seccao };
-        return { url: '/dev/ajax_save_footer.php', campo: 'seccao', valor: el.dataset.seccao };
+        if (el.classList.contains('home-editable'))   return { url: '/admin/ajax_save_home.php',   campo: 'chave',  valor: el.dataset.chave };
+        if (el.classList.contains('header-editable')) return { url: '/admin/ajax_save_header.php', campo: 'seccao', valor: el.dataset.seccao };
+        return { url: '/admin/ajax_save_footer.php', campo: 'seccao', valor: el.dataset.seccao };
     }
 
     async function guardarInline(el) {
@@ -911,7 +910,7 @@ document.getElementById('header-edit-logo')?.addEventListener('change', function
 <?php endif; ?>
 
 <div id="side-cart-overlay" class="side-cart-overlay"></div>
-<div id="side-cart" class="side-cart">
+<div id="side-cart" class="side-cart" role="dialog" aria-modal="true" aria-label="O Meu Carrinho">
     <div class="side-cart-header">
         <h4>O Meu Carrinho</h4>
         <?php echo ui_close_button(['id' => 'btn-fechar-side-cart', 'class' => 'btn-fechar-side-cart', 'raw_class' => true, 'title' => 'Fechar carrinho', 'attrs' => ['aria-label' => 'Fechar carrinho']]); ?>
@@ -923,7 +922,7 @@ document.getElementById('header-edit-logo')?.addEventListener('change', function
             <span>€0,00</span>
         </div>
         <?php
-        echo ui_button('Ver Carrinho', ['href' => '/carrinho.php', 'class' => 'button voltar-btn']);
+        echo ui_button('Ver Carrinho', ['href' => '/carrinho', 'class' => 'button voltar-btn']);
         echo ui_button('Finalizar Encomenda', ['href' => '/checkout', 'id' => 'side-cart-finalizar', 'class' => 'button add-btn']);
         ?>
     </div>
@@ -947,8 +946,12 @@ document.getElementById('header-edit-logo')?.addEventListener('change', function
 <script src="/public/js/utils.js?v=<?php echo $versao_global; ?>"></script>
 <script src="/public/js/search.js?v=<?php echo $versao_global; ?>"></script>
 <script src="/public/js/backToTop.js?v=<?php echo $versao_global; ?>"></script>
+<script src="/public/js/table-sort.js?v=<?php echo $versao_global; ?>" defer></script>
 
-<?php if (strpos((string)(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? ''), '/admin/') === 0): ?>
+<?php
+$_footerReqPath = (string)(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '');
+if (strpos($_footerReqPath, '/admin/') === 0 || strpos($_footerReqPath, '/dev/') === 0):
+?>
     <script src="/public/js/admin-ui.js?v=<?php echo $versao_global; ?>"></script>
 <?php endif; ?>
 
@@ -1021,8 +1024,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             fetch('/dev/ajax_limpar_cache_global.php', {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ csrf_token: <?php echo json_encode($_SESSION['csrf_token'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?> })
+                body: new URLSearchParams({ csrf_token: <?php echo json_encode(function_exists('csrf_token') ? csrf_token() : ($_SESSION['csrf_token'] ?? ''), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?> })
             })
                 .then(r => r.json())
                 .then(data => {
@@ -1041,6 +1045,106 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+</script>
+<script>
+(function () {
+    const ENDPOINT = '/ajax_log_js.php';
+    const seen = new Set();
+    let sentCount = 0;
+
+    function reportJsError(payload) {
+        try {
+            if (sentCount >= 15) return;
+            const key = [payload.type, payload.message, payload.source, payload.line, payload.endpoint, payload.status].join('|');
+            if (seen.has(key)) return;
+            seen.add(key);
+            sentCount++;
+
+            payload.page = location.pathname + location.search;
+            const body = JSON.stringify(payload);
+            if (navigator.sendBeacon) {
+                const blob = new Blob([body], { type: 'application/json' });
+                if (navigator.sendBeacon(ENDPOINT, blob)) return;
+            }
+            if (typeof window.fetch === 'function') {
+                window.fetch(ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body,
+                    keepalive: true,
+                    credentials: 'same-origin'
+                }).catch(function () {});
+            }
+        } catch (_) {}
+    }
+
+    window.addEventListener('error', function (e) {
+        const target = e && e.target;
+        if (target && target !== window && (target.tagName === 'SCRIPT' || target.tagName === 'LINK')) {
+            const url = target.src || target.href || '';
+            if (!url || url.includes(ENDPOINT)) return;
+            reportJsError({
+                type: 'resource',
+                message: 'Falha ao carregar ' + target.tagName.toLowerCase(),
+                source: url
+            });
+            return;
+        }
+        const msg = (e && e.message) ? String(e.message) : '';
+        if (!msg || msg === 'Script error.') return;
+        reportJsError({
+            type: 'error',
+            message: msg,
+            source: e.filename || '',
+            line: e.lineno || 0,
+            col: e.colno || 0,
+            stack: e.error && e.error.stack ? String(e.error.stack) : ''
+        });
+    }, true);
+
+    window.addEventListener('unhandledrejection', function (e) {
+        const reason = e ? e.reason : null;
+        if (reason && reason.name === 'AbortError') return;
+        const msg = reason
+            ? (reason.message ? String(reason.message) : String(reason))
+            : 'Promise rejeitada sem motivo';
+        reportJsError({
+            type: 'unhandledrejection',
+            message: msg,
+            stack: reason && reason.stack ? String(reason.stack) : ''
+        });
+    });
+
+    if (typeof window.fetch === 'function') {
+        const origFetch = window.fetch.bind(window);
+        window.fetch = function (input, init) {
+            const url = (typeof input === 'string') ? input : (input && input.url ? input.url : '');
+            const isSelf = !url || url.includes(ENDPOINT);
+            const isSameOrigin = !isSelf && (url.startsWith('/') || url.startsWith(location.origin) || !/^https?:\/\//i.test(url));
+
+            return origFetch(input, init).then(function (res) {
+                if (isSameOrigin && res && res.status >= 500) {
+                    reportJsError({
+                        type: 'fetch_error',
+                        message: 'Resposta HTTP ' + res.status + ' no servidor',
+                        endpoint: url,
+                        status: res.status
+                    });
+                }
+                return res;
+            }, function (err) {
+                if (isSameOrigin && (!err || err.name !== 'AbortError')) {
+                    reportJsError({
+                        type: 'fetch_error',
+                        message: 'Falha de rede: ' + (err && err.message ? err.message : 'erro desconhecido'),
+                        endpoint: url
+                    });
+                }
+                throw err;
+            });
+        };
+    }
+})();
 </script>
 </body>
 </html>

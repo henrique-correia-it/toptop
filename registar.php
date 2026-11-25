@@ -15,6 +15,7 @@ $erro = '';
 $nome = '';
 $email = '';
 $telefone = '';
+$nif = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_from_post()) {
@@ -48,9 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $token = customer_create_email_verification_token($conn, $customerId);
 
-                $env_vars = file_exists(__DIR__ . '/.env') ? parse_ini_file(__DIR__ . '/.env') : [];
-                $base_url = rtrim($env_vars['APP_URL'] ?? 'https://toptop.pt', '/');
-                $link = $base_url . '/verificar-email.php?token=' . urlencode($token);
+                $app_base = rtrim($base_url ?: tt_env('APP_URL', 'https://toptop.pt'), '/');
+                $link = $app_base . '/verificar-email?token=' . urlencode($token);
 
                 require_once __DIR__ . '/admin/includes/email_handler.php';
                 enviarEmailTemplate('verificacao_email', $email, $nome, [
@@ -59,10 +59,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
 
                 $_SESSION['registo_pendente_email'] = $email;
+                log_app("Nova conta de cliente #{$customerId} ({$email}) registada; aguarda verificação.", 'INFO', 'registar.php');
                 header('Location: /registar?pendente=1');
                 exit;
             } catch (Throwable $e) {
-                log_app($e->getMessage(), 'ERROR', 'registar.php');
+                log_exception($e, 'registar.php');
                 $erro = 'Nao foi possivel criar a conta. Tente novamente.';
             }
         }
@@ -84,7 +85,7 @@ include __DIR__ . '/templates/header.php';
                 <h2>Verifica o teu email</h2>
                 <p class="cliente-auth-copy">Enviámos um link de confirmação para <strong><?php echo htmlspecialchars($email_pendente !== '' ? $email_pendente : 'o teu email', ENT_QUOTES, 'UTF-8'); ?></strong>. Abre o email e clica no link para ativares a conta.</p>
                 <div class="form-actions-footer" style="margin-top:1.5rem;">
-                    <a href="/entrar" class="link-recuperar">Já ativei — entrar</a>
+                    <a href="/entrar" class="link-recuperar">Já ativei - entrar</a>
                 </div>
             <?php else: ?>
 
@@ -108,29 +109,29 @@ include __DIR__ . '/templates/header.php';
                 </div>
                 <div class="form-group">
                     <label for="nif">NIF</label>
-                    <?php echo ui_input('nif', ['id' => 'nif', 'inputmode' => 'numeric']); ?>
+                    <?php echo ui_input('nif', ['id' => 'nif', 'inputmode' => 'numeric', 'value' => $nif]); ?>
                 </div>
                 <div class="form-group">
                     <label for="password">Palavra-passe</label>
                     <div class="password-wrapper">
                         <?php echo ui_input('password', ['type' => 'password', 'id' => 'password', 'required' => true, 'autocomplete' => 'new-password']); ?>
-                        <span class="toggle-senha" data-target="password">
+                        <button type="button" class="toggle-senha" aria-label="Mostrar ou ocultar palavra-passe" data-target="password" style="background:none;border:none;padding:0;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        </span>
+                        </button>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="password_confirm">Confirmar palavra-passe</label>
                     <div class="password-wrapper">
                         <?php echo ui_input('password_confirm', ['type' => 'password', 'id' => 'password_confirm', 'required' => true, 'autocomplete' => 'new-password']); ?>
-                        <span class="toggle-senha" data-target="password_confirm">
+                        <button type="button" class="toggle-senha" aria-label="Mostrar ou ocultar palavra-passe" data-target="password_confirm" style="background:none;border:none;padding:0;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        </span>
+                        </button>
                     </div>
                 </div>
 
                 <div style="margin-top: 10px;">
-                    <?php echo ui_button('Criar conta', ['type' => 'submit', 'class' => 'button add-btn']); ?>
+                    <?php echo ui_button('Criar conta', ['type' => 'submit', 'class' => 'button add-btn', 'full' => true]); ?>
                 </div>
             </form>
 

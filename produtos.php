@@ -112,16 +112,20 @@ if (!empty($atributos_selecionados)) {
 $where_clause = " WHERE " . implode(' AND ', $condicoes);
 
 // OBTER O TOTAL DE RESULTADOS
-$stmt_count = $conn->prepare("SELECT COUNT(DISTINCT p.id) as total " . $sql_base . $where_clause);
+$stmt_count = $conn->prepare("SELECT COUNT(*) as total " . $sql_base . $where_clause);
 if (!empty($params)) {
     $stmt_count->bind_param($types, ...$params);
 }
 $stmt_count->execute();
-$total_resultados = $stmt_count->get_result()->fetch_assoc()['total'];
-$total_paginas = ceil($total_resultados / $resultados_por_pagina);
+$total_resultados = (int)$stmt_count->get_result()->fetch_assoc()['total'];
+$total_paginas = max(1, (int)ceil($total_resultados / $resultados_por_pagina));
 $stmt_count->close();
+if ($pagina_atual > $total_paginas) {
+    $pagina_atual = $total_paginas;
+    $offset = ($pagina_atual - 1) * $resultados_por_pagina;
+}
 
-// ORDENAÇÃO — construir FIELD() dinâmico com ordem das categorias da BD
+// ORDENAÇÃO - construir FIELD() dinâmico com ordem das categorias da BD
 $_cats_order_r = $conn->query("SELECT nome FROM categorias ORDER BY ordem ASC, id ASC");
 if ($_cats_order_r !== false && $_cats_order_r->num_rows > 0) {
     $_cats_order = array_column($_cats_order_r->fetch_all(MYSQLI_ASSOC), 'nome');
@@ -155,8 +159,8 @@ switch ($ordenar_selecionado) {
 // BUSCAR PRODUTOS PARA A PÁGINA ATUAL
 $produtos_finais = [];
 if ($total_resultados > 0) {
-    // Adicionámos uma subconsulta para ir buscar o ID da variação base para produtos simples
-    $query_final = "SELECT DISTINCT p.*,
+    // Subconsulta para stock total e ID da variação base para produtos simples
+    $query_final = "SELECT p.*,
         (SELECT SUM(pv.quantidade) FROM produto_variacoes pv WHERE pv.produto_id = p.id) as stock_total,
         (SELECT pv.id FROM produto_variacoes pv WHERE pv.produto_id = p.id AND pv.atributos = '{}' LIMIT 1) as base_variacao_id "
         . $sql_base . $where_clause . $order_by_clause . " LIMIT ? OFFSET ?";
@@ -174,28 +178,68 @@ if ($total_resultados > 0) {
 }
 
 
-// --- FUNÇÃO PARA GERAR PAGINAÇÃO (usada apenas no AJAX) ---
+// --- FUNÇÃO PARA GERAR PAGINAÇÃO (URLs reais + windowing + ARIA, compatível com AJAX e SEO) ---
 function gerarPaginacaoAjax($pagina_atual, $total_paginas)
 {
-    if ($total_paginas <= 1)
+    if ($total_paginas <= 1) {
         return '';
-    $html = '<nav class="pagination-container"><ul class="pagination-list">';
-    
-    // Anterior
-    $html .= '<li class="pagination-item prev ' . ($pagina_atual <= 1 ? 'disabled' : '') . '">
-                <a class="page-link" href="#" data-pagina="' . ($pagina_atual - 1) . '" title="Anterior">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                </a></li>';
+    }
+    $pagina_atual = max(1, min((int)$total_paginas, (int)$pagina_atual));
+    $query_base = $_GET;
+    unset($query_base['_fragment'], $query_base['pagina']);
 
-    for ($i = 1; $i <= $total_paginas; $i++) {
-        $html .= '<li class="pagination-item ' . ($i == $pagina_atual ? 'active' : '') . '"><a class="page-link" href="#" data-pagina="' . $i . '">' . $i . '</a></li>';
+    $buildUrl = static function (int $p) use ($query_base): string {
+        $q = $query_base;
+        if ($p > 1) {
+            $q['pagina'] = $p;
+        }
+        $qs = http_build_query($q);
+        return '/produtos' . ($qs !== '' ? '?' . $qs : '');
+    };
+
+    $max_visible = 5;
+    $start = max(1, $pagina_atual - (int)floor($max_visible / 2));
+    $end   = min($total_paginas, $start + $max_visible - 1);
+    if ($end - $start + 1 < $max_visible) {
+        $start = max(1, $end - $max_visible + 1);
+    }
+
+    $html = '<nav class="pagination-container" aria-label="Paginação de produtos"><ul class="pagination-list">';
+
+    // Anterior
+    if ($pagina_atual > 1) {
+        $prevUrl = htmlspecialchars($buildUrl($pagina_atual - 1), ENT_QUOTES, 'UTF-8');
+        $html .= '<li class="pagination-item prev">'
+            . '<a class="page-link" href="' . $prevUrl . '" data-pagina="' . ($pagina_atual - 1) . '" aria-label="Página anterior" title="Anterior">'
+            . '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>'
+            . '</a></li>';
+    } else {
+        $html .= '<li class="pagination-item prev disabled">'
+            . '<span class="page-link" aria-disabled="true" aria-label="Página anterior">'
+            . '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>'
+            . '</span></li>';
+    }
+
+    for ($i = $start; $i <= $end; $i++) {
+        $pageUrl = htmlspecialchars($buildUrl($i), ENT_QUOTES, 'UTF-8');
+        $isActive = ($i === $pagina_atual);
+        $html .= '<li class="pagination-item' . ($isActive ? ' active' : '') . '">'
+            . '<a class="page-link" href="' . $pageUrl . '" data-pagina="' . $i . '"' . ($isActive ? ' aria-current="page"' : '') . '>' . $i . '</a></li>';
     }
 
     // Seguinte
-    $html .= '<li class="pagination-item next ' . ($pagina_atual >= $total_paginas ? 'disabled' : '') . '">
-                <a class="page-link" href="#" data-pagina="' . ($pagina_atual + 1) . '" title="Seguinte">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a></li>';
+    if ($pagina_atual < $total_paginas) {
+        $nextUrl = htmlspecialchars($buildUrl($pagina_atual + 1), ENT_QUOTES, 'UTF-8');
+        $html .= '<li class="pagination-item next">'
+            . '<a class="page-link" href="' . $nextUrl . '" data-pagina="' . ($pagina_atual + 1) . '" aria-label="Página seguinte" title="Seguinte">'
+            . '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+            . '</a></li>';
+    } else {
+        $html .= '<li class="pagination-item next disabled">'
+            . '<span class="page-link" aria-disabled="true" aria-label="Página seguinte">'
+            . '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+            . '</span></li>';
+    }
 
     $html .= '</ul></nav>';
     return $html;
@@ -243,12 +287,21 @@ ob_start(); // Inicia um novo buffer para o HTML dos produtos
             $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
             $types_ids = str_repeat('i', count($product_ids));
 
-            $stmt_img = $conn->prepare("SELECT produto_id, nome_ficheiro FROM produto_imagens WHERE produto_id IN ($placeholders) ORDER BY produto_id, FIELD(nome_ficheiro, (SELECT foto_principal FROM produtos WHERE id = produto_id)) DESC, id ASC");
+            $foto_principal_por_id = array_column($produtos_finais, 'foto_principal', 'id');
+            $stmt_img = $conn->prepare("SELECT produto_id, nome_ficheiro FROM produto_imagens WHERE produto_id IN ($placeholders) ORDER BY produto_id, id ASC");
             $stmt_img->bind_param($types_ids, ...$product_ids);
             $stmt_img->execute();
             $result_img = $stmt_img->get_result();
             while ($img_row = $result_img->fetch_assoc()) {
-                $imagens_por_produto[$img_row['produto_id']][] = $img_row['nome_ficheiro'];
+                $pid = $img_row['produto_id'];
+                if (!isset($imagens_por_produto[$pid])) {
+                    $imagens_por_produto[$pid] = [];
+                }
+                if (($foto_principal_por_id[$pid] ?? '') === $img_row['nome_ficheiro']) {
+                    array_unshift($imagens_por_produto[$pid], $img_row['nome_ficheiro']);
+                } else {
+                    $imagens_por_produto[$pid][] = $img_row['nome_ficheiro'];
+                }
             }
             $stmt_img->close();
 
@@ -361,6 +414,7 @@ ob_start(); // Inicia um novo buffer para o HTML dos produtos
                     'filtros_ativos'  => $filtros_de_atributos_ativos,
                     'modal_data'      => true,
                     'quick_add'       => true,
+                    'img_dimensions'  => true,
                 ]);
                 ?>
             <?php endforeach; endforeach; ?>
@@ -395,20 +449,20 @@ if (!empty($termo_pesquisa)) {
     $titulo_pagina = 'Pesquisa: ' . $termo_pesquisa;
     $descricao_pagina = 'Resultados para "' . $termo_pesquisa . '" na TopTop.';
     $noindex = true;
-    $canonical_url = '/produtos.php?q=' . rawurlencode($termo_pesquisa);
+    $canonical_url = '/produtos?q=' . rawurlencode($termo_pesquisa);
 } elseif (!empty($promocao_selecionada)) {
     $titulo_pagina = 'Promoções';
     $descricao_pagina = 'Descobre as promoções TopTop. Roupa de mulher e acessórios com desconto, com envio rápido para Portugal.';
-    $canonical_url = '/produtos.php?promocao=1';
+    $canonical_url = '/produtos?promocao=1';
 } elseif (count($categorias_selecionadas) === 1 && empty($atributos_selecionados)) {
     $cat_nome = $categorias_selecionadas[0];
     $titulo_pagina = $cat_nome;
     $descricao_pagina = 'Explora ' . $cat_nome . ' na TopTop. Moda feminina com envio rápido para Portugal.';
-    $canonical_url = '/produtos.php?categorias%5B%5D=' . rawurlencode($cat_nome);
+    $canonical_url = '/produtos?categorias%5B%5D=' . rawurlencode($cat_nome);
 } else {
     $titulo_pagina = 'Produtos';
     $descricao_pagina = 'Explora toda a coleção TopTop: roupa de mulher, acessórios e muito mais. Envio rápido para Portugal.';
-    $canonical_url = '/produtos.php';
+    $canonical_url = '/produtos';
 }
 if ($pagina_atual > 1) {
     $canonical_url .= (strpos($canonical_url, '?') !== false ? '&' : '?') . 'pagina=' . $pagina_atual;
@@ -418,19 +472,18 @@ $_pag_base = rtrim($_pag_base, '?&');
 $head_extra = '';
 if ($pagina_atual > 1) {
     $_prev = $pagina_atual === 2 ? $_pag_base : $_pag_base . (strpos($_pag_base, '?') !== false ? '&' : '?') . 'pagina=' . ($pagina_atual - 1);
-    $head_extra .= '    <link rel="prev" href="https://www.toptop.pt' . htmlspecialchars($_prev, ENT_QUOTES, 'UTF-8') . '">' . "\n";
+    $head_extra .= '    <link rel="prev" href="https://toptop.pt' . htmlspecialchars($_prev, ENT_QUOTES, 'UTF-8') . '">' . "\n";
 }
 if ($pagina_atual < $total_paginas) {
     $_next = $_pag_base . (strpos($_pag_base, '?') !== false ? '&' : '?') . 'pagina=' . ($pagina_atual + 1);
-    $head_extra .= '    <link rel="next" href="https://www.toptop.pt' . htmlspecialchars($_next, ENT_QUOTES, 'UTF-8') . '">' . "\n";
+    $head_extra .= '    <link rel="next" href="https://toptop.pt' . htmlspecialchars($_next, ENT_QUOTES, 'UTF-8') . '">' . "\n";
 }
 include 'templates/header.php';
 ?>
 <main class="pagina-produtos animate-entry">
     <div class="loja-header">
         <p class="loja-kicker"><?php echo !empty($termo_pesquisa) ? 'Pesquisa' : 'Catálogo'; ?></p>
-        <h2><?php echo !empty($termo_pesquisa) ? 'Resultados para "' . htmlspecialchars($termo_pesquisa) . '"' : 'Produtos'; ?>
-        </h2>
+        <h1><?php echo !empty($termo_pesquisa) ? 'Resultados para "' . htmlspecialchars($termo_pesquisa) . '"' : 'Produtos'; ?></h1>
     </div>
     <div class="mobile-filter-bar">
         <button type="button" class="botao-filtros-mobile" aria-controls="filtros-produtos" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
@@ -469,7 +522,7 @@ include 'templates/header.php';
                 
                 <?php if (!empty($categorias)): ?>
                     <div class="filtro-grupo">
-                        <h3 class="filtro-titulo">Categoria <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg></h3>
+                        <button type="button" class="filtro-titulo" aria-expanded="false">Categoria <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
                         <div class="filtro-conteudo">
                             <div class="filtro-conteudo-inner">
                                 <ul class="lista-filtros">
@@ -489,7 +542,7 @@ include 'templates/header.php';
 
                 <?php foreach ($filtros_disponiveis as $nome_grupo => $valores): ?>
                     <div class="filtro-grupo">
-                        <h3 class="filtro-titulo"><?php echo htmlspecialchars($nome_grupo); ?> <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg></h3>
+                        <button type="button" class="filtro-titulo" aria-expanded="false"><?php echo htmlspecialchars($nome_grupo); ?> <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
                         <div class="filtro-conteudo">
                             <div class="filtro-conteudo-inner">
                                 <ul class="lista-filtros">
@@ -533,12 +586,12 @@ include 'templates/header.php';
 
         <div class="modal-grid-conteudo">
             <div class="modal-galeria">
-                <div class="zoom-container"><img id="modalImagemPrincipal" src=""></div>
+                <div class="zoom-container"><img id="modalImagemPrincipal" alt=""></div>
                 <div id="modalThumbnails" class="modal-thumbnails"></div>
             </div>
 
             <div class="modal-info">
-                <h1 id="modalNome"></h1>
+                <h2 id="modalNome"></h2>
                 <p id="modalPreco"></p>
                 <div class="produto-meta-info">
                     <span id="meta-referencia" class="meta-item" style="display: none;">
@@ -908,7 +961,8 @@ if ($abrir_produto_id > 0 && !in_array($abrir_produto_id, array_map('intval', $p
         document.querySelectorAll('.filtro-titulo').forEach(titulo => {
             titulo.addEventListener('click', function() {
                 const grupo = this.closest('.filtro-grupo');
-                grupo.classList.toggle('aberto');
+                const aberto = grupo.classList.toggle('aberto');
+                this.setAttribute('aria-expanded', aberto ? 'true' : 'false');
             });
         });
 

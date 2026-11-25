@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/config/session.php';
+require_once __DIR__ . '/config/auth.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/stripe.php';
 require_once __DIR__ . '/config/cliente_auth.php';
@@ -12,7 +13,7 @@ $encomenda         = null;
 
 // --- DEVELOPER PREVIEW MODE (SEGURANÇA REFORÇADA) ---
 if (isset($_GET['dev_preview'])) {
-    if (isset($_SESSION['admin_logado']) && $_SESSION['admin_role'] === 'desenvolvedor') {
+    if (is_developer()) {
         $encomenda_id = 9999;
         $token = 'dev_token';
         $estado = ($_GET['dev_preview'] === 'sucesso') ? 'sucesso' : 'falhou';
@@ -63,6 +64,7 @@ if ($encomenda_id && $token && $payment_intent_id) {
                 $encomenda['estado'] = 'pago';
 
                 if ($foi_primeiro) {
+                    log_stripe("Pagamento confirmado via API em sucesso.php para enc#{$encomenda['id']} ({$metodo_real}, PI:{$payment_intent_id}).", 'INFO', 'sucesso.php');
                     try {
                         require_once __DIR__ . '/admin/includes/email_handler.php';
                         $template_email = ($encomenda['metodo_entrega'] === 'recolha') ? 'recolha_paga' : 'confirmacao_stripe';
@@ -78,7 +80,7 @@ if ($encomenda_id && $token && $payment_intent_id) {
                             'total_final' => $total_enc, 'metodo_pagamento' => $metodo_real,
                         ]);
                     } catch (\Throwable $e) {
-                        error_log("sucesso.php: falha no email enc #{$encomenda['id']}: " . $e->getMessage());
+                        log_email("sucesso.php: falha no email enc #{$encomenda['id']}: " . $e->getMessage(), 'sucesso.php', 'ERROR');
                     }
                 }
             } elseif (in_array($pi_status, ['canceled', 'requires_payment_method'])) {
@@ -175,11 +177,11 @@ include 'templates/header.php';
             <div class="sc-btns">
                 <?php if ($encomenda_id && $token): ?>
                     <?php echo ui_button('Acompanhar Encomenda', [
-                        'href'  => 'estado_encomenda.php?id=' . $encomenda_id . '&token=' . urlencode($token),
+                        'href'  => '/estado_encomenda?id=' . $encomenda_id . '&token=' . urlencode($token),
                         'class' => 'sc-btn-primary',
                     ]); ?>
                 <?php endif; ?>
-                <?php echo ui_button('Continuar a comprar', ['href' => 'produtos.php', 'class' => 'sc-btn-secondary']); ?>
+                <?php echo ui_button('Continuar a comprar', ['href' => '/produtos', 'class' => 'sc-btn-secondary']); ?>
             </div>
 
         <?php elseif ($estado === 'aguardar'): ?>
@@ -206,11 +208,11 @@ include 'templates/header.php';
             <div class="sc-btns">
                 <?php if ($encomenda_id && $token): ?>
                     <?php echo ui_button('Ver Estado da Encomenda', [
-                        'href'  => 'estado_encomenda.php?id=' . $encomenda_id . '&token=' . urlencode($token),
+                        'href'  => '/estado_encomenda?id=' . $encomenda_id . '&token=' . urlencode($token),
                         'class' => 'sc-btn-primary',
                     ]); ?>
                 <?php endif; ?>
-                <?php echo ui_button('Continuar a comprar', ['href' => 'produtos.php', 'class' => 'sc-btn-secondary']); ?>
+                <?php echo ui_button('Continuar a comprar', ['href' => '/produtos', 'class' => 'sc-btn-secondary']); ?>
             </div>
 
         <?php else: /* falhou */ ?>
@@ -236,7 +238,7 @@ include 'templates/header.php';
             <hr class="sc-divider">
 
             <div class="sc-btns">
-                <?php echo ui_button('Continuar a comprar', ['href' => 'produtos.php', 'class' => 'sc-btn-primary']); ?>
+                <?php echo ui_button('Continuar a comprar', ['href' => '/produtos', 'class' => 'sc-btn-primary']); ?>
             </div>
 
         <?php endif; ?>

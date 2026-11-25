@@ -1,4 +1,4 @@
-/* Estilos exclusivos da página de produtos, principalmente os filtros. */
+/* Estilos exclusivos da pÃƒÂ¡gina de produtos, principalmente os filtros. */
 .pagina-produtos {
     /* Tokens editoriais espelhados da homepage */
     --p-accent: var(--cor-accent);
@@ -33,6 +33,7 @@
     background: currentColor;
     opacity: .55;
 }
+.pagina-produtos .loja-header h1,
 .pagina-produtos .loja-header h2 {
     font-family: var(--p-display);
     font-size: clamp(1.9rem, 3.2vw, 2.6rem);
@@ -51,18 +52,18 @@
     align-items: start; /* Importante para o sticky funcionar corretamente */
 }
 
-/* ── Barra Lateral de Filtros (Sticky no Desktop) ── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Barra Lateral de Filtros (Sticky no Desktop) Ã¢â€â‚¬Ã¢â€â‚¬ */
 .filtros-sidebar {
     border-right: 1px solid var(--cor-divisor-pagina);
     padding-right: 20px;
     position: sticky;
-    top: 120px; /* Altura do header (101px) mais espaçamento (19px) */
+    top: 120px; /* Altura do header (101px) mais espaÃƒÂ§amento (19px) */
     max-height: calc(100vh - 140px);
     overflow-y: auto;
     z-index: 90;
 }
 
-/* Personalização da scrollbar da sidebar para ser mais premium */
+/* PersonalizaÃƒÂ§ÃƒÂ£o da scrollbar da sidebar para ser mais premium */
 .filtros-sidebar::-webkit-scrollbar {
     width: 4px;
 }
@@ -71,7 +72,7 @@
     border-radius: 4px;
 }
 
-/* ── Cabeçalho Mobile ── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ CabeÃƒÂ§alho Mobile Ã¢â€â‚¬Ã¢â€â‚¬ */
 .filtros-mobile-header {
     display: none;
 }
@@ -91,13 +92,13 @@
 
 .sidebar-desktop-header span {
     font-size: 1.1rem;
-    font-weight: 800;
+    font-weight: 700;
     text-transform: lowercase;
     letter-spacing: -0.02em;
     color: var(--cor-preto);
 }
 
-/* ── Acordeão de Filtros ── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ AcordeÃƒÂ£o de Filtros Ã¢â€â‚¬Ã¢â€â‚¬ */
 .filtro-grupo {
     padding-bottom: 24px;
     margin-bottom: 24px;
@@ -110,21 +111,35 @@
 }
 
 .filtro-titulo {
+    width: 100%;
+    padding: 0 !important;
+    margin: 0;
+    min-height: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    font-family: inherit;
     font-size: 0.85rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+    text-align: left;
     color: var(--cor-preto);
     display: flex;
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    margin-bottom: 0;
     user-select: none;
-    transition: all 0.2s ease;
+    transform: none !important;
+    transition: color 0.2s ease, margin-bottom 0.2s ease;
 }
 
 .filtro-titulo:hover {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    transform: none !important;
     color: var(--p-accent, #475569);
 }
 
@@ -164,56 +179,112 @@
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding-top: 5px; /* Pequeno respiro após o título */
+    gap: 4px;
+    padding: 4px 4px 8px 4px;
+    margin: 0;
 }
 
 .filtro-checkbox {
     display: flex;
     align-items: center;
+    gap: 11px;
+    padding: 6px 8px;
+    border-radius: 10px;
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 500;
-    color: var(--cor-slate-500); /* Slate 500 */
-    transition: all 0.2s ease;
+    color: var(--cor-slate-600);
+    transition: color 0.2s ease, background-color 0.2s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
     user-select: none;
 }
 
 .filtro-checkbox:hover {
     color: var(--cor-preto);
+    background-color: rgba(15, 23, 42, 0.04);
+    transform: translateX(3px);
+}
+
+.filtro-checkbox:active {
+    transform: translateX(2px) scale(0.985);
 }
 
 .filtro-checkbox input[type="checkbox"] {
     display: none;
 }
 
+.filtro-label-text {
+    line-height: 1.3;
+    transition: color 0.2s ease;
+}
+
 .custom-checkbox {
     width: 20px;
     height: 20px;
-    border: 1.5px solid var(--cor-slate-200);
-    border-radius: 6px;
-    margin-right: 12px;
+    border: 1.5px solid var(--cor-slate-300);
+    border-radius: 7px;
+    margin: 0;
     position: relative;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     background-color: var(--cor-branco);
     flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.custom-checkbox::after {
+    content: "";
+    display: block;
+    width: 12px;
+    height: 12px;
+    background-color: var(--cor-preto-suave);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    opacity: 0;
+    transform: scale(0.3) rotate(-14deg);
+    transition: opacity 0.16s ease, transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .filtro-checkbox:hover .custom-checkbox {
-    border-color: var(--cor-slate-300);
+    background-color: var(--cor-slate-50);
+    border-color: var(--cor-preto-suave);
+    transform: scale(1.06);
+}
+
+.filtro-checkbox:active .custom-checkbox {
+    transform: scale(0.92);
 }
 
 .filtro-checkbox input[type="checkbox"]:checked + .custom-checkbox {
-    background-color: var(--p-accent, #000);
-    border-color: var(--p-accent, #000);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
-    background-size: 12px;
-    background-position: center;
-    background-repeat: no-repeat;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    background-color: var(--cor-branco);
+    border-color: var(--cor-preto-suave);
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.filtro-checkbox input[type="checkbox"]:checked + .custom-checkbox::after {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+}
+
+.filtro-checkbox:hover input[type="checkbox"]:checked + .custom-checkbox {
+    background-color: var(--cor-slate-50);
+    border-color: #000000;
+    transform: scale(1.06);
+    box-shadow: 0 3px 8px rgba(15, 23, 42, 0.12);
+}
+
+.filtro-checkbox:active input[type="checkbox"]:checked + .custom-checkbox {
+    transform: scale(0.92);
 }
 
 .filtro-checkbox input[type="checkbox"]:checked ~ .filtro-label-text {
@@ -221,13 +292,13 @@
     font-weight: 600;
 }
 
-/* Checkbox Destaque (Apenas promoções) */
+/* Checkbox Destaque (Apenas promoÃƒÂ§ÃƒÂµes) */
 .filtro-checkbox.principal {
     font-weight: 600;
     color: var(--cor-preto-suave);
 }
 
-/* ── Ações de Filtro ── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ AÃƒÂ§ÃƒÂµes de Filtro Ã¢â€â‚¬Ã¢â€â‚¬ */
 .filtro-acoes {
     margin-top: 10px;
     padding-top: 4px;
@@ -245,7 +316,7 @@
     box-shadow: none !important;
     text-align: left;
     font-size: 0.85rem;
-    font-weight: 650;
+    font-weight: 600;
     color: var(--cor-slate-500) !important;
     text-decoration: underline;
     text-decoration-thickness: 1px;
@@ -271,7 +342,7 @@
     display: none;
 }
 
-/* Grelha e Ordenação */
+/* Grelha e OrdenaÃƒÂ§ÃƒÂ£o */
 #produtos-grid-container {
     transition: opacity 0.3s ease;
 }
@@ -306,7 +377,7 @@
     height: 100%;
     background-color: rgba(15, 23, 42, 0.32);
     backdrop-filter: none;
-    z-index: 10002;
+    z-index: var(--z-overlay, 1000);
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
@@ -330,34 +401,13 @@
     border-bottom: 1px solid var(--cor-divisor-pagina);
 }
 
-.site-bg-dark .pagina-produtos .loja-header h2,
-.site-bg-dark .sidebar-desktop-header,
-.site-bg-dark .sidebar-desktop-header svg,
-.site-bg-dark .sidebar-desktop-header span,
-.site-bg-dark .filtro-titulo,
-.site-bg-dark .filtro-checkbox.principal,
-.site-bg-dark .filtro-checkbox input[type="checkbox"]:checked ~ .filtro-label-text {
-    color: var(--cor-texto-pagina);
-}
-
-.site-bg-dark .filtro-checkbox,
-.site-bg-dark .ordenar-container label,
-.site-bg-dark .filtro-acoes .link-limpar {
-    color: var(--cor-texto-pagina-suave) !important;
-}
-
-.site-bg-dark .filtro-checkbox:hover,
-.site-bg-dark .filtro-titulo:hover,
-.site-bg-dark .filtro-acoes .link-limpar:hover {
-    color: var(--cor-texto-pagina) !important;
-}
-
 @media (max-width: 768px) {
     .pagina-produtos .loja-header {
         display: block;
         margin-bottom: 12px;
     }
 
+    .pagina-produtos .loja-header h1,
     .pagina-produtos .loja-header h2 {
         min-width: 0;
         font-size: 1.35rem;
@@ -398,7 +448,7 @@
         margin-bottom: 10px;
         color: var(--cor-preto-suave);
         font-size: 0.78rem;
-        font-weight: 800;
+        font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
     }
@@ -428,7 +478,7 @@
         height: min(88dvh, 720px);
         max-height: calc(100dvh - 18px);
         background-color: var(--cor-fundo);
-        z-index: 10003;
+        z-index: calc(var(--z-overlay, 1000) + 10);
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
@@ -445,26 +495,6 @@
         visibility: visible;
         pointer-events: auto;
         transform: translateY(0);
-    }
-
-    /* O painel mobile é uma superfície branca, mesmo quando a página é escura. */
-    .site-bg-dark .filtros-sidebar,
-    .site-bg-dark .filtros-sidebar .filtro-titulo,
-    .site-bg-dark .filtros-sidebar .filtro-sort-mobile label,
-    .site-bg-dark .filtros-sidebar .filtro-checkbox.principal,
-    .site-bg-dark .filtros-sidebar .filtro-checkbox input[type="checkbox"]:checked ~ .filtro-label-text {
-        color: var(--cor-gray-900);
-    }
-
-    .site-bg-dark .filtros-sidebar .filtro-checkbox,
-    .site-bg-dark .filtros-sidebar .filtro-acoes .link-limpar {
-        color: var(--cor-slate-500) !important;
-    }
-
-    .site-bg-dark .filtros-sidebar .filtro-checkbox:hover,
-    .site-bg-dark .filtros-sidebar .filtro-titulo:hover,
-    .site-bg-dark .filtros-sidebar .filtro-acoes .link-limpar:hover {
-        color: var(--cor-gray-900) !important;
     }
     
     .filtros-mobile-header {
@@ -497,7 +527,7 @@
     .filtros-mobile-header h3 {
         margin: 0;
         font-size: 1rem;
-        font-weight: 800;
+        font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
         text-align: center;

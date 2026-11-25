@@ -1,22 +1,17 @@
 
-/* ── Página de acompanhamento ── */
-main.pagina-info {
+/* Ã¢â€â‚¬Ã¢â€â‚¬ PÃƒÂ¡gina de acompanhamento Ã¢â€â‚¬Ã¢â€â‚¬ */
+main.pagina-info:has(.acomp-wrap) {
     padding-top: 60px !important;
     padding-bottom: 80px !important;
 }
-.acomp-wrap { max-width: 800px; margin: 0 auto; animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.acomp-wrap { max-width: 800px; margin: 0 auto; animation: fadeIn 0.2s ease-out both; }
 
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* ── Cabeçalho ── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ CabeÃƒÂ§alho Ã¢â€â‚¬Ã¢â€â‚¬ */
 .acomp-header { margin-bottom: 40px; text-align: center; }
-.acomp-header h2 { font-size: 2.2rem; font-weight: 800; margin: 0 0 10px; letter-spacing: -1px; }
+.acomp-header h2 { font-size: 2.2rem; font-weight: 700; margin: 0 0 10px; letter-spacing: -1px; }
 .acomp-header p  { color: var(--cor-cinza-texto); margin: 0; font-size: 1rem; }
 
-/* ── Card Premium ── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Card Premium Ã¢â€â‚¬Ã¢â€â‚¬ */
 .acomp-card {
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(12px);
@@ -45,7 +40,7 @@ main.pagina-info {
     background: #eee;
 }
 
-/* ── Timeline ── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Timeline Ã¢â€â‚¬Ã¢â€â‚¬ */
 .timeline-wrap { position: relative; margin: 20px 0 40px; }
 .timeline-track {
     display: flex; align-items: flex-start; justify-content: space-between;
@@ -87,7 +82,7 @@ main.pagina-info {
 .tl-step.done .tl-label, .tl-step.active .tl-label { color: var(--cor-preto); }
 .tl-step.cancelada .tl-label { color: var(--cor-perigo); }
 
-/* ── Banner de estado ── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Banner de estado Ã¢â€â‚¬Ã¢â€â‚¬ */
 .estado-banner {
     display: flex; align-items: center; gap: 16px;
     padding: 20px 24px; border-radius: 16px;
@@ -103,7 +98,7 @@ main.pagina-info {
 .estado-banner .eb-icon { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .estado-banner strong { display: block; font-weight: 700; font-size: 1.05rem; }
 
-/* ── Tracking ── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Tracking Ã¢â€â‚¬Ã¢â€â‚¬ */
 .tracking-box {
     display: flex; align-items: center; gap: 16px;
     background: var(--cor-branco); border: 1px solid #e5e7eb;
@@ -111,7 +106,7 @@ main.pagina-info {
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
 }
 .tracking-box strong { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: #999; display: block; margin-bottom: 4px; }
-.tracking-code { font-family: 'Inter', sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--cor-preto); }
+.tracking-code { font-family: 'Inter', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--cor-preto); }
 .tracking-box a { 
     margin-left: auto; 
     background: var(--cor-preto); 
@@ -125,33 +120,33 @@ main.pagina-info {
 }
 .tracking-box a:hover { background: var(--cor-cinza-escuro); transform: translateX(3px); }
 
-/* ── Itens ── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Itens Ã¢â€â‚¬Ã¢â€â‚¬ */
 .item-linha { display: flex; align-items: center; gap: 20px; padding: 20px 0; border-bottom: 1px solid var(--cor-cinza-claro); }
 .item-linha:last-child { border-bottom: none; }
 .item-linha img { width: 70px; height: 70px; object-fit: cover; border-radius: 14px; border: 1px solid #eee; flex-shrink: 0; }
 .item-linha-info { flex: 1; min-width: 0; }
 .item-linha-info strong { display: block; font-size: 1rem; font-weight: 700; color: var(--cor-preto); margin-bottom: 4px; }
 .item-linha-info small { color: #888; font-size: .85rem; font-weight: 500; }
-.item-linha-preco { font-weight: 800; font-size: 1.05rem; color: var(--cor-preto); }
+.item-linha-preco { font-weight: 700; font-size: 1.05rem; color: var(--cor-preto); }
 
 .sumario-totais { border-top: 2px solid #f8f8f8; padding-top: 20px; margin-top: 10px; }
 .total-linha { display: flex; justify-content: space-between; font-size: .95rem; color: var(--cor-cinza-texto); margin-bottom: 10px; }
 .total-linha.final { font-size: 1.3rem; font-weight: 900; color: var(--cor-preto); border-top: none; padding-top: 10px; }
 
-/* ── Detalhe entrega ── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Detalhe entrega Ã¢â€â‚¬Ã¢â€â‚¬ */
 .entrega-info { display: flex; gap: 15px; align-items: center; font-size: .95rem; color: #444; background: #fafafa; padding: 15px; border-radius: 16px; border: 1px solid var(--cor-cinza-claro); }
 .entrega-info svg { flex-shrink: 0; color: #999; }
 .entrega-info div { line-height: 1.6; }
 .entrega-info strong { color: var(--cor-preto); font-weight: 700; margin-bottom: 2px; font-size: .8rem; text-transform: uppercase; letter-spacing: 0.05em; }
 
-/* ── Mensagens ── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Mensagens Ã¢â€â‚¬Ã¢â€â‚¬ */
 .msg-item { padding: 20px; border-radius: 16px; background: #fafafa; border: 1px solid var(--cor-cinza-claro); margin-bottom: 15px; }
 .msg-item:last-child { margin-bottom: 0; }
 .msg-meta { display: flex; justify-content: space-between; font-size: .75rem; color: #999; margin-bottom: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-.msg-assunto { font-weight: 800; font-size: 1rem; color: var(--cor-preto); margin-bottom: 8px; }
+.msg-assunto { font-weight: 700; font-size: 1rem; color: var(--cor-preto); margin-bottom: 8px; }
 .msg-corpo { font-size: .92rem; color: #444; line-height: 1.7; }
 
-/* ── Botões ── */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ BotÃƒÂµes Ã¢â€â‚¬Ã¢â€â‚¬ */
 .btn-voltar-compra {
     display: inline-flex; align-items: center; justify-content: center;
     background: var(--cor-preto); color: var(--cor-branco); padding: 18px 40px; border-radius: 50px;

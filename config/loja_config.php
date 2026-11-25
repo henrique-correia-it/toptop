@@ -56,3 +56,17 @@ function setLojaConfig(string $chave, string $valor): bool {
     }
     return $result;
 }
+
+if (!function_exists('getHeroBgUrl')) {
+    function getHeroBgUrl(string $fallback = '/public/assets/hero.avif'): string {
+        $cfg  = trim((string)getLojaConfig('home_hero_bg', $fallback));
+        $path = parse_url($cfg, PHP_URL_PATH);
+        if (is_string($path) && $path !== '' && str_starts_with($path, '/public/')) {
+            $abs = __DIR__ . '/../' . ltrim($path, '/');
+            if (is_file($abs)) {
+                return $path;
+            }
+        }
+        return $fallback;
+    }
+}

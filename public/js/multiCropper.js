@@ -9,35 +9,76 @@ function inicializarMultiCropper(inputId, previewContainerId, formId, maxFiles, 
     const guardarCorteBtn = document.getElementById('guardarCorteBtn');
     if (!inputFicheiros || !previewContainer || !form || !modal || !imagemParaCortar || !guardarCorteBtn) return;
 
-    let cropper;
+    let cropper = null;
+    let cropperReady = false;
+    let isSavingCrop = false;
     let ficheirosParaProcessar = [];
-    // Estrutura: { tipo: 'nova', dados: 'base64...', placeholder: 'NEW_0' } ou { tipo: 'existente', id: 123, url: 'imagem.jpg' }
     let imagensGaleria = [];
     let idsParaApagar = [];
     let ficheiroAtualIndex = 0;
-    let newImageCounter = 0; // Contador para placeholders de novas imagens
+    let newImageCounter = 0;
     let sortable = null;
 
-    // --- NOVA FUNÇÃO ---
-    // Torna a lista de imagens da galeria acessível a outros scripts
-    window.getImagensGaleria = () => JSON.parse(JSON.stringify(imagensGaleria));
-    // --- FIM DA NOVA FUNÇÃO ---
+    let cancelarCorteBtn = document.getElementById('cancelarCorteBtn');
+    if (!cancelarCorteBtn) {
+        cancelarCorteBtn = document.createElement('button');
+        cancelarCorteBtn.type = 'button';
+        cancelarCorteBtn.id = 'cancelarCorteBtn';
+        cancelarCorteBtn.className = 'voltar-btn';
+        cancelarCorteBtn.textContent = 'Cancelar';
+        guardarCorteBtn.insertAdjacentElement('beforebegin', cancelarCorteBtn);
+    }
 
+    window.getImagensGaleria = () => JSON.parse(JSON.stringify(imagensGaleria));
+
+    function destruirCropper() {
+        cropperReady = false;
+        if (cropper) {
+            try { cropper.destroy(); } catch (_) {}
+            cropper = null;
+        }
+    }
+
+    function fecharModalCorte(cancelarFila = false) {
+        destruirCropper();
+        modal.style.display = 'none';
+        imagemParaCortar.removeAttribute('src');
+        isSavingCrop = false;
+        guardarCorteBtn.disabled = false;
+        if (cancelarFila) {
+            ficheirosParaProcessar = [];
+            ficheiroAtualIndex = 0;
+            inputFicheiros.value = '';
+            document.dispatchEvent(new CustomEvent('galeriaAtualizada'));
+        }
+    }
+
+    cancelarCorteBtn.addEventListener('click', () => fecharModalCorte(true));
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+            e.preventDefault();
+            fecharModalCorte(true);
+        }
+    });
 
     function carregarImagensIniciais() {
         imagensGaleria = [];
         idsParaApagar = [];
         newImageCounter = 0;
 
-        imagensIniciais.forEach(img => {
-            imagensGaleria.push({ tipo: 'existente', id: img.id, url: img.url });
-        });
+        if (Array.isArray(imagensIniciais)) {
+            imagensIniciais.forEach(img => {
+                if (img && img.id !== undefined && img.url) {
+                    imagensGaleria.push({ tipo: 'existente', id: String(img.id), url: img.url });
+                }
+            });
+        }
         atualizarPreviews();
         inicializarSortable();
     }
 
     inputFicheiros.addEventListener('change', (event) => {
-        const files = Array.from(event.target.files).filter(f => f.type && f.type.startsWith('image/'));
+        const files = Array.from(event.target.files || []).filter(f => f.type && f.type.startsWith('image/'));
         if (files.length === 0) {
             mostrarPopup('Selecione apenas ficheiros de imagem válidos.', 'erro');
             inputFicheiros.value = '';
@@ -59,44 +100,74 @@ function inicializarMultiCropper(inputId, previewContainerId, formId, maxFiles, 
         if (ficheiroAtualIndex < ficheirosParaProcessar.length) {
             const reader = new FileReader();
             reader.onload = (e) => abrirModalDeCorte(e.target.result);
+            reader.onerror = () => {
+                mostrarPopup('Não foi possível ler um dos ficheiros selecionados.', 'erro');
+                ficheiroAtualIndex++;
+                processarFicheiroSeguinte();
+            };
             reader.readAsDataURL(ficheirosParaProcessar[ficheiroAtualIndex]);
         } else {
+            ficheirosParaProcessar = [];
+            ficheiroAtualIndex = 0;
             inputFicheiros.value = '';
-            // Dispara um evento para notificar outros scripts que a galeria foi atualizada
             document.dispatchEvent(new CustomEvent('galeriaAtualizada'));
         }
     }
 
     function abrirModalDeCorte(imageDataUrl) {
+        if (typeof Cropper !== 'function') {
+            mostrarPopup('O editor de recorte não está disponível. Recarregue a página.', 'erro');
+            fecharModalCorte(true);
+            return;
+        }
+        destruirCropper();
+        isSavingCrop = false;
+        guardarCorteBtn.disabled = true;
         modal.style.display = 'flex';
         imagemParaCortar.src = imageDataUrl;
-        if (cropper) cropper.destroy();
-        cropper = new Cropper(imagemParaCortar, { aspectRatio: 0.75, viewMode: 1, autoCropArea: 1 });
+        cropper = new Cropper(imagemParaCortar, {
+            aspectRatio: 0.75,
+            viewMode: 1,
+            autoCropArea: 1,
+            ready() {
+                cropperReady = true;
+                guardarCorteBtn.disabled = false;
+            }
+        });
     }
 
     guardarCorteBtn.addEventListener('click', () => {
+        if (!cropper || !cropperReady || isSavingCrop) return;
+        isSavingCrop = true;
+        guardarCorteBtn.disabled = true;
+
         const canvas = cropper.getCroppedCanvas({ width: 600, height: 800 });
+        if (!canvas) {
+            mostrarPopup('Não foi possível recortar a imagem. Tente novamente.', 'erro');
+            isSavingCrop = false;
+            guardarCorteBtn.disabled = false;
+            return;
+        }
         const base64ImageData = canvas.toDataURL('image/jpeg', 0.9);
 
-        // Adiciona um placeholder único para a nova imagem
         const placeholderId = `NEW_${newImageCounter++}`;
         imagensGaleria.push({ tipo: 'nova', dados: base64ImageData, placeholder: placeholderId });
 
         atualizarPreviews();
+        fecharModalCorte(false);
 
-        modal.style.display = 'none';
         ficheiroAtualIndex++;
         processarFicheiroSeguinte();
     });
 
     function removerImagem(indexToRemove) {
         const imagem = imagensGaleria[indexToRemove];
+        if (!imagem) return;
         if (imagem.tipo === 'existente') {
             idsParaApagar.push(imagem.id);
         }
         imagensGaleria.splice(indexToRemove, 1);
         atualizarPreviews();
-        // Notifica outros scripts da alteração
         document.dispatchEvent(new CustomEvent('galeriaAtualizada'));
     }
 
@@ -106,8 +177,7 @@ function inicializarMultiCropper(inputId, previewContainerId, formId, maxFiles, 
         imagensGaleria.forEach((imagem, index) => {
             const previewWrapper = document.createElement('div');
             previewWrapper.classList.add('preview-item');
-            // Adiciona um identificador único ao elemento do DOM
-            previewWrapper.dataset.imageId = (imagem.tipo === 'existente') ? imagem.id : imagem.placeholder;
+            previewWrapper.dataset.imageId = (imagem.tipo === 'existente') ? String(imagem.id) : String(imagem.placeholder);
 
             const img = document.createElement('img');
             img.src = (imagem.tipo === 'nova') ? imagem.dados : imagem.url;
@@ -140,7 +210,6 @@ function inicializarMultiCropper(inputId, previewContainerId, formId, maxFiles, 
 
         document.querySelectorAll('.hidden-image-input').forEach(el => el.remove());
 
-        let newImageCounterSubmit = 0;
         const finalOrder = [];
         const newImagesData = [];
 
@@ -148,7 +217,6 @@ function inicializarMultiCropper(inputId, previewContainerId, formId, maxFiles, 
             if (img.tipo === 'existente') {
                 finalOrder.push(img.id);
             } else {
-                // Usa o placeholder consistente
                 finalOrder.push(img.placeholder);
                 newImagesData.push({ placeholder: img.placeholder, dados: img.dados });
             }
@@ -177,16 +245,20 @@ function inicializarMultiCropper(inputId, previewContainerId, formId, maxFiles, 
     });
 
     function inicializarSortable() {
-        if (sortable) sortable.destroy();
+        if (sortable) {
+            try { sortable.destroy(); } catch (_) {}
+            sortable = null;
+        }
+        if (typeof Sortable !== 'function') return;
 
         sortable = new Sortable(previewContainer, {
             animation: 150,
             ghostClass: 'sortable-ghost',
             onEnd: function (evt) {
+                if (evt.oldIndex === undefined || evt.newIndex === undefined || evt.oldIndex === evt.newIndex) return;
                 const [movedItem] = imagensGaleria.splice(evt.oldIndex, 1);
                 imagensGaleria.splice(evt.newIndex, 0, movedItem);
                 atualizarPreviews();
-                // Notifica outros scripts da alteração na ordem
                 document.dispatchEvent(new CustomEvent('galeriaAtualizada'));
             }
         });

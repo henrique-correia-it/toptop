@@ -33,6 +33,8 @@ if (!function_exists('insert_order_items_and_decrement_stock')) {
         );
 
         if (!$stmtItem || !$stmtStock) {
+            if ($stmtItem) $stmtItem->close();
+            if ($stmtStock) $stmtStock->close();
             throw new RuntimeException("Erro interno de base de dados (prepare itens): " . $conn->error);
         }
 
@@ -55,9 +57,9 @@ if (!function_exists('insert_order_items_and_decrement_stock')) {
                 $stmtStock->execute();
 
                 if ($stmtStock->affected_rows === 0) {
-                    throw new Exception(
+                    throw new DomainException(
                         "Lamentamos, mas o stock do produto '" .
-                        htmlspecialchars($item['nome_produto']) .
+                        (string)($item['nome_produto'] ?? '') .
                         "' esgotou-se enquanto finalizava a compra. Por favor, atualize o carrinho."
                     );
                 }
@@ -77,26 +79,44 @@ if (!function_exists('restore_order_stock')) {
             throw new RuntimeException("Erro interno de base de dados (prepare itens stock): " . $conn->error);
         }
 
-        $stmtItems->bind_param('i', $orderId);
-        $stmtItems->execute();
-        $items = $stmtItems->get_result()->fetch_all(MYSQLI_ASSOC);
-        $stmtItems->close();
+        try {
+            $stmtItems->bind_param('i', $orderId);
+            $stmtItems->execute();
+            $items = $stmtItems->get_result()->fetch_all(MYSQLI_ASSOC);
+        } finally {
+            $stmtItems->close();
+        }
+
+        $qtyByVar = [];
+        foreach ($items as $item) {
+            $varId = (int)($item['variacao_id'] ?? 0);
+            $qty = (int)($item['quantidade'] ?? 0);
+            if ($varId <= 0 || $qty <= 0) {
+                continue;
+            }
+            $qtyByVar[$varId] = ($qtyByVar[$varId] ?? 0) + $qty;
+        }
+
+        if (empty($qtyByVar)) {
+            return;
+        }
+
+        // Ordena por variacao_id ASC para adquirir locks de linha sempre na mesma ordem (evita deadlocks)
+        ksort($qtyByVar, SORT_NUMERIC);
 
         $stmtStock = $conn->prepare("UPDATE produto_variacoes SET quantidade = quantidade + ? WHERE id = ?");
         if (!$stmtStock) {
             throw new RuntimeException("Erro interno de base de dados (prepare repor stock): " . $conn->error);
         }
 
-        foreach ($items as $item) {
-            if (empty($item['variacao_id'])) {
-                continue;
+        try {
+            foreach ($qtyByVar as $varId => $qty) {
+                $stmtStock->bind_param('ii', $qty, $varId);
+                $stmtStock->execute();
             }
-
-            $stmtStock->bind_param('ii', $item['quantidade'], $item['variacao_id']);
-            $stmtStock->execute();
+        } finally {
+            $stmtStock->close();
         }
-
-        $stmtStock->close();
     }
 }
 
@@ -108,23 +128,29 @@ if (!function_exists('delete_order_with_items')) {
             throw new RuntimeException("Erro interno de base de dados (prepare apagar itens): " . $conn->error);
         }
 
-        $stmtItems->bind_param('i', $orderId);
-        $stmtItems->execute();
-        $stmtItems->close();
+        try {
+            $stmtItems->bind_param('i', $orderId);
+            $stmtItems->execute();
+        } finally {
+            $stmtItems->close();
+        }
 
         $stmtOrder = $conn->prepare("DELETE FROM encomendas WHERE id = ?");
         if (!$stmtOrder) {
             throw new RuntimeException("Erro interno de base de dados (prepare apagar encomenda): " . $conn->error);
         }
 
-        $stmtOrder->bind_param('i', $orderId);
-        $stmtOrder->execute();
-
-        if ($stmtOrder->affected_rows === 0) {
-            throw new Exception("Nao foi possivel eliminar a encomenda.");
+        try {
+            $stmtOrder->bind_param('i', $orderId);
+            $stmtOrder->execute();
+            $affected = $stmtOrder->affected_rows;
+        } finally {
+            $stmtOrder->close();
         }
 
-        $stmtOrder->close();
+        if ($affected === 0) {
+            throw new Exception("Nao foi possivel eliminar a encomenda.");
+        }
     }
 }
 
@@ -139,10 +165,13 @@ if (!function_exists('release_incomplete_order_reservation')) {
                 throw new RuntimeException("Erro interno de base de dados (prepare encomenda): " . $conn->error);
             }
 
-            $stmtOrder->bind_param('is', $orderId, $token);
-            $stmtOrder->execute();
-            $order = $stmtOrder->get_result()->fetch_assoc();
-            $stmtOrder->close();
+            try {
+                $stmtOrder->bind_param('is', $orderId, $token);
+                $stmtOrder->execute();
+                $order = $stmtOrder->get_result()->fetch_assoc();
+            } finally {
+                $stmtOrder->close();
+            }
 
             if (!$order) {
                 throw new Exception("Reserva nao encontrada.");
@@ -157,7 +186,7 @@ if (!function_exists('release_incomplete_order_reservation')) {
 
             $conn->commit();
         } catch (Throwable $e) {
-            $conn->rollback();
+            try { $conn->rollback(); } catch (Throwable $ignored) {}
             throw $e;
         }
     }

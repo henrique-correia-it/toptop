@@ -38,6 +38,8 @@ document.addEventListener("DOMContentLoaded", function () {
   let isZoomed = false;
   let lastPan = { x: 0, y: 0 };
   let currentPan = { x: 0, y: 0 };
+  let modalAbortController = null;
+  let modalRequestId = 0;
 
   function obterElementosGuia() {
     const modalGuia = document.getElementById("modalGuiaTamanhos");
@@ -185,44 +187,51 @@ document.addEventListener("DOMContentLoaded", function () {
     resetarModalParaEstadoInicial();
     estado.produtoAtual = elementoProduto;
     const produtoData = elementoProduto.dataset;
-    // --- INÍCIO DA ALTERAÇÃO ---
-    // Lemos os filtros que vieram do URL, se existirem (relevante para a página produto.php)
-    // --- INÍCIO DA CORREÇÃO ---
-    const filtrosUrl = JSON.parse(produtoData.filtrosUrl || "{}");
-    const filtrosEstavamAtivos = produtoData.filtrosAtivos === "true";
-    const atributosDoProduto = JSON.parse(produtoData.atributos || "{}");
-    const temAtributos = Object.keys(atributosDoProduto).length > 0;
 
-    if (metaReferencia) metaReferencia.style.display = "none";
-    if (metaStock) metaStock.style.display = "none";
-
-    const blocoAcoes = escopo.querySelector(".bloco-acoes-compra");
-    if (blocoAcoes && !temAtributos) {
-      blocoAcoes.classList.add("sem-variacoes");
+    if (modalAbortController) {
+      modalAbortController.abort();
     }
-
-    const promessasDeDados = [];
-    const cacheBuster = `&t=${Date.now()}`;
-    promessasDeDados.push(
-      fetch(`/ajax_get_variacoes.php?id=${produtoData.id}${cacheBuster}`) // <-- LINHA MODIFICADA
-        .then((response) =>
-          response.ok
-            ? response.json()
-            : Promise.reject("Falha ao buscar variações."),
-        ),
-    );
-    promessasDeDados.push(
-      fetch(
-        `/ajax_get_relacionados.php?id_atual=${produtoData.id}&categoria=${encodeURIComponent(produtoData.categoria)}`,
-      ).then((response) =>
-        response.ok
-          ? response.json()
-          : Promise.reject("Falha ao buscar relacionados."),
-      ),
-    );
+    modalAbortController = new AbortController();
+    const { signal } = modalAbortController;
+    const currentReqId = ++modalRequestId;
 
     try {
+      const filtrosUrl = JSON.parse(produtoData.filtrosUrl || "{}");
+      const filtrosEstavamAtivos = produtoData.filtrosAtivos === "true";
+      const atributosDoProduto = JSON.parse(produtoData.atributos || "{}");
+      const temAtributos = Object.keys(atributosDoProduto).length > 0;
+
+      if (metaReferencia) metaReferencia.style.display = "none";
+      if (metaStock) metaStock.style.display = "none";
+
+      const blocoAcoes = escopo.querySelector(".bloco-acoes-compra");
+      if (blocoAcoes && !temAtributos) {
+        blocoAcoes.classList.add("sem-variacoes");
+      }
+
+      const promessasDeDados = [];
+      const cacheBuster = `&t=${Date.now()}`;
+      promessasDeDados.push(
+        fetch(`/ajax_get_variacoes.php?id=${encodeURIComponent(produtoData.id || "")}${cacheBuster}`, { signal })
+          .then((response) =>
+            response.ok
+              ? response.json()
+              : Promise.reject(new Error("Falha ao buscar variações.")),
+          ),
+      );
+      promessasDeDados.push(
+        fetch(
+          `/ajax_get_relacionados.php?id_atual=${encodeURIComponent(produtoData.id || "")}&categoria=${encodeURIComponent(produtoData.categoria || "")}`,
+          { signal },
+        ).then((response) =>
+          response.ok
+            ? response.json()
+            : Promise.reject(new Error("Falha ao buscar relacionados.")),
+        ),
+      );
+
       const resultados = await Promise.all(promessasDeDados);
+      if (currentReqId !== modalRequestId) return;
       const dadosVariacoes = resultados[0];
       const dadosRelacionados = resultados[1];
 
@@ -358,7 +367,7 @@ document.addEventListener("DOMContentLoaded", function () {
           const variacoesComImagem = estado.variacoes.filter(
             (v) =>
               v.imagens &&
-              v.imagens.some((img) => img.endsWith(imagemFiltrada)),
+              v.imagens.some((img) => img.split("/").pop() === imagemFiltrada),
           );
 
           if (
@@ -414,6 +423,7 @@ document.addEventListener("DOMContentLoaded", function () {
         scrollModalParaTopo();
       }
     } catch (error) {
+      if (error && error.name === "AbortError") return;
       console.error("Erro ao carregar dados para o modal:", error);
       mostrarPopup("Não foi possível abrir os detalhes do produto.", "erro");
       if (modal) fecharModal();
@@ -529,21 +539,30 @@ document.addEventListener("DOMContentLoaded", function () {
   function mudarImagemAtiva(nomeFicheiro) {
     if (!nomeFicheiro || !modalImagemPrincipal) return;
 
-    // --- INÍCIO DA CORREÇÃO: Lógica de loading ---
     if (zoomContainer) {
       zoomContainer.classList.add("loading");
     }
 
+    if (modalImagemPrincipal._currentLoadHandler) {
+      modalImagemPrincipal.removeEventListener("load", modalImagemPrincipal._currentLoadHandler);
+      modalImagemPrincipal.removeEventListener("error", modalImagemPrincipal._currentLoadHandler);
+    }
+
     const onImageLoad = () => {
+      modalImagemPrincipal.removeEventListener("load", onImageLoad);
+      modalImagemPrincipal.removeEventListener("error", onImageLoad);
+      if (modalImagemPrincipal._currentLoadHandler === onImageLoad) {
+        modalImagemPrincipal._currentLoadHandler = null;
+      }
       if (zoomContainer) {
         zoomContainer.classList.remove("loading");
       }
       modalImagemPrincipal.style.opacity = "1";
       atualizarFundoModalPelaImagem();
     };
-    modalImagemPrincipal.addEventListener("load", onImageLoad, { once: true });
-    modalImagemPrincipal.addEventListener("error", onImageLoad, { once: true });
-    // --- FIM DA CORREÇÃO ---
+    modalImagemPrincipal._currentLoadHandler = onImageLoad;
+    modalImagemPrincipal.addEventListener("load", onImageLoad);
+    modalImagemPrincipal.addEventListener("error", onImageLoad);
 
     const thumbParaAtivar = modalThumbnails.querySelector(
       `[data-foto-nome="${CSS.escape(nomeFicheiro)}"]`,
@@ -791,18 +810,19 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         metaStock.style.display = "inline-flex";
       }
+      const precoVariacao = v.preco !== null && v.preco !== undefined ? parseFloat(v.preco) : 0;
       atualizarPreco(
         precoBase,
         precoPromoBase,
-        v.preco ? parseFloat(v.preco) : null,
+        precoVariacao > 0 ? precoVariacao : null,
       );
       if (v.quantidade > 0) {
         adicionarCarrinhoBtn.textContent = "Adicionar ao Carrinho";
         adicionarCarrinhoBtn.disabled = false;
         acoesPrincipaisContainer.classList.add("seletor-visivel");
         inputQuantidade.max = v.quantidade;
-        if (parseInt(inputQuantidade.value) > v.quantidade)
-          inputQuantidade.value = v.quantidade;
+        const currentQty = parseInt(inputQuantidade.value, 10) || 1;
+        inputQuantidade.value = Math.max(1, Math.min(v.quantidade, currentQty));
       } else {
         adicionarCarrinhoBtn.textContent = "Esgotado";
         adicionarCarrinhoBtn.disabled = true;
@@ -859,8 +879,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const precoBase = parseFloat(estado.produtoAtual.dataset.preco) || 0;
     const precoPromoBase =
       parseFloat(estado.produtoAtual.dataset.precoPromocional) || 0;
-    const precoFinal = v.preco
-      ? parseFloat(v.preco)
+    const precoVar = v.preco !== null && v.preco !== undefined ? parseFloat(v.preco) : 0;
+    const precoFinal = precoVar > 0
+      ? precoVar
       : precoPromoBase > 0
         ? precoPromoBase
         : precoBase;
@@ -868,7 +889,11 @@ document.addEventListener("DOMContentLoaded", function () {
     let fotoParaCarrinho =
       v.imagens && v.imagens.length > 0
         ? `/public/images/${v.imagens[0].split("/").pop()}`
-        : `/public/images/${estado.fotosOriginais[0]}`;
+        : `/public/images/${estado.fotosOriginais[0] || "default.jpg"}`;
+
+    const maxStock = Math.max(1, parseInt(v.quantidade, 10) || 1);
+    const qtdClamped = Math.max(1, Math.min(maxStock, parseInt(inputQuantidade.value, 10) || 1));
+    inputQuantidade.value = qtdClamped;
 
     const produtoParaCarrinho = {
       id: estado.produtoAtual.dataset.id,
@@ -880,7 +905,7 @@ document.addEventListener("DOMContentLoaded", function () {
       emPromocao: precoFinal < precoBase,
       foto: fotoParaCarrinho,
       selecoes: { ...estado.selecaoAtual },
-      quantidade: parseInt(inputQuantidade.value, 10),
+      quantidade: qtdClamped,
       stock: v.quantidade,
       peso_gramas: parseInt(estado.produtoAtual.dataset.peso, 10) || 0
     };
@@ -897,10 +922,22 @@ document.addEventListener("DOMContentLoaded", function () {
     modal.addEventListener("click", (e) => {
       if (e.target == modal) fecharModal();
     });
+  window.addEventListener("popstate", () => {
+    if (modal && estado.isModalOpen && !window.location.hash) {
+      fecharModal(false);
+    }
+  });
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && estado.isModalOpen) {
-      fecharModal();
-      return;
+    if (e.key === "Escape") {
+      const modalGuia = document.getElementById("modalGuiaTamanhos");
+      if (modalGuia && modalGuia.classList.contains("ativo")) {
+        modalGuia.classList.remove("ativo");
+        return;
+      }
+      if (estado.isModalOpen) {
+        fecharModal();
+        return;
+      }
     }
 
     if (
@@ -963,11 +1000,21 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  if (zoomContainer && modalImagemPrincipal) {
-    const isTouchDevice =
-      "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  if (inputQuantidade) {
+    inputQuantidade.addEventListener("change", () => {
+      const max = parseInt(inputQuantidade.max, 10) || 1;
+      const min = parseInt(inputQuantidade.min, 10) || 1;
+      const val = parseInt(inputQuantidade.value, 10) || min;
+      inputQuantidade.value = Math.max(min, Math.min(max, val));
+      atualizarEstadoBotoesQty();
+    });
+  }
 
-    if (!isTouchDevice) {
+  if (zoomContainer && modalImagemPrincipal) {
+    const supportsHoverZoom =
+      window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+    if (supportsHoverZoom) {
       zoomContainer.addEventListener("mousemove", (e) => {
         const rect = zoomContainer.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -1126,6 +1173,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function fecharModal(updateHistory = true) {
     if (!estado.isModalOpen) return;
+
+    if (modalAbortController) {
+      modalAbortController.abort();
+      modalAbortController = null;
+    }
 
     modal.classList.remove("ativo");
     document.body.style.overflow = "";

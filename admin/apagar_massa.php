@@ -1,15 +1,20 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/csrf.php';
 
 // --- VALIDAÇÃO DE SEGURANÇA (CSRF, MÉTODO, SESSÃO) ---
+if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true) {
+    http_response_code(403);
+    exit('Acesso não autorizado.');
+}
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    header('Allow: POST');
     exit('Acesso inválido.');
 }
-if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+if (!csrf_from_post()) {
+    http_response_code(403);
     exit('Erro de validação de segurança. Ação não permitida.');
-}
-if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true) {
-    exit('Acesso não autorizado.');
 }
 
 // Verifica se foram enviados IDs para apagar
@@ -29,7 +34,7 @@ $types = str_repeat('i', count($ids_para_apagar));
 $erros = [];
 $conn->begin_transaction();
 try {
-    // 1. Obter todos os nomes de ficheiro de imagem para os produtos selecionados
+    // 1. Obter todos os nomes de ficheiro de imagem (galeria + foto_principal) para os produtos selecionados
     $stmt_imgs = $conn->prepare("SELECT DISTINCT nome_ficheiro FROM produto_imagens WHERE produto_id IN ($placeholders)");
     $stmt_imgs->bind_param($types, ...$ids_para_apagar);
     $stmt_imgs->execute();
@@ -38,10 +43,22 @@ try {
     $imagens_para_apagar = [];
     while ($row = $result_imgs->fetch_assoc()) {
         if (!empty($row['nome_ficheiro'])) {
-            $imagens_para_apagar[] = $row['nome_ficheiro'];
+            $imagens_para_apagar[$row['nome_ficheiro']] = true;
         }
     }
     $stmt_imgs->close();
+
+    $stmt_fotos_p = $conn->prepare("SELECT DISTINCT foto_principal FROM produtos WHERE id IN ($placeholders)");
+    $stmt_fotos_p->bind_param($types, ...$ids_para_apagar);
+    $stmt_fotos_p->execute();
+    $res_fotos_p = $stmt_fotos_p->get_result();
+    while ($row = $res_fotos_p->fetch_assoc()) {
+        if (!empty($row['foto_principal'])) {
+            $imagens_para_apagar[$row['foto_principal']] = true;
+        }
+    }
+    $stmt_fotos_p->close();
+    $imagens_para_apagar = array_keys($imagens_para_apagar);
 
     // Guardar esta informação antes do DELETE. Assim, mesmo que alguma relação
     // da base de dados use ON DELETE, as imagens históricas ficam protegidas.
@@ -70,10 +87,11 @@ try {
 
     // 3. Confirmar a eliminação antes de tratar dos ficheiros no disco
     $conn->commit();
+    log_app("{$linhas_afetadas} produto(s) eliminado(s) em massa.", 'INFO', 'apagar_massa.php');
 
 } catch (Exception $e) {
     $conn->rollback();
-    error_log($e->getMessage()); 
+    log_exception($e, 'apagar_massa.php');
     $_SESSION['flash_message'] = ['tipo' => 'erro', 'texto' => 'Ocorreu um erro ao apagar os produtos. Tente novamente.'];
     header("Location: admin_produtos.php");
     exit;
@@ -83,6 +101,7 @@ try {
 // Esta limpeza ocorre depois do commit: uma falha no disco nunca contradiz
 // uma eliminação que a base de dados já confirmou.
 try {
+    $images_dir_real = realpath(__DIR__ . '/../public/images');
     $stmt_check_products = $conn->prepare("SELECT COUNT(*) AS total FROM produtos WHERE foto_principal = ?");
     $stmt_check_gallery = $conn->prepare("SELECT COUNT(*) AS total FROM produto_imagens WHERE nome_ficheiro = ?");
 
@@ -99,9 +118,9 @@ try {
         $stmt_check_gallery->execute();
         $uso_galeria = (int)$stmt_check_gallery->get_result()->fetch_assoc()['total'];
 
-        if (!isset($imagens_usadas_encomendas[$ficheiro]) && $uso_produtos === 0 && $uso_galeria === 0) {
-            $caminho = __DIR__ . '/../public/images/' . $ficheiro;
-            if (is_file($caminho) && !unlink($caminho)) {
+        if (!isset($imagens_usadas_encomendas[$ficheiro]) && $uso_produtos === 0 && $uso_galeria === 0 && $images_dir_real !== false) {
+            $caminho_real = realpath($images_dir_real . DIRECTORY_SEPARATOR . $ficheiro);
+            if ($caminho_real !== false && strpos($caminho_real, $images_dir_real . DIRECTORY_SEPARATOR) === 0 && is_file($caminho_real) && !unlink($caminho_real)) {
                 log_app('Não foi possível remover a imagem: ' . $ficheiro, 'WARNING', 'apagar_massa.php');
             }
         }

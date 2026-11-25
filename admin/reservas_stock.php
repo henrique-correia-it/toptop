@@ -11,6 +11,9 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
+$filtro_q      = trim((string)($_GET['q'] ?? ''));
+$filtro_estado = trim((string)($_GET['estado'] ?? ''));
+
 $stmt = $conn->prepare(
     "SELECT
         e.id AS encomenda_id,
@@ -22,7 +25,6 @@ $stmt = $conn->prepare(
      FROM encomendas e
      INNER JOIN encomenda_itens ei ON ei.encomenda_id = e.id
      WHERE e.estado = 'incompleta'
-       AND e.data_encomenda >= DATE_SUB(NOW(), INTERVAL 30 MINUTE)
      ORDER BY e.data_encomenda ASC, e.id ASC"
 );
 $stmt->execute();
@@ -35,7 +37,8 @@ foreach ($reservas as $reserva) {
     if (!isset($encomendas_agrupadas[$eid])) {
         $encomendas_agrupadas[$eid] = [
             'id'                => $eid,
-            'cliente_nome'      => $reserva['cliente_nome'],
+            'cliente_nome'      => (string)($reserva['cliente_nome'] ?? ''),
+            'cliente_email'     => (string)($reserva['cliente_email'] ?? ''),
             'data_encomenda'    => $reserva['data_encomenda'],
             'segundos_restantes'=> (int)$reserva['segundos_restantes'],
             'total_items'       => 0,
@@ -43,6 +46,36 @@ foreach ($reservas as $reserva) {
     }
     $encomendas_agrupadas[$eid]['total_items'] += (int)$reserva['quantidade_reservada'];
 }
+
+if ($filtro_estado === 'ativas') {
+    $encomendas_agrupadas = array_filter($encomendas_agrupadas, fn($e) => $e['segundos_restantes'] > 0);
+} elseif ($filtro_estado === 'expiradas') {
+    $encomendas_agrupadas = array_filter($encomendas_agrupadas, fn($e) => $e['segundos_restantes'] <= 0);
+}
+if ($filtro_q !== '') {
+    $qLower = mb_strtolower($filtro_q, 'UTF-8');
+    $qNum   = ltrim($filtro_q, '#');
+    $encomendas_agrupadas = array_filter($encomendas_agrupadas, function ($e) use ($qLower, $qNum) {
+        return (ctype_digit($qNum) && (string)$e['id'] === $qNum)
+            || mb_stripos($e['cliente_nome'], $qLower, 0, 'UTF-8') !== false
+            || mb_stripos($e['cliente_email'], $qLower, 0, 'UTF-8') !== false;
+    });
+}
+
+$sort_allowed = ['id', 'cliente', 'unidades', 'tempo'];
+$sort_by      = isset($_GET['sort']) && in_array($_GET['sort'], $sort_allowed, true) ? $_GET['sort'] : 'tempo';
+$sort_dir     = (isset($_GET['dir']) && strtolower((string)$_GET['dir']) === 'desc') ? 'desc' : 'asc';
+$mult         = $sort_dir === 'desc' ? -1 : 1;
+
+usort($encomendas_agrupadas, function ($a, $b) use ($sort_by, $mult) {
+    $cmp = match ($sort_by) {
+        'id'       => $a['id'] <=> $b['id'],
+        'cliente'  => strcasecmp($a['cliente_nome'] ?: $a['cliente_email'], $b['cliente_nome'] ?: $b['cliente_email']),
+        'unidades' => $a['total_items'] <=> $b['total_items'],
+        default    => $a['segundos_restantes'] <=> $b['segundos_restantes'],
+    };
+    return ($cmp !== 0 ? $cmp : ($a['id'] <=> $b['id'])) * $mult;
+});
 
 function formatarTempoReserva(int $segundos): string {
     $segundos = max(0, $segundos);
@@ -53,7 +86,6 @@ include '../templates/header.php';
 ?>
 
 <main class="dashboard-container animate-entry">
-<script>if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; } window.scrollTo(0,0);</script>
 
     <?php echo ui_page_header("Reservas de Stock", ['layout' => 'admin', 'back_url' => '/admin', 'back_title' => 'Voltar ao Painel']); ?>
 
@@ -62,15 +94,12 @@ include '../templates/header.php';
         <?php unset($_SESSION['flash_message']); ?>
     <?php endif; ?>
 
-    <div class="prod-toolbar">
-        <div class="prod-toolbar-right">
-            <?php echo ui_select_mode_button(); ?>
-        </div>
-    </div>
+    <?php echo ui_table_toolbar([
+        'filter' => ['name' => 'estado', 'options' => ['' => 'Todas as reservas', 'ativas' => 'Ativas', 'expiradas' => 'Expiradas'], 'value' => $filtro_estado, 'title' => 'Filtrar por estado'],
+        'search' => ['name' => 'q', 'value' => $filtro_q],
+    ]); ?>
 
     <?php
-    echo ui_selection_bar();
-
     $reservaRows = [];
     foreach ($encomendas_agrupadas as $enc) {
         $acoes = '<div class="acoes-tabela">'
@@ -78,24 +107,49 @@ include '../templates/header.php';
             . ui_icon_button('cancel', ['title' => 'Cancelar reserva e repor stock', 'attrs' => ['data-id' => (int)$enc['id']]])
             . '</div>';
 
+        $seg = (int)$enc['segundos_restantes'];
+        if ($seg <= 0) {
+            $tempoHtml = ui_badge('Expirada', 'danger', [
+                'class' => 'reservation-countdown',
+                'attrs' => ['data-seconds' => '0'],
+            ]);
+        } else {
+            $tempoHtml = ui_badge(formatarTempoReserva($seg), $seg <= 300 ? 'warning' : 'info', [
+                'class' => 'reservation-countdown',
+                'attrs' => ['data-seconds' => (string)$seg],
+            ]);
+        }
+
+        $clienteInfo = $enc['cliente_nome'] !== ''
+            ? '<strong>' . ui_e($enc['cliente_nome']) . '</strong>' . ($enc['cliente_email'] !== '' ? '<br><small style="color:var(--cor-slate-500);">' . ui_e($enc['cliente_email']) . '</small>' : '')
+            : ($enc['cliente_email'] !== '' ? ui_e($enc['cliente_email']) : '<span style="color:var(--cor-slate-400);">-</span>');
+
         $reservaRows[] = [
             'attrs' => ['data-id' => (int)$enc['id']],
             'cells' => [
                 '<strong>#' . (int)$enc['id'] . '</strong>',
+                $clienteInfo,
                 '<strong>' . (int)$enc['total_items'] . '</strong>',
-                '<span class="reservation-countdown" data-seconds="' . (int)$enc['segundos_restantes'] . '">' . ui_e(formatarTempoReserva($enc['segundos_restantes'])) . '</span>',
+                $tempoHtml,
                 $acoes,
             ],
         ];
     }
 
-    echo ui_table(['Encomenda', 'Unidades', 'Volta ao Stock em', 'Ações'], $reservaRows, [
+    echo ui_table([
+        ['label' => 'Encomenda', 'sort' => ['key' => 'id', 'default_dir' => 'desc']],
+        ['label' => 'Cliente', 'sort' => 'cliente'],
+        ['label' => 'Unidades', 'sort' => ['key' => 'unidades', 'default_dir' => 'desc']],
+        ['label' => 'Volta ao Stock em', 'sort' => 'tempo'],
+        'Ações',
+    ], $reservaRows, [
         'selectable'        => true,
         'sel_hidden_inline' => true,
         'wrap_id'           => 'table-wrapper',
         'wrap_class'        => 'table-wrapper reservation-table-wrapper',
         'table_class'       => 'admin-table reservation-table',
-        'empty_message'     => 'Não existem encomendas temporariamente reservadas neste momento.',
+        'empty_message'     => ($filtro_q !== '' || $filtro_estado !== '') ? 'Nenhuma reserva encontrada com os filtros selecionados.' : 'Não existem encomendas temporariamente reservadas neste momento.',
+        'sort'              => ['by' => isset($_GET['sort']) ? $sort_by : '', 'dir' => $sort_dir],
     ]);
     ?>
 </main>
@@ -109,82 +163,17 @@ include '../templates/header.php';
 const CSRF = <?= json_encode($_SESSION['csrf_token']) ?>;
 
 document.addEventListener('DOMContentLoaded', function () {
-    const btnSelMode  = document.getElementById('btn-sel-mode');
-    const selModeBar  = document.getElementById('sel-mode-bar');
-    const selCountEl  = document.getElementById('sel-count');
-    const btnSelAll   = document.getElementById('btn-sel-all');
-    const bulkBar     = document.getElementById('bulk-bar');
-    const bulkCountEl = document.getElementById('bulk-count');
-    const bulkCancel  = document.getElementById('bulk-cancel');
-    const bulkAction  = document.getElementById('bulk-cancel-reservas');
-    const tableWrap   = document.getElementById('table-wrapper');
-
-    let selMode  = false;
-    let selected = new Set();
-
-    function updateUI() {
-        const n = selected.size;
-        selCountEl.textContent = n;
-        bulkCountEl.textContent = n;
-        const total = document.querySelectorAll('.reservation-table tbody tr[data-id]').length;
-        btnSelAll.textContent = (n === total && total > 0) ? 'Desselecionar todos' : 'Selecionar todos';
-        bulkBar.classList.toggle('visible', n > 0);
-    }
-
-    btnSelMode.addEventListener('click', () => {
-        selMode = !selMode;
-        tableWrap.classList.toggle('sel-mode', selMode);
-        btnSelMode.classList.toggle('active', selMode);
-        selModeBar.classList.toggle('visible', selMode);
-        if (!selMode) {
-            selected.clear();
-            document.querySelectorAll('.reservation-table tbody tr').forEach(r => r.classList.remove('selecionado'));
-        }
-        updateUI();
-    });
-
-    bulkCancel.addEventListener('click', () => btnSelMode.click());
-
-    document.querySelector('.reservation-table tbody')?.addEventListener('click', function (e) {
-        if (!selMode) return;
-        const tr = e.target.closest('tr[data-id]');
-        if (!tr) return;
-        const id = tr.dataset.id;
-        if (selected.has(id)) { selected.delete(id); tr.classList.remove('selecionado'); }
-        else                   { selected.add(id);    tr.classList.add('selecionado'); }
-        updateUI();
-    });
-
-    btnSelAll.addEventListener('click', () => {
-        const rows = [...document.querySelectorAll('.reservation-table tbody tr[data-id]')];
-        const allSel = rows.every(r => selected.has(r.dataset.id));
-        rows.forEach(r => {
-            if (allSel) { selected.delete(r.dataset.id); r.classList.remove('selecionado'); }
-            else        { selected.add(r.dataset.id);    r.classList.add('selecionado'); }
-        });
-        updateUI();
-    });
-
-    bulkAction.addEventListener('click', () => {
-        const ids = [...selected];
-        if (!ids.length) return;
-        mostrarModalConfirmacao('Cancelar Reservas', `Cancelar ${ids.length} reserva(s) e repor stock?`, () => {
-            const form = document.getElementById('form-cancelar-massa');
-            const container = document.getElementById('form-ids');
-            container.innerHTML = '';
-            ids.forEach(id => {
-                const inp = document.createElement('input');
-                inp.type = 'hidden'; inp.name = 'ids[]'; inp.value = id;
-                container.appendChild(inp);
-            });
-            form.submit();
-        });
+    const bulkSel = window.initAdminBulkSelection({
+        bulkActionId: 'bulk-cancel-reservas',
+        formId: 'form-cancelar-massa',
+        confirmTitle: 'Cancelar Reservas',
+        confirmMessage: ids => `Cancelar ${ids.length} reserva(s) e repor stock?`,
     });
 
     // Botão individual de cancelar
     document.querySelector('.reservation-table tbody')?.addEventListener('click', function (e) {
         const btn = e.target.closest('.btn-cancel-single');
-        if (!btn || selMode) return;
+        if (!btn || (bulkSel && bulkSel.isSelMode())) return;
         const tr = btn.closest('tr');
         mostrarModalConfirmacao('Cancelar Reserva', 'Cancelar esta reserva e repor o stock?', () => {
             btn.disabled = true;
@@ -211,15 +200,29 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Contador regressivo
-    const counters = document.querySelectorAll('.reservation-countdown');
-    const fmt = s => { s = Math.max(0,s); return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); };
+    // Contador regressivo (consulta elementos vivos no DOM)
+    const fmt = s => { s = Math.max(0, s); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
     setInterval(() => {
-        counters.forEach(c => {
-            const next = Math.max(0, parseInt(c.dataset.seconds||'0',10)-1);
+        document.querySelectorAll('.reservation-countdown').forEach(c => {
+            const cur = parseInt(c.dataset.seconds || '0', 10);
+            if (cur <= 0) {
+                c.textContent = 'Expirada';
+                c.classList.remove('ui-badge--info', 'ui-badge--warning');
+                c.classList.add('ui-badge--danger');
+                return;
+            }
+            const next = Math.max(0, cur - 1);
             c.dataset.seconds = String(next);
-            c.textContent = fmt(next);
-            c.classList.toggle('ending', next <= 300);
+            if (next === 0) {
+                c.textContent = 'Expirada';
+                c.classList.remove('ui-badge--info', 'ui-badge--warning');
+                c.classList.add('ui-badge--danger');
+            } else {
+                c.textContent = fmt(next);
+                c.classList.toggle('ui-badge--warning', next <= 300);
+                c.classList.toggle('ui-badge--info', next > 300);
+                c.classList.remove('ui-badge--danger');
+            }
         });
     }, 1000);
 });

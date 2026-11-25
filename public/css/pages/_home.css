@@ -1,10 +1,10 @@
 
-/* Estilos exclusivos da página inicial. */
+/* Estilos exclusivos da pÃƒÂ¡gina inicial. */
 .main-home {
     padding: 0;
     max-width: none;
     background: var(--cor-fundo-pagina, #FAF8F4);
-    /* Tokens de design da homepage (editorial premium, inspirado nas referências) */
+    /* Tokens de design da homepage (editorial premium, inspirado nas referÃƒÂªncias) */
     --home-bg: var(--cor-fundo-pagina, #FAF8F4);
     --home-surface: var(--tema-superficie);
     --home-ink: var(--tema-ink);
@@ -247,6 +247,24 @@
     grid-row: span 1;
 }
 
+.category-card img.cat-cover-img {
+    object-position: var(--cat-pos, 50% 50%);
+    transform: scale(var(--cat-zoom, 1));
+}
+
+.category-card-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #e2e8f0;
+}
+
+@media (max-width: 768px) {
+    .category-card img.cat-cover-img {
+        object-position: var(--cat-mob-pos, var(--cat-pos, 50% 50%)) !important;
+        transform: scale(var(--cat-mob-zoom, var(--cat-zoom, 1))) !important;
+    }
+}
+
 .global-edit-mode-active .home-category-editor .category-card {
     cursor: grab;
 }
@@ -314,7 +332,7 @@
     background: var(--cor-slate-50);
     border: 1px solid transparent;
     font-size: 0.82rem;
-    font-weight: 800;
+    font-weight: 700;
     cursor: pointer;
     box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.12);
     transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
@@ -422,12 +440,14 @@
     display: flex;
     align-items: center;
     gap: 25px;
-    z-index: 10000;
+    z-index: var(--z-modal, 2000);
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
     opacity: 0;
     animation: focal-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    min-width: 400px;
+    width: min(420px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+    box-sizing: border-box;
 }
 
 @keyframes focal-slide-up {
@@ -642,7 +662,7 @@
     background-color: var(--cor-cinza-escuro);
 }
 
-/* Bento adaptativo por número de categorias (1-8) */
+/* Bento adaptativo por nÃƒÂºmero de categorias (1-8) */
 .category-bento.count-1 {
     grid-template-columns: 1fr;
     grid-auto-rows: 450px;
@@ -753,7 +773,7 @@
 }
 
 /* ==========================================================================
-   ANIMAÇÃO DE CORTINAS PREMIUM (HOME PRELOADER)
+   ANIMAÃƒâ€¡ÃƒÆ’O DE CORTINAS PREMIUM (HOME PRELOADER)
    ========================================================================== */
 .premium-preloader {
     position: fixed;
@@ -761,7 +781,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 999999;
+    z-index: calc(var(--z-modal, 2000) + 50);
     pointer-events: none;
     overflow: hidden;
     display: flex;
@@ -769,7 +789,7 @@
     justify-content: center;
 }
 
-/* Painéis das cortinas */
+/* PainÃƒÂ©is das cortinas */
 .curtain-panel {
     position: absolute;
     top: 0;
@@ -796,7 +816,7 @@
     z-index: 1;
 }
 
-/* Posições */
+/* PosiÃƒÂ§ÃƒÂµes */
 .curtain-panel.left {
     left: 0;
     transform-origin: left;
@@ -820,7 +840,7 @@
     transition: opacity 0.4s ease;
 }
 
-/* Conteúdo central (Logo) */
+/* ConteÃƒÂºdo central (Logo) */
 .preloader-content {
     position: relative;
     z-index: 10;
@@ -865,14 +885,14 @@
 
 .premium-preloader.open .preloader-content {
     opacity: 0;
-    transform: scale(1.2); /* Efeito cinemático: zoom ao desaparecer */
+    transform: scale(1.2); /* Efeito cinemÃƒÂ¡tico: zoom ao desaparecer */
 }
 
 /* ==========================================================================
    REDESIGN PREMIUM DA HOMEPAGE
-   Inspirado nos projectos de referência (casa_em_ordem + brasporto):
+   Inspirado nos projectos de referÃƒÂªncia (casa_em_ordem + brasporto):
    tipografia serif editorial, kickers, marquee, cards refinados, reveal.
-   Tudo scoped a .main-home para não afectar outras páginas.
+   Tudo scoped a .main-home para nÃƒÂ£o afectar outras pÃƒÂ¡ginas.
    ========================================================================== */
 
 /* --- HERO --- */
@@ -1144,7 +1164,7 @@
     letter-spacing: 0;
 }
 
-/* --- NOVIDADES / BOTÃO VER MAIS --- */
+/* --- NOVIDADES / BOTÃƒÆ’O VER MAIS --- */
 .main-home .btn-ver-mais {
     display: inline-flex;
     align-items: center;
@@ -1202,16 +1222,16 @@
 }
 
 /* ==========================================================================
-   MICRO-DETALHES (o segredo está nos pormenores)
+   MICRO-DETALHES (o segredo estÃƒÂ¡ nos pormenores)
    ========================================================================== */
 
-/* Cor de seleção de texto editorial */
+/* Cor de seleÃƒÂ§ÃƒÂ£o de texto editorial */
 .main-home ::selection {
     background: var(--home-accent);
     color: var(--cor-branco);
 }
 
-/* Ícone das trust badges preenche-se ao passar o rato */
+/* ÃƒÂcone das trust badges preenche-se ao passar o rato */
 .main-home .trust-badge svg {
     transition: background .4s ease, color .4s ease;
 }
@@ -1220,7 +1240,7 @@
     color: var(--cor-branco);
 }
 
-/* Seta subtil nos botões principais (desliza no hover) */
+/* Seta subtil nos botÃƒÂµes principais (desliza no hover) */
 .main-home .button-hero::after,
 .main-home .btn-ver-mais::after {
     content: "\2192";

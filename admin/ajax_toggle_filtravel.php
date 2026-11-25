@@ -1,9 +1,10 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/csrf.php';
 include '../config/database.php';
 
-if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true || !in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor'])) {
+if (!is_admin_manager()) {
     http_response_code(403);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['sucesso' => false, 'mensagem' => 'Acesso negado.']);

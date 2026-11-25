@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
 require_once __DIR__ . '/../config/formatters.php';
+require_once __DIR__ . '/includes/storage_helper.php';
 
 if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true || $_SESSION['admin_role'] !== 'desenvolvedor') {
     header("Location: /admin/admin.php");
@@ -11,238 +12,395 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-$images_dir  = __DIR__ . '/../public/images/';
-$cats_dir    = __DIR__ . '/../public/assets/img_categorias/';
-$logos_dir   = __DIR__ . '/../public/assets/header/';
-$allowed_ext = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
+$galeria         = dev_listar_imagens_galeria();
+$imagens         = $galeria['imagens'];
+$contagens       = $galeria['contagens'];
+$total_ficheiros = $galeria['total_count'];
+$total_bytes     = $galeria['total_bytes'];
+$tipo_labels     = dev_galeria_tipo_labels();
 
-$imagens = [];
-
-// Carregar imagens de produtos
-if (is_dir($images_dir)) {
-    foreach (scandir($images_dir) as $f) {
-        if ($f === '.' || $f === '..') continue;
-        $path = $images_dir . $f;
-        if (!is_file($path)) continue;
-        $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
-        if (!in_array($ext, $allowed_ext)) continue;
-        $imagens[] = ['nome' => $f, 'tamanho' => filesize($path), 'data' => filemtime($path), 'tipo' => 'produto'];
-    }
-}
-
-// Carregar imagens de categorias
-if (is_dir($cats_dir)) {
-    foreach (scandir($cats_dir) as $f) {
-        if ($f === '.' || $f === '..') continue;
-        $path = $cats_dir . $f;
-        if (!is_file($path)) continue;
-        $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
-        if (!in_array($ext, $allowed_ext)) continue;
-        $imagens[] = ['nome' => $f, 'tamanho' => filesize($path), 'data' => filemtime($path), 'tipo' => 'categoria'];
-    }
-}
-
-// Carregar logos do cabeçalho
-if (is_dir($logos_dir)) {
-    foreach (scandir($logos_dir) as $f) {
-        if ($f === '.' || $f === '..') continue;
-        $path = $logos_dir . $f;
-        if (!is_file($path)) continue;
-        $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
-        if (!in_array($ext, $allowed_ext)) continue;
-        $imagens[] = ['nome' => $f, 'tamanho' => filesize($path), 'data' => filemtime($path), 'tipo' => 'logo'];
-    }
-}
-
-usort($imagens, fn($a, $b) => $b['data'] - $a['data']);
-
-$total_ficheiros = count($imagens);
-$total_bytes     = array_sum(array_column($imagens, 'tamanho'));
-
+$titulo_pagina = 'Galeria de Imagens';
 include '../templates/header.php';
 ?>
 
-
 <main class="dashboard-container animate-entry">
-    
-<!-- Bloquear scroll automático no refresh -->
-<script>
-    if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-    }
-    window.scrollTo(0, 0);
-</script>
 <div class="gal-page">
 
-    <?php echo ui_page_header("Galeria de Imagens do Servidor", ['layout' => 'admin', 'back_url' => '/dev', 'back_title' => 'Painel Dev']); ?>
+    <?php echo ui_page_header('Galeria de Imagens', [
+        'layout'     => 'admin',
+        'back_url'   => '/dev',
+        'back_title' => 'Voltar ao Painel Dev',
+    ]); ?>
 
-    <!-- ── Page Header ── -->
-    <div class="gal-ph">
-        <div class="gal-ph-left"></div>
-        <div class="gal-stats">
-            <div class="gal-stat">
-                <div class="gal-stat-icon gal-stat-icon--imgs">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                </div>
-                <div class="gal-stat-text">
-                    <small>Imagens</small>
-                    <strong><?php echo $total_ficheiros; ?></strong>
-                </div>
-            </div>
-            <div class="gal-stat">
-                <div class="gal-stat-icon gal-stat-icon--size">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                </div>
-                <div class="gal-stat-text">
-                    <small>Espaço</small>
-                    <strong><?php echo format_bytes($total_bytes, 1, 'B'); ?></strong>
-                </div>
-            </div>
-            <div class="gal-stat">
-                <div class="gal-stat-icon gal-stat-icon--ghost">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/></svg>
-                </div>
-                <div class="gal-stat-text">
-                    <small>Fantasmas</small>
-                    <strong id="stat-ghost">—</strong>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── Toolbar ── -->
-    <div class="gal-toolbar">
-        <div class="gal-tabs">
-            <button class="gal-tab active" data-filter="todas">Todas</button>
-            <button class="gal-tab" data-filter="produto">Produtos</button>
-            <button class="gal-tab" data-filter="categoria">Categorias</button>
-            <button class="gal-tab" data-filter="logo">Logos</button>
-            <button class="gal-tab" data-filter="fantasmas" id="tab-fantasmas" disabled>Fantasmas</button>
-        </div>
-        <div class="gal-spacer"></div>
+    <!-- KPIs (ui_stat_card oficial) -->
+    <div class="stats-grid gal-stats-grid">
         <?php
-        echo ui_button('Apagar todas as fantasmas', [
-            'id'    => 'btn-del-all',
-            'class' => 'gal-btn-del-all',
-            'html'  => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg><span id="del-all-txt">Apagar todas as fantasmas</span>',
+        echo ui_stat_card((string)$total_ficheiros, 'Total de Imagens', [
+            'value_id' => 'stat-total',
+            'icon'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
         ]);
-        echo ui_button('Reanalisar', [
-            'id'    => 'btn-scan',
-            'class' => 'gal-btn-scan',
-            'html'  => '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span id="scan-txt">Reanalisar</span>',
+        echo ui_stat_card(format_bytes($total_bytes, 2, 'B'), 'Espaço Ocupado', [
+            'value_id' => 'stat-bytes',
+            'icon'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+        ]);
+        echo ui_stat_card('-', 'Fotos Fantasma', [
+            'value_id' => 'stat-ghost',
+            'class'    => 'gal-stat-ghost',
+            'attrs'    => [
+                'id'       => 'card-stat-ghost',
+                'role'     => 'button',
+                'tabindex' => '0',
+                'title'    => 'Filtrar fotos fantasma',
+            ],
+            'icon'     => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>',
         ]);
         ?>
     </div>
 
-    <!-- ── Result banner ── -->
-    <div class="gal-banner" id="gal-banner"></div>
+    <!-- Toolbar unificada (ui_toolbar oficial) -->
+    <?php
+    $toolbarLeft = ui_button('Reanalisar', [
+        'id'      => 'btn-scan',
+        'variant' => 'default',
+        'icon'    => '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>',
+    ]) . ui_button('Apagar fantasmas', [
+        'id'      => 'btn-del-all',
+        'variant' => 'danger',
+        'class'   => 'gal-del-all',
+        'icon'    => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>',
+    ]);
 
-    <!-- ── Grid ── -->
+    $filterOptions = [
+        'todas'     => "Todas ({$total_ficheiros})",
+        'produto'   => "Produtos ({$contagens['produto']})",
+        'categoria' => "Categorias ({$contagens['categoria']})",
+        'logo'      => "Logos ({$contagens['logo']})",
+        'hero'      => "Hero ({$contagens['hero']})",
+    ];
+    if (($contagens['outros'] ?? 0) > 0) {
+        $filterOptions['outros'] = "Outros ({$contagens['outros']})";
+    }
+    $filterOptions['fantasmas'] = ['value' => 'fantasmas', 'label' => 'Fantasmas (-)', 'disabled' => true];
+
+    $toolbarRight = '<div class="gal-filter-controls">'
+        . ui_select('', $filterOptions, 'todas', [
+            'id'      => 'gal-filter',
+            'variant' => 'toolbar',
+            'title'   => 'Filtrar imagens',
+        ])
+        . ui_search_input('', 'Pesquisar ficheiro...', ['id' => 'gal-search'])
+        . '</div>';
+
+    echo ui_toolbar($toolbarLeft, $toolbarRight, ['class' => 'gal-toolbar-wrap']);
+    ?>
+
+    <!-- Grelha de Imagens -->
     <div class="gal-grid" id="gal-grid">
-        <?php if (empty($imagens)): ?>
-            <div class="gal-empty">Nenhuma imagem encontrada em <code>/public/images/</code>.</div>
-        <?php else: ?>
-            <?php foreach ($imagens as $img): ?>
-            <div class="gal-card"
-                 data-nome="<?php echo htmlspecialchars($img['nome']); ?>"
-                 data-size="<?php echo format_bytes($img['tamanho'], 1, 'B'); ?>"
-                 data-tipo="<?php echo $img['tipo']; ?>"
-                 onclick="abrirLightbox(this)">
+        <?php foreach ($imagens as $img):
+            $tipo      = $img['tipo'];
+            $size_fmt  = format_bytes($img['tamanho'], 2, 'B');
+            $tipo_lbl  = $tipo_labels[$tipo] ?? ucfirst($tipo);
+        ?>
+        <div class="gal-card"
+             data-nome="<?php echo ui_e($img['nome']); ?>"
+             data-rel="<?php echo ui_e($img['rel']); ?>"
+             data-src="<?php echo ui_e($img['src']); ?>"
+             data-size="<?php echo ui_e($size_fmt); ?>"
+             data-bytes="<?php echo (int)$img['tamanho']; ?>"
+             data-tipo="<?php echo ui_e($tipo); ?>"
+             data-tipo-label="<?php echo ui_e($tipo_lbl); ?>"
+             onclick="abrirLightbox(this)">
 
-                <?php 
-                $src_path = '/public/images/';
-                if ($img['tipo'] === 'categoria') $src_path = '/public/assets/img_categorias/';
-                if ($img['tipo'] === 'logo') $src_path = '/public/assets/header/';
-                ?>
-                <img src="<?php echo $src_path . rawurlencode($img['nome']); ?>" alt="" loading="lazy">
+            <img src="<?php echo ui_e($img['src']); ?>" alt="<?php echo ui_e($img['nome']); ?>" loading="lazy">
 
-                <div class="gal-overlay">
-                    <div class="gal-overlay-nome"><?php echo htmlspecialchars($img['nome'], ENT_QUOTES, 'UTF-8'); ?></div>
-                    <div class="gal-overlay-size"><?php echo format_bytes($img['tamanho'], 1, 'B'); ?></div>
-                </div>
-
-                <div class="gal-ghost-overlay">
-                    <span class="gal-ghost-label">Fantasma</span>
-                    <button class="gal-ghost-del" onclick="event.stopPropagation(); apagarFoto(this)">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                        Apagar
-                    </button>
-                </div>
+            <div class="gal-overlay">
+                <div class="gal-overlay-nome"><?php echo ui_e($img['nome']); ?></div>
+                <div class="gal-overlay-meta"><?php echo ui_e($tipo_lbl . ' · ' . $size_fmt); ?></div>
             </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+
+            <div class="gal-ghost-overlay">
+                <?php echo ui_badge('Fantasma', 'danger', ['class' => 'gal-ghost-badge']); ?>
+                <?php echo ui_button('Apagar', [
+                    'variant' => 'danger',
+                    'size'    => 'sm',
+                    'class'   => 'gal-ghost-del',
+                    'onclick' => 'event.stopPropagation(); apagarFoto(this)',
+                    'icon'    => '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>',
+                ]); ?>
+            </div>
+        </div>
+        <?php endforeach; ?>
     </div>
+
+    <?php echo ui_empty_state('Nenhuma imagem encontrada.', [
+        'class' => 'gal-empty-state',
+        'icon'  => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+        'attrs' => [
+            'id'    => 'gal-empty-state',
+            'style' => empty($imagens) ? '' : 'display:none;',
+        ],
+    ]); ?>
 
 </div>
 </main>
 
-<!-- ── Lightbox ── -->
-<div class="gal-lb" id="lightbox" onclick="fecharLightbox()">
-    <?php echo ui_close_button(['class' => 'gal-lb-close', 'onclick' => 'fecharLightbox()']); ?>
-    <div class="gal-lb-inner" onclick="event.stopPropagation()">
-        <img id="lb-img" src="" alt="">
-        <div class="gal-lb-info" id="lb-info"></div>
+<!-- Modal de Preview -->
+<div class="gal-lb" id="lightbox" role="dialog" aria-modal="true" aria-labelledby="lb-nome" onclick="fecharLightbox()">
+    <div class="gal-modal-card" onclick="event.stopPropagation()">
+        <div class="gal-modal-hd">
+            <div class="gal-modal-title-wrap">
+                <span id="lb-nome" class="gal-modal-name"></span>
+                <span id="lb-tipo" class="ui-badge ui-badge--neutral"></span>
+            </div>
+            <?php echo ui_close_button(['class' => 'gal-modal-close', 'onclick' => 'fecharLightbox()']); ?>
+        </div>
+
+        <div class="gal-modal-stage">
+            <button type="button" id="lb-prev" class="gal-modal-nav gal-modal-nav--prev" aria-label="Imagem anterior" title="Anterior">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <img id="lb-img" src="" alt="">
+            <button type="button" id="lb-next" class="gal-modal-nav gal-modal-nav--next" aria-label="Imagem seguinte" title="Seguinte">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+        </div>
+
+        <div class="gal-modal-ft">
+            <div class="gal-modal-meta" id="lb-meta"></div>
+            <div class="gal-modal-actions">
+                <?php
+                echo ui_button('Copiar caminho', [
+                    'id'      => 'lb-copy',
+                    'variant' => 'default',
+                    'size'    => 'sm',
+                    'icon'    => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+                ]);
+                echo ui_button('Abrir', [
+                    'id'      => 'lb-open',
+                    'href'    => '#',
+                    'target'  => '_blank',
+                    'variant' => 'primary',
+                    'size'    => 'sm',
+                    'attrs'   => ['rel' => 'noopener'],
+                    'icon'    => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+                ]);
+                ?>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-const CSRF = '<?php echo $_SESSION['csrf_token']; ?>';
-let filtroAtual = 'todas';
+const CSRF = <?php echo json_encode($_SESSION['csrf_token'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+const filterSelect = document.getElementById('gal-filter');
+const searchInput  = document.getElementById('gal-search');
+const emptyStateEl = document.getElementById('gal-empty-state');
+const ghostCardEl  = document.getElementById('card-stat-ghost');
+const btnDelAll    = document.getElementById('btn-del-all');
 
-// ── Tabs ──────────────────────────────────────────────────────────────────
-document.querySelectorAll('.gal-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-        if (btn.disabled) return;
-        document.querySelectorAll('.gal-tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        filtroAtual = btn.dataset.filter;
-        aplicarFiltro();
+let scanConcluido = false;
+
+function formatBytesPt(bytes) {
+    if (!bytes || bytes <= 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
+    const val = bytes / Math.pow(1024, i);
+    return (i === 0 ? Math.round(val) : val.toFixed(2)) + ' ' + units[i];
+}
+
+function atualizarContadores() {
+    const cards = [...document.querySelectorAll('.gal-card')];
+    const counts = { todas: cards.length, produto: 0, categoria: 0, logo: 0, hero: 0, outros: 0, fantasmas: 0 };
+    let totalBytes = 0;
+
+    cards.forEach(card => {
+        const tipo = card.dataset.tipo || 'produto';
+        if (Object.prototype.hasOwnProperty.call(counts, tipo)) counts[tipo]++;
+        if (card.classList.contains('fantasma')) counts.fantasmas++;
+        totalBytes += parseInt(card.dataset.bytes || '0', 10) || 0;
     });
-});
+
+    document.getElementById('stat-total').textContent = String(counts.todas);
+    document.getElementById('stat-bytes').textContent = formatBytesPt(totalBytes);
+
+    const ghostText = scanConcluido ? String(counts.fantasmas) : '-';
+    document.getElementById('stat-ghost').textContent = ghostText;
+    ghostCardEl?.classList.toggle('has-ghosts', scanConcluido && counts.fantasmas > 0);
+    btnDelAll?.classList.toggle('show', scanConcluido && counts.fantasmas > 0);
+
+    if (filterSelect) {
+        const labels = {
+            todas:     'Todas (' + counts.todas + ')',
+            produto:   'Produtos (' + counts.produto + ')',
+            categoria: 'Categorias (' + counts.categoria + ')',
+            logo:      'Logos (' + counts.logo + ')',
+            hero:      'Hero (' + counts.hero + ')',
+            outros:    'Outros (' + counts.outros + ')',
+            fantasmas: 'Fantasmas (' + (scanConcluido ? counts.fantasmas : '-') + ')',
+        };
+        Array.from(filterSelect.options).forEach(opt => {
+            if (labels[opt.value]) opt.textContent = labels[opt.value];
+            if (opt.value === 'fantasmas') opt.disabled = !scanConcluido;
+        });
+        if (typeof window.uiRefreshSelect === 'function') {
+            window.uiRefreshSelect(filterSelect);
+        }
+    }
+}
 
 function aplicarFiltro() {
+    const filtroAtual = filterSelect ? filterSelect.value : 'todas';
+    const termo       = (searchInput ? searchInput.value : '').trim().toLowerCase();
+    let visiveis      = 0;
+
     document.querySelectorAll('.gal-card').forEach(card => {
         const fantasma = card.classList.contains('fantasma');
         const tipo     = card.dataset.tipo;
-        
-        let show = false;
-        if (filtroAtual === 'todas') show = true;
-        else if (filtroAtual === 'fantasmas') show = fantasma;
-        else show = (tipo === filtroAtual);
+        const nome     = (card.dataset.nome || '').toLowerCase();
+
+        let matchTipo = false;
+        if (filtroAtual === 'todas') matchTipo = true;
+        else if (filtroAtual === 'fantasmas') matchTipo = fantasma;
+        else matchTipo = (tipo === filtroAtual);
+
+        const matchBusca = (termo === '' || nome.includes(termo));
+        const show       = matchTipo && matchBusca;
 
         card.classList.toggle('hidden-card', !show);
+        if (show) visiveis++;
     });
+
+    if (emptyStateEl) {
+        emptyStateEl.style.display = visiveis === 0 ? '' : 'none';
+    }
 }
 
-// ── Lightbox ─────────────────────────────────────────────────────────────
+filterSelect?.addEventListener('change', aplicarFiltro);
+searchInput?.addEventListener('input', aplicarFiltro);
+
+function toggleGhostFilter() {
+    if (!scanConcluido || !filterSelect) return;
+    filterSelect.value = (filterSelect.value === 'fantasmas') ? 'todas' : 'fantasmas';
+    if (typeof window.uiRefreshSelect === 'function') {
+        window.uiRefreshSelect(filterSelect);
+    }
+    aplicarFiltro();
+}
+
+ghostCardEl?.addEventListener('click', toggleGhostFilter);
+ghostCardEl?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleGhostFilter();
+    }
+});
+
+// Modal de Preview
+const lbEl     = document.getElementById('lightbox');
+const lbImg    = document.getElementById('lb-img');
+const lbNome   = document.getElementById('lb-nome');
+const lbTipo   = document.getElementById('lb-tipo');
+const lbMeta   = document.getElementById('lb-meta');
+const lbOpen   = document.getElementById('lb-open');
+const lbCopy   = document.getElementById('lb-copy');
+const lbPrev   = document.getElementById('lb-prev');
+const lbNext   = document.getElementById('lb-next');
+
+let currentLbCard = null;
+let currentLbSrc  = '';
+let currentLbBaseMeta = '';
+
+function getVisibleGalCards() {
+    return [...document.querySelectorAll('.gal-card:not(.hidden-card)')];
+}
+
+function updateLbDimensions() {
+    if (!lbImg || !lbMeta || !lbEl?.classList.contains('open')) return;
+    if (lbImg.naturalWidth > 0 && lbImg.naturalHeight > 0) {
+        lbMeta.textContent = currentLbBaseMeta + ' · ' + lbImg.naturalWidth + ' × ' + lbImg.naturalHeight + ' px';
+    }
+}
+
+lbImg?.addEventListener('load', updateLbDimensions);
+
 function abrirLightbox(card) {
-    if (card.classList.contains('fantasma')) return;
-    const nome = card.dataset.nome;
-    const size = card.dataset.size;
-    const tipo = card.dataset.tipo;
-    
-    let path = '/public/images/';
-    if (tipo === 'categoria') path = '/public/assets/img_categorias/';
-    if (tipo === 'logo') path = '/public/assets/header/';
-    
-    document.getElementById('lb-img').src = path + nome;
-    document.getElementById('lb-info').textContent = nome + '  ·  ' + size;
-    document.getElementById('lightbox').classList.add('open');
+    if (!card || !lbEl) return;
+    currentLbCard = card;
+
+    const nome      = card.dataset.nome || '';
+    const size      = card.dataset.size || '';
+    const tipo      = card.dataset.tipo || 'produto';
+    const tipoLabel = card.dataset.tipoLabel || tipo;
+    const src       = card.dataset.src || ('/public/' + (card.dataset.rel || 'images/' + encodeURIComponent(nome)));
+    currentLbSrc    = src;
+
+    const visCards = getVisibleGalCards();
+    const idx      = visCards.indexOf(card);
+    const showNav  = visCards.length > 1 && idx !== -1;
+
+    if (lbPrev) lbPrev.style.display = showNav ? '' : 'none';
+    if (lbNext) lbNext.style.display = showNav ? '' : 'none';
+
+    currentLbBaseMeta = size + (showNav ? (' · ' + (idx + 1) + ' / ' + visCards.length) : '');
+    if (lbNome) lbNome.textContent = nome;
+    if (lbTipo) lbTipo.textContent = tipoLabel;
+    if (lbMeta) lbMeta.textContent = currentLbBaseMeta;
+    if (lbOpen) lbOpen.href = src;
+    if (lbImg) {
+        lbImg.alt = nome;
+        lbImg.src = src;
+        if (lbImg.complete && lbImg.naturalWidth > 0) {
+            updateLbDimensions();
+        }
+    }
+
+    lbEl.classList.add('open');
     document.body.style.overflow = 'hidden';
 }
+
+function navegarLightbox(delta) {
+    if (!currentLbCard) return;
+    const visCards = getVisibleGalCards();
+    if (visCards.length <= 1) return;
+    const idx = visCards.indexOf(currentLbCard);
+    if (idx === -1) return;
+    const nextIdx = (idx + delta + visCards.length) % visCards.length;
+    abrirLightbox(visCards[nextIdx]);
+}
+
 function fecharLightbox() {
-    document.getElementById('lightbox').classList.remove('open');
-    document.getElementById('lb-img').src = '';
+    if (!lbEl) return;
+    lbEl.classList.remove('open');
+    if (lbImg) lbImg.src = '';
+    currentLbCard = null;
+    currentLbSrc  = '';
     document.body.style.overflow = '';
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharLightbox(); });
 
-// ── Scan ──────────────────────────────────────────────────────────────────
-async function runScan() {
-    const btn = document.getElementById('btn-scan');
-    const txt = document.getElementById('scan-txt');
-    btn.disabled = true;
-    txt.innerHTML = '<span class="gal-spin"></span> A analisar...';
+lbPrev?.addEventListener('click', () => navegarLightbox(-1));
+lbNext?.addEventListener('click', () => navegarLightbox(1));
+lbCopy?.addEventListener('click', () => {
+    if (!currentLbSrc || !navigator.clipboard) return;
+    navigator.clipboard.writeText(currentLbSrc).then(() => {
+        mostrarPopup('Caminho copiado.', 'sucesso');
+    });
+});
+
+document.addEventListener('keydown', e => {
+    if (!lbEl?.classList.contains('open')) return;
+    if (e.key === 'Escape') fecharLightbox();
+    else if (e.key === 'ArrowLeft') navegarLightbox(-1);
+    else if (e.key === 'ArrowRight') navegarLightbox(1);
+});
+
+// Scan
+const btnScan = document.getElementById('btn-scan');
+const scanBtnOrigHtml = btnScan ? btnScan.innerHTML : '';
+
+async function runScan(manual = false) {
+    if (!btnScan) return;
+    btnScan.disabled = true;
+    btnScan.innerHTML = '<span class="gal-spin" aria-hidden="true"></span><span>A analisar...</span>';
 
     try {
         const res  = await fetch('ajax_galeria_imagens.php', {
@@ -251,58 +409,44 @@ async function runScan() {
             body: JSON.stringify({ action: 'analisar', csrf_token: CSRF })
         });
         const data = await res.json();
-        if (!data.sucesso) throw new Error(data.mensagem || 'Erro.');
+        if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao analisar imagens.');
 
         const ghosts = new Set(data.fantasmas);
         const total  = data.fantasmas.length;
 
         document.querySelectorAll('.gal-card').forEach(card => {
-            const isGhost = ghosts.has(card.dataset.nome);
+            const rel     = card.dataset.rel || '';
+            const key     = (card.dataset.tipo || 'produto') + ':' + card.dataset.nome;
+            const isGhost = ghosts.has(rel) || ghosts.has(key) || ghosts.has(card.dataset.nome);
             card.classList.toggle('fantasma', isGhost);
-            card.style.cursor = isGhost ? 'default' : 'zoom-in';
         });
 
-        // Stats
-        document.getElementById('stat-ghost').textContent = total;
-
-        // Tab
-        const tabF = document.getElementById('tab-fantasmas');
-        tabF.disabled = false;
-        tabF.textContent = 'Fantasmas (' + total + ')';
-
-        // Delete-all button
-        const btnDelAll = document.getElementById('btn-del-all');
-        btnDelAll.classList.toggle('show', total > 0);
-
-        // Banner
-        const banner = document.getElementById('gal-banner');
-        banner.className = 'gal-banner show';
-        if (total === 0) {
-            banner.classList.add('gal-banner--ok');
-            banner.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Tudo limpo — nenhuma foto fantasma encontrada.';
-        } else {
-            banner.classList.add('gal-banner--warn');
-            banner.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> <strong>' + total + ' foto(s) fantasma</strong> encontrada(s) — não referenciadas em nenhum produto, galeria ou encomenda.';
-        }
-
-        txt.textContent = 'Reanalisar';
-        btn.disabled = false;
+        scanConcluido = true;
+        atualizarContadores();
         aplicarFiltro();
 
+        if (manual) {
+            if (total === 0) {
+                mostrarPopup('Tudo limpo - nenhuma foto fantasma encontrada.', 'sucesso');
+            } else {
+                mostrarPopup(total + ' foto(s) fantasma encontrada(s).', 'info');
+            }
+        }
     } catch (e) {
         mostrarPopup('Erro: ' + e.message, 'erro');
-        txt.textContent = 'Reanalisar';
-        btn.disabled = false;
+    } finally {
+        btnScan.disabled = false;
+        btnScan.innerHTML = scanBtnOrigHtml;
     }
 }
 
-document.getElementById('btn-scan').addEventListener('click', runScan);
+btnScan?.addEventListener('click', () => runScan(true));
+runScan(false);
 
-// Auto-scan on page load
-runScan();
+// Delete All Ghosts
+const delAllOrigHtml = btnDelAll ? btnDelAll.innerHTML : '';
 
-// ── Delete-All ────────────────────────────────────────────────────────────
-document.getElementById('btn-del-all').addEventListener('click', () => {
+btnDelAll?.addEventListener('click', () => {
     const fantasmas = [...document.querySelectorAll('.gal-card.fantasma')];
     if (!fantasmas.length) return;
 
@@ -310,41 +454,45 @@ document.getElementById('btn-del-all').addEventListener('click', () => {
         'Apagar todas as fantasmas',
         'Vai apagar permanentemente <strong>' + fantasmas.length + ' imagem(ns)</strong> não referenciadas. Esta ação não pode ser revertida.',
         async () => {
-            const txt = document.getElementById('del-all-txt');
-            const btn = document.getElementById('btn-del-all');
-            btn.disabled = true;
-            txt.innerHTML = '<span class="gal-spin"></span> A apagar...';
+            btnDelAll.disabled = true;
+            btnDelAll.innerHTML = '<span class="gal-spin" aria-hidden="true"></span><span>A apagar...</span>';
 
             let apagadas = 0;
             for (const card of fantasmas) {
                 const nome = card.dataset.nome;
+                const tipo = card.dataset.tipo || '';
+                const rel  = card.dataset.rel || '';
                 try {
                     const res  = await fetch('ajax_galeria_imagens.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'apagar', csrf_token: CSRF, ficheiro: nome })
+                        body: JSON.stringify({ action: 'apagar', csrf_token: CSRF, ficheiro: nome, tipo, rel })
                     });
                     const data = await res.json();
                     if (data.sucesso) {
-                        card.style.transition = 'opacity .25s, transform .25s';
-                        card.style.opacity = '0'; card.style.transform = 'scale(.9)';
-                        setTimeout(() => card.remove(), 260);
+                        card.remove();
                         apagadas++;
                     }
                 } catch (_) {}
             }
 
-            document.getElementById('stat-ghost').textContent = 0;
-            document.getElementById('tab-fantasmas').textContent = 'Fantasmas (0)';
-            btn.classList.remove('show');
-
-            const banner = document.getElementById('gal-banner');
-            banner.className = 'gal-banner show gal-banner--ok';
-            banner.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ' + apagadas + ' imagem(ns) apagada(s) com sucesso.';
-
-            if (filtroAtual === 'fantasmas') {
-                document.querySelectorAll('.gal-tab')[0].click();
+            if (apagadas > 0) {
+                mostrarPopup(apagadas + ' imagem(ns) apagada(s) com sucesso.', 'sucesso');
+            } else {
+                mostrarPopup('Não foi possível apagar as imagens selecionadas.', 'erro');
             }
+
+            btnDelAll.disabled = false;
+            btnDelAll.innerHTML = delAllOrigHtml;
+
+            atualizarContadores();
+            if (filterSelect && filterSelect.value === 'fantasmas' && document.querySelectorAll('.gal-card.fantasma').length === 0) {
+                filterSelect.value = 'todas';
+                if (typeof window.uiRefreshSelect === 'function') {
+                    window.uiRefreshSelect(filterSelect);
+                }
+            }
+            aplicarFiltro();
         }
     );
 });
@@ -353,40 +501,40 @@ function escapeGalHtml(s) {
     return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-// ── Delete single ─────────────────────────────────────────────────────────
+// Delete Single Ghost
 async function apagarFoto(btn) {
     const card = btn.closest('.gal-card');
     const nome = card ? card.dataset.nome : '';
+    const tipo = card ? (card.dataset.tipo || '') : '';
+    const rel  = card ? (card.dataset.rel || '') : '';
     if (!nome) return;
+
     mostrarModalConfirmacao(
         'Apagar imagem',
         'Apagar permanentemente <strong>' + escapeGalHtml(nome) + '</strong>?',
         async () => {
             const orig = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<span class="gal-spin" style="border-top-color:#fff;border-color:rgba(255,255,255,.3)"></span>';
+            btn.innerHTML = '<span class="gal-spin" aria-hidden="true"></span>';
 
             try {
                 const res  = await fetch('ajax_galeria_imagens.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'apagar', csrf_token: CSRF, ficheiro: nome })
+                    body: JSON.stringify({ action: 'apagar', csrf_token: CSRF, ficheiro: nome, tipo, rel })
                 });
                 const data = await res.json();
-                if (!data.sucesso) throw new Error(data.mensagem);
+                if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao apagar.');
 
-                const card = btn.closest('.gal-card');
-                card.style.transition = 'opacity .3s, transform .3s';
-                card.style.opacity = '0'; card.style.transform = 'scale(.85)';
-                setTimeout(() => card.remove(), 300);
-
-                const cur = parseInt(document.getElementById('stat-ghost').textContent) || 0;
-                const novo = Math.max(0, cur - 1);
-                document.getElementById('stat-ghost').textContent = novo;
-                const tabF = document.getElementById('tab-fantasmas');
-                tabF.textContent = 'Fantasmas (' + novo + ')';
-                if (novo === 0) document.getElementById('btn-del-all').classList.remove('show');
-
+                card.remove();
+                atualizarContadores();
+                if (filterSelect && filterSelect.value === 'fantasmas' && document.querySelectorAll('.gal-card.fantasma').length === 0) {
+                    filterSelect.value = 'todas';
+                    if (typeof window.uiRefreshSelect === 'function') {
+                        window.uiRefreshSelect(filterSelect);
+                    }
+                }
+                aplicarFiltro();
                 mostrarPopup('Imagem apagada.', 'sucesso');
             } catch (e) {
                 mostrarPopup('Erro: ' + e.message, 'erro');

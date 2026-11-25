@@ -125,7 +125,7 @@ $portes_por_pais = $portes_js ?? [];
                 </div>
 
                 <?php echo ui_button('Continuar para pagamento →', ['id' => 'btn-continuar', 'class' => 'ck-btn', 'raw_class' => true]); ?>
-                <div class="ck-back-row"><a href="carrinho.php" class="ck-back ck-back-full">← Voltar ao carrinho</a></div>
+                <div class="ck-back-row"><a href="/carrinho" class="ck-back ck-back-full">← Voltar ao carrinho</a></div>
             </form>
         </div>
 
@@ -156,7 +156,6 @@ $portes_por_pais = $portes_js ?? [];
 <div id="ck-loading"><div class="ck-spin" style="width:30px; height:30px;"></div><p>A processar...</p></div>
 
 <script src="https://js.stripe.com/v3/"></script>
-<script src="/public/js/utils.js"></script>
 <script>
 (function(){
 'use strict';
@@ -749,7 +748,7 @@ document.getElementById('btn-pagar').addEventListener('click', async () => {
     const btn = document.getElementById('btn-pagar');
     btn.disabled = true;
     btn.innerHTML = '<span class="ck-spin"></span> A processar...';
-    const returnUrl = `${window.location.origin}/sucesso.php?id=${orderId}&token=${orderToken}`;
+    const returnUrl = `${window.location.origin}/sucesso?id=${orderId}&token=${orderToken}`;
     const result = await stripe.confirmPayment({ elements: stripeEl, confirmParams: { return_url: returnUrl }, redirect: 'if_required' });
     if (result.error) {
         const friendlyMsg = translateStripeError(result.error);
@@ -774,7 +773,7 @@ if (backBtn && document.referrer) {
     try {
         const ref = document.referrer;
         const refUrl = new URL(ref);
-        if (refUrl.origin === window.location.origin && !ref.includes('checkout.php')) {
+        if (refUrl.origin === window.location.origin && !/\/checkout(\.php)?(\?|$)/.test(refUrl.pathname)) {
             backBtn.href = ref;
             if (ref.includes('carrinho')) backBtn.textContent = '← Voltar ao carrinho';
             else if (ref.includes('produto')) backBtn.textContent = '← Voltar ao produto';

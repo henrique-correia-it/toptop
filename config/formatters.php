@@ -4,8 +4,10 @@
 if (!function_exists('format_money')) {
     function format_money($valor, string $simbolo = '€', string $posicao = 'prefix'): string
     {
-        $formatado = number_format((float)$valor, 2, ',', '.');
-        return $posicao === 'suffix' ? $formatado . $simbolo : $simbolo . $formatado;
+        $num = (float)$valor;
+        $sinal = $num < 0 ? '-' : '';
+        $formatado = number_format(abs($num), 2, ',', '.');
+        return $posicao === 'suffix' ? $sinal . $formatado . $simbolo : $sinal . $simbolo . $formatado;
     }
 }
 
@@ -37,6 +39,9 @@ if (!function_exists('format_time_ago')) {
             return $datetime;
         }
         $diff = $agora->getTimestamp() - $data->getTimestamp();
+        if ($diff < 0) {
+            return $data->format('d/m/Y H:i');
+        }
 
         if ($style === 'short') {
             if ($diff < 60) return 'Agora mesmo';

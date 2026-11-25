@@ -22,9 +22,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $inTx = false;
         try {
             if ($acao === 'criar') {
-                $rua = trim($_POST['rua'] ?? '');
-                $cp = trim($_POST['codigo_postal'] ?? '');
-                $loc = trim($_POST['localidade'] ?? '');
+                $rua  = trim((string)($_POST['rua'] ?? ''));
+                $cp   = trim((string)($_POST['codigo_postal'] ?? ''));
+                $loc  = trim((string)($_POST['localidade'] ?? ''));
+                $prov = trim((string)($_POST['provincia'] ?? ''));
+                $pais = strtoupper(trim((string)($_POST['pais_regiao'] ?? 'PT')));
+                if ($pais === 'UK') $pais = 'GB';
+                if (!preg_match('/^[A-Z]{2}$/', $pais)) $pais = 'PT';
+                if (!in_array($pais, ['ES', 'US', 'BR'], true)) {
+                    $prov = '';
+                }
 
                 // Verificar duplicados
                 $stmtCheck = $conn->prepare("SELECT id FROM cliente_moradas WHERE cliente_id = ? AND rua = ? AND codigo_postal = ? AND localidade = ? LIMIT 1");
@@ -36,10 +43,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $stmtCheck->close();
 
+                $dadosMorada = [
+                    'nome'          => trim((string)($_POST['nome'] ?? '')),
+                    'rua'           => $rua,
+                    'codigo_postal' => $cp,
+                    'localidade'    => $loc,
+                    'provincia'     => $prov,
+                    'pais_regiao'   => $pais,
+                ];
+
                 $conn->begin_transaction();
                 $inTx = true;
                 $principal = !empty($_POST['principal']) || count(customer_addresses($conn, (int)$cliente['id'])) === 0;
-                customer_save_address($conn, (int)$cliente['id'], $_POST, $principal);
+                customer_save_address($conn, (int)$cliente['id'], $dadosMorada, $principal);
                 $conn->commit();
                 $inTx = false;
 
@@ -76,21 +92,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($acao === 'editar') {
                 $moradaId = (int)($_POST['morada_id'] ?? 0);
                 if (!$moradaId) throw new InvalidArgumentException('Morada inválida.');
-                $rua  = trim($_POST['rua'] ?? '');
-                $cp   = trim($_POST['codigo_postal'] ?? '');
-                $loc  = trim($_POST['localidade'] ?? '');
+                $rua  = trim((string)($_POST['rua'] ?? ''));
+                $cp   = trim((string)($_POST['codigo_postal'] ?? ''));
+                $loc  = trim((string)($_POST['localidade'] ?? ''));
                 if ($rua === '' || $cp === '' || $loc === '') throw new InvalidArgumentException('Preencha a rua, código postal e localidade.');
-                $prov      = trim($_POST['provincia'] ?? '');
-                $pais      = strtoupper(trim($_POST['pais_regiao'] ?? 'PT'));
+                $prov      = trim((string)($_POST['provincia'] ?? ''));
+                $pais      = strtoupper(trim((string)($_POST['pais_regiao'] ?? 'PT')));
+                if ($pais === 'UK') $pais = 'GB';
                 if (!preg_match('/^[A-Z]{2}$/', $pais)) $pais = 'PT';
+                if (!in_array($pais, ['ES', 'US', 'BR'], true)) {
+                    $prov = '';
+                }
                 $principal = !empty($_POST['principal']) ? 1 : 0;
 
-                $stmtOwn = $conn->prepare("SELECT id FROM cliente_moradas WHERE id = ? AND cliente_id = ? LIMIT 1");
+                $stmtOwn = $conn->prepare("SELECT id, principal FROM cliente_moradas WHERE id = ? AND cliente_id = ? LIMIT 1");
                 $stmtOwn->bind_param('ii', $moradaId, $cliente['id']);
                 $stmtOwn->execute();
-                $existe = (bool)$stmtOwn->get_result()->fetch_assoc();
+                $moradaAtual = $stmtOwn->get_result()->fetch_assoc();
                 $stmtOwn->close();
-                if (!$existe) throw new InvalidArgumentException('Morada não encontrada.');
+                if (!$moradaAtual) throw new InvalidArgumentException('Morada não encontrada.');
+
+                $stmtDup = $conn->prepare("SELECT id FROM cliente_moradas WHERE cliente_id = ? AND rua = ? AND codigo_postal = ? AND localidade = ? AND id != ? LIMIT 1");
+                $stmtDup->bind_param('isssi', $cliente['id'], $rua, $cp, $loc, $moradaId);
+                $stmtDup->execute();
+                if ($stmtDup->get_result()->fetch_assoc()) {
+                    $stmtDup->close();
+                    throw new InvalidArgumentException('Já existe outra morada guardada com estes dados.');
+                }
+                $stmtDup->close();
 
                 $conn->begin_transaction();
                 $inTx = true;
@@ -103,6 +132,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt2->bind_param('ii', $cliente['id'], $moradaId);
                     $stmt2->execute();
                     $stmt2->close();
+                } elseif ((int)$moradaAtual['principal'] === 1) {
+                    // Se desmarcou a principal, promove outra morada (ou mantém esta se for a única)
+                    $stmtProm = $conn->prepare("UPDATE cliente_moradas SET principal = 1 WHERE cliente_id = ? AND id != ? ORDER BY id DESC LIMIT 1");
+                    $stmtProm->bind_param('ii', $cliente['id'], $moradaId);
+                    $stmtProm->execute();
+                    $promovida = $stmtProm->affected_rows > 0;
+                    $stmtProm->close();
+                    if (!$promovida) {
+                        $stmtKeep = $conn->prepare("UPDATE cliente_moradas SET principal = 1 WHERE id = ? AND cliente_id = ?");
+                        $stmtKeep->bind_param('ii', $moradaId, $cliente['id']);
+                        $stmtKeep->execute();
+                        $stmtKeep->close();
+                    }
                 }
                 $conn->commit();
                 $inTx = false;
@@ -112,10 +154,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             } elseif ($acao === 'apagar') {
                 $moradaId = (int)($_POST['morada_id'] ?? 0);
-                $stmt = $conn->prepare("DELETE FROM cliente_moradas WHERE id = ? AND cliente_id = ?");
-                $stmt->bind_param('ii', $moradaId, $cliente['id']);
-                $stmt->execute();
-                $stmt->close();
+                $conn->begin_transaction();
+                $inTx = true;
+
+                $stmtOwn = $conn->prepare("SELECT principal FROM cliente_moradas WHERE id = ? AND cliente_id = ? FOR UPDATE");
+                $stmtOwn->bind_param('ii', $moradaId, $cliente['id']);
+                $stmtOwn->execute();
+                $rowDel = $stmtOwn->get_result()->fetch_assoc();
+                $stmtOwn->close();
+
+                if ($rowDel) {
+                    $stmt = $conn->prepare("DELETE FROM cliente_moradas WHERE id = ? AND cliente_id = ?");
+                    $stmt->bind_param('ii', $moradaId, $cliente['id']);
+                    $stmt->execute();
+                    $stmt->close();
+
+                    if ((int)$rowDel['principal'] === 1) {
+                        $stmtProm = $conn->prepare("UPDATE cliente_moradas SET principal = 1 WHERE cliente_id = ? ORDER BY id DESC LIMIT 1");
+                        $stmtProm->bind_param('i', $cliente['id']);
+                        $stmtProm->execute();
+                        $stmtProm->close();
+                    }
+                }
+
+                $conn->commit();
+                $inTx = false;
 
                 $_SESSION['sucesso_morada'] = 'Morada removida.';
                 header('Location: /minha-conta/moradas');
@@ -343,6 +406,7 @@ function fetchAddressConfig(iso) {
         inputProv.placeholder = fb.statePh || 'Ex: ...';
     } else {
         blocoProv.style.display = 'none';
+        inputProv.value = '';
     }
 }
 
@@ -358,14 +422,21 @@ window.editarMorada = function(data) {
     document.getElementById('btn-submit-morada').textContent = 'Atualizar morada';
     document.getElementById('btn-cancelar-edicao').style.display = '';
 
-    const pais = (data.pais_regiao || 'PT').toUpperCase();
+    const paisRaw = (data.pais_regiao || 'PT').toUpperCase();
+    const pais = (paisRaw === 'UK' && ![...selectPais.options].some(o => o.value === 'UK') && [...selectPais.options].some(o => o.value === 'GB')) ? 'GB' : paisRaw;
+    if (![...selectPais.options].some(o => o.value === pais)) {
+        const optExtra = document.createElement('option');
+        optExtra.value = pais;
+        optExtra.textContent = getNomePais(pais);
+        selectPais.appendChild(optExtra);
+    }
     selectPais.value = pais;
     selectPais.dispatchEvent(new Event('change', { bubbles: true }));
 
     inputRua.value = data.rua || '';
     inputCP.value  = data.codigo_postal || '';
     inputLoc.value = data.localidade || '';
-    inputProv.value = data.provincia || '';
+    inputProv.value = (fallbacks[pais]?.hasState) ? (data.provincia || '') : '';
     document.getElementById('mor-principal').checked = !!data.principal;
 
     document.getElementById('painel-form-morada').scrollIntoView({ behavior: 'smooth', block: 'start' });

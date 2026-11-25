@@ -19,6 +19,7 @@ if (!function_exists('criar_slug')) {
         if ($conv !== false) {
             $texto = $conv;
         }
+        $texto = preg_replace('/[_\/]+/', '-', $texto);
         $texto = preg_replace('/[^a-zA-Z0-9 -]/', '', $texto);
         $texto = str_replace(' ', '-', $texto);
         $texto = strtolower($texto);

@@ -7,11 +7,14 @@ include '../config/database.php';
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true || $_SESSION['admin_role'] !== 'desenvolvedor') {
+    http_response_code(403);
     echo json_encode(['sucesso' => false, 'mensagem' => 'Acesso negado.']);
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    header('Allow: POST');
     echo json_encode(['sucesso' => false, 'mensagem' => 'Método inválido.']);
     exit;
 }

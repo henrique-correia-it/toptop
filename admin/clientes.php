@@ -18,22 +18,26 @@ $mensagem_erro    = '';
 switch ($_GET['sucesso'] ?? '') {
     case '1': $mensagem_sucesso = 'Cliente removido com sucesso.'; break;
     case '2': $mensagem_sucesso = 'Clientes removidos com sucesso.'; break;
-    case '3': $mensagem_sucesso = 'Estado do cliente atualizado.'; break;
 }
 switch ($_GET['erro'] ?? '') {
     case '1': $mensagem_erro = 'Erro ao remover o cliente.'; break;
     case 'csrf': $mensagem_erro = 'Erro de segurança. Recarregue a página.'; break;
 }
 
-$filtro_q = trim($_GET['q'] ?? '');
-$pagina   = max(1, (int)($_GET['p'] ?? 1));
-$por_pagina   = 25;
-$offset       = ($pagina - 1) * $por_pagina;
+$filtro_q      = trim($_GET['q'] ?? '');
+$filtro_estado = $_GET['estado'] ?? '';
+$pagina        = max(1, (int)($_GET['p'] ?? 1));
+$por_pagina    = 25;
 
 $where  = [];
 $params = [];
 $types  = '';
 
+if ($filtro_estado === 'ativo') {
+    $where[] = 'c.ativo = 1';
+} elseif ($filtro_estado === 'inativo') {
+    $where[] = 'c.ativo = 0';
+}
 if ($filtro_q !== '') {
     $like     = '%' . $filtro_q . '%';
     $where[]  = '(c.nome LIKE ? OR c.email LIKE ? OR c.telefone LIKE ?)';
@@ -54,13 +58,28 @@ if ($params) {
     $total = (int)$conn->query($count_sql)->fetch_row()[0];
 }
 $total_paginas = max(1, (int)ceil($total / $por_pagina));
+$pagina = min($pagina, $total_paginas);
+$offset = ($pagina - 1) * $por_pagina;
+
+$sort_map = [
+    'nome'         => 'c.nome',
+    'email'        => 'c.email',
+    'telefone'     => 'c.telefone',
+    'estado'       => 'c.ativo',
+    'encomendas'   => 'total_encomendas',
+    'data_criacao' => 'c.data_criacao',
+    'ultimo_login' => 'c.ultimo_login',
+];
+$sort_by   = isset($_GET['sort']) && array_key_exists($_GET['sort'], $sort_map) ? $_GET['sort'] : 'data_criacao';
+$sort_dir  = (isset($_GET['dir']) && strtolower((string)$_GET['dir']) === 'asc') ? 'asc' : (isset($_GET['dir']) ? 'desc' : 'desc');
+$order_sql = $sort_map[$sort_by] . ' ' . strtoupper($sort_dir) . ', c.id DESC';
 
 // Dados da página
 $sql          = "SELECT c.id, c.nome, c.email, c.telefone, c.ativo, c.aceita_marketing,
                         c.data_criacao, c.ultimo_login,
                         (SELECT COUNT(*) FROM encomendas e WHERE e.cliente_id = c.id) AS total_encomendas
                  FROM clientes c $where_sql
-                 ORDER BY c.data_criacao DESC
+                 ORDER BY {$order_sql}
                  LIMIT ? OFFSET ?";
 $params_page  = array_merge($params, [$por_pagina, $offset]);
 $types_page   = $types . 'ii';
@@ -72,37 +91,38 @@ $stmt->close();
 ?>
 
 <main class="dashboard-container animate-entry">
-<script>
-    if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
-    window.scrollTo(0, 0);
-</script>
 
 <?= ui_page_header('Contas de Clientes', [
     'layout'     => 'admin',
     'back_url'   => '/admin',
     'back_title' => 'Painel',
-    'actions'    => ui_badge($total . ' conta' . ($total !== 1 ? 's' : ''), 'neutral'),
 ]) ?>
 
-<?php if ($mensagem_sucesso): ?>
-    <div style="max-width:1200px;margin:0 auto 20px;"><?= ui_alert($mensagem_sucesso, 'success') ?></div>
-<?php elseif ($mensagem_erro): ?>
-    <div style="max-width:1200px;margin:0 auto 20px;"><?= ui_alert($mensagem_erro, 'danger') ?></div>
+<?php if ($mensagem_sucesso !== '' || $mensagem_erro !== ''): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof mostrarPopup === 'function') {
+        mostrarPopup(
+            <?php echo json_encode($mensagem_sucesso !== '' ? $mensagem_sucesso : $mensagem_erro, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>,
+            <?php echo json_encode($mensagem_sucesso !== '' ? 'sucesso' : 'erro', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>
+        );
+    }
+    if (window.history && typeof window.history.replaceState === 'function') {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('sucesso');
+        url.searchParams.delete('erro');
+        window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+    }
+});
+</script>
 <?php endif; ?>
 
-<div class="prod-toolbar">
-    <div class="prod-toolbar-left"></div>
-    <div class="prod-toolbar-right">
-        <form method="GET" style="display:flex;align-items:center;gap:10px;">
-            <?= ui_search_input('q', 'Nome, email ou telefone...', ['value' => $filtro_q]) ?>
-        </form>
-        <?= ui_select_mode_button() ?>
-    </div>
-</div>
+<?= ui_table_toolbar([
+    'filter' => ['name' => 'estado', 'options' => ['' => 'Todos os estados', 'ativo' => 'Ativos', 'inativo' => 'Inativos'], 'value' => $filtro_estado, 'title' => 'Filtrar por estado'],
+    'search' => ['name' => 'q', 'value' => $filtro_q],
+]) ?>
 
 <?php
-echo ui_selection_bar();
-
 $clienteRows = [];
 foreach ($clientes as $c) {
     $acoes = '<div class="acoes-tabela"><form action="apagar_cliente_admin.php" method="POST" style="margin:0;">'
@@ -121,36 +141,58 @@ foreach ($clientes as $c) {
         ])
         . '</form></div>';
 
-    $badgeAtivo = '<span class="badge ' . ($c['ativo'] ? 'badge-verde' : 'badge-cinzento') . ' badge-ativo-toggle"'
-        . ' data-id="' . (int)$c['id'] . '" data-ativo="' . (int)$c['ativo'] . '"'
-        . ' title="Clique para ' . ($c['ativo'] ? 'suspender' : 'ativar') . '"'
-        . ' style="cursor:pointer;user-select:none;">' . ($c['ativo'] ? 'Ativo' : 'Inativo') . '</span>';
+    $badgeAtivo = ui_badge($c['ativo'] ? 'Ativo' : 'Inativo', $c['ativo'] ? 'success' : 'neutral', [
+        'tag'         => 'button',
+        'interactive' => true,
+        'class'       => 'badge-ativo-toggle',
+        'title'       => 'Clique para ' . ($c['ativo'] ? 'suspender' : 'ativar'),
+        'attrs'       => [
+            'data-id'    => (int)$c['id'],
+            'data-ativo' => (int)$c['ativo'],
+        ],
+    ]);
 
     $clienteRows[] = [
         'attrs' => ['data-id' => (int)$c['id'], 'data-nome' => $c['nome']],
         'cells' => [
-            ['style' => 'font-weight:600;color:var(--cor-slate-800);', 'html' => ui_e($c['nome'])],
-            ['style' => 'color:var(--cor-slate-500);', 'html' => ui_e($c['email'])],
-            ['style' => 'color:var(--cor-slate-500);', 'html' => ui_e($c['telefone'] ?? '') ?: '<span style="color:var(--cor-slate-300);">—</span>'],
+            ui_e($c['nome']),
+            ui_e($c['email']),
+            ui_e($c['telefone'] ?? '') ?: '-',
             $badgeAtivo,
-            ['style' => 'color:' . ($c['total_encomendas'] > 0 ? 'var(--cor-slate-800)' : 'var(--cor-slate-400)') . ';font-weight:' . ($c['total_encomendas'] > 0 ? '600' : '400') . ';', 'html' => (string)(int)$c['total_encomendas']],
-            ['style' => 'color:var(--cor-slate-500);font-size:0.85rem;', 'html' => date('d/m/Y', strtotime($c['data_criacao']))],
-            ['style' => 'color:var(--cor-slate-500);font-size:0.85rem;', 'html' => $c['ultimo_login'] ? date('d/m/Y H:i', strtotime($c['ultimo_login'])) : '<span style="color:var(--cor-slate-300);">—</span>'],
+            (string)(int)$c['total_encomendas'],
+            date('d/m/Y', strtotime($c['data_criacao'])),
+            $c['ultimo_login'] ? date('d/m/Y H:i', strtotime($c['ultimo_login'])) : '-',
             $acoes,
         ],
     ];
 }
 
-echo ui_table(['Nome', 'Email', 'Telefone', 'Estado', 'Encomendas', 'Registado em', 'Último login', 'Ações'], $clienteRows, [
+echo ui_table([
+    ['label' => 'Nome', 'sort' => 'nome'],
+    ['label' => 'Email', 'sort' => 'email'],
+    ['label' => 'Telefone', 'sort' => 'telefone'],
+    ['label' => 'Estado', 'sort' => ['key' => 'estado', 'default_dir' => 'desc']],
+    ['label' => 'Encomendas', 'sort' => ['key' => 'encomendas', 'default_dir' => 'desc']],
+    ['label' => 'Registado em', 'sort' => ['key' => 'data_criacao', 'default_dir' => 'desc']],
+    ['label' => 'Último login', 'sort' => ['key' => 'ultimo_login', 'default_dir' => 'desc']],
+    'Ações',
+], $clienteRows, [
     'selectable'        => true,
     'sel_hidden_inline' => true,
     'wrap_id'           => 'table-wrapper',
     'wrap_style'        => 'max-width:1200px;margin:0 auto;',
     'empty_message'     => 'Nenhum cliente encontrado.',
+    'sort'              => ['by' => $sort_by, 'dir' => $sort_dir, 'page_param' => 'p'],
 ]);
 ?>
 
-<?= ui_pagination($pagina, $total_paginas, fn($i) => '?' . http_build_query(array_filter(['q' => $filtro_q, 'p' => $i > 1 ? $i : null], fn($v) => $v !== '' && $v !== null))) ?>
+<?= ui_pagination($pagina, $total_paginas, fn($i) => '?' . http_build_query(array_filter([
+    'estado' => $filtro_estado,
+    'q'      => $filtro_q,
+    'sort'   => isset($_GET['sort']) ? $sort_by : null,
+    'dir'    => isset($_GET['sort']) ? $sort_dir : null,
+    'p'      => $i > 1 ? $i : null,
+], fn($v) => $v !== '' && $v !== null))) ?>
 
 </main>
 
@@ -159,102 +201,46 @@ echo ui_table(['Nome', 'Email', 'Telefone', 'Estado', 'Encomendas', 'Registado e
 <script>
 const CSRF = '<?php echo $_SESSION['csrf_token']; ?>';
 document.addEventListener('DOMContentLoaded', function () {
-    const btnSelMode  = document.getElementById('btn-sel-mode');
-    const selModeBar  = document.getElementById('sel-mode-bar');
-    const selCountEl  = document.getElementById('sel-count');
-    const btnSelAll   = document.getElementById('btn-sel-all');
-    const bulkBar     = document.getElementById('bulk-bar');
-    const bulkCountEl = document.getElementById('bulk-count');
-    const bulkCancel  = document.getElementById('bulk-cancel');
-    const bulkDel     = document.getElementById('bulk-del');
-    const tableWrap   = document.getElementById('table-wrapper');
-    let selMode = false, selected = new Set();
-
-    function getRows() { return [...document.querySelectorAll('.admin-table tbody tr[data-id]')]; }
-    function updateUI() {
-        const n = selected.size, total = getRows().length;
-        selCountEl.textContent  = n;
-        bulkCountEl.textContent = n;
-        btnSelAll.textContent   = (n === total && total > 0) ? 'Desselecionar todos' : 'Selecionar todos';
-        bulkBar.classList.toggle('visible', n > 0);
-    }
-
-    btnSelMode.addEventListener('click', () => {
-        selMode = !selMode;
-        tableWrap.classList.toggle('sel-mode', selMode);
-        btnSelMode.classList.toggle('active', selMode);
-        selModeBar.classList.toggle('visible', selMode);
-        if (!selMode) { selected.clear(); getRows().forEach(r => r.classList.remove('selecionado')); }
-        updateUI();
-    });
-
-    bulkCancel.addEventListener('click', () => btnSelMode.click());
-
-    document.querySelector('.admin-table tbody')?.addEventListener('click', function (e) {
-        if (!selMode) return;
-        const tr = e.target.closest('tr[data-id]');
-        if (!tr) return;
-        const id = tr.dataset.id;
-        if (selected.has(id)) { selected.delete(id); tr.classList.remove('selecionado'); }
-        else                   { selected.add(id);    tr.classList.add('selecionado'); }
-        updateUI();
-    });
-
-    btnSelAll.addEventListener('click', () => {
-        const rows  = getRows();
-        const allSel = rows.every(r => selected.has(r.dataset.id));
-        rows.forEach(r => {
-            if (allSel) { selected.delete(r.dataset.id); r.classList.remove('selecionado'); }
-            else        { selected.add(r.dataset.id);    r.classList.add('selecionado'); }
-        });
-        updateUI();
-    });
-
-    bulkDel.addEventListener('click', () => {
-        const ids = [...selected];
-        if (!ids.length) return;
-        mostrarModalConfirmacao(
-            'Apagar Clientes',
-            `Apagar permanentemente ${ids.length} conta(s) de cliente? As encomendas associadas ficam guardadas.`,
-            () => {
-                const form      = document.getElementById('form-delete-clientes');
-                const container = document.getElementById('form-ids');
-                container.innerHTML = '';
-                ids.forEach(id => {
-                    const inp = document.createElement('input');
-                    inp.type = 'hidden'; inp.name = 'ids[]'; inp.value = id;
-                    container.appendChild(inp);
-                });
-                form.submit();
-            }
-        );
+    const bulkSel = window.initAdminBulkSelection({
+        formId: 'form-delete-clientes',
+        confirmTitle: 'Apagar Clientes',
+        confirmMessage: ids => `Apagar permanentemente ${ids.length} conta(s) de cliente? As encomendas associadas ficam guardadas.`,
     });
 
     // Toggle ativo
     document.querySelectorAll('.badge-ativo-toggle').forEach(function (badge) {
         badge.addEventListener('click', function (e) {
-            if (selMode) return;
+            if ((bulkSel && bulkSel.isSelMode()) || this.dataset.loading === '1') return;
             e.stopPropagation();
             const id        = this.dataset.id;
-            const novoAtivo = parseInt(this.dataset.ativo) ? 0 : 1;
+            const novoAtivo = parseInt(this.dataset.ativo, 10) ? 0 : 1;
+            this.dataset.loading = '1';
+            this.style.opacity = '0.6';
             fetch('/admin/ajax_toggle_cliente_ativo.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ csrf_token: CSRF, id: id, ativo: novoAtivo })
             })
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
             .then(data => {
                 if (data.sucesso) {
                     this.dataset.ativo  = novoAtivo;
                     this.textContent    = novoAtivo ? 'Ativo' : 'Inativo';
-                    this.className      = 'badge ' + (novoAtivo ? 'badge-verde' : 'badge-cinzento') + ' badge-ativo-toggle';
+                    this.className      = 'ui-badge ' + (novoAtivo ? 'ui-badge--success' : 'ui-badge--neutral') + ' ui-badge--interactive badge-ativo-toggle';
                     this.title          = 'Clique para ' + (novoAtivo ? 'suspender' : 'ativar');
                     mostrarPopup(data.mensagem, 'sucesso');
                 } else {
                     mostrarPopup(data.mensagem || 'Erro', 'erro');
                 }
             })
-            .catch(() => mostrarPopup('Erro de ligação', 'erro'));
+            .catch(() => mostrarPopup('Erro de ligação', 'erro'))
+            .finally(() => {
+                delete this.dataset.loading;
+                this.style.opacity = '';
+            });
         });
     });
 });

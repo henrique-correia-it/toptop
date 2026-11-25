@@ -9,15 +9,10 @@ error_reporting(E_ALL);
 ini_set('log_errors', '1');
 
 require_once __DIR__ . '/logger.php';
+require_once __DIR__ . '/env.php';
 
-$env_path = dirname(__DIR__) . '/.env';
-if (!is_file($env_path)) {
-    http_response_code(503);
-    die('Servico temporariamente indisponivel.');
-}
-
-$env_vars = parse_ini_file($env_path, false, INI_SCANNER_RAW);
-if ($env_vars === false) {
+$env_vars = tt_load_env();
+if (empty($env_vars)) {
     http_response_code(503);
     die('Servico temporariamente indisponivel.');
 }
@@ -34,11 +29,12 @@ if ($host === '' || $user === '' || $dbname === '' || $base_url === '') {
     die('Servico temporariamente indisponivel.');
 }
 
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 try {
     $conn = new mysqli($host, $user, $password, $dbname);
 } catch (\mysqli_sql_exception $e) {
     log_sql('Falha na ligacao a base de dados (Excecao): ' . $e->getMessage(), 'database.php');
-    error_log('Erro na ligacao a base de dados: ' . $e->getMessage());
     if (php_sapi_name() === 'cli') {
         die('Erro na ligacao a base de dados: ' . $e->getMessage() . "\n");
     }
@@ -48,7 +44,6 @@ try {
 
 if ($conn->connect_error) {
     log_sql('Falha na ligacao a base de dados: ' . $conn->connect_error, 'database.php');
-    error_log('Erro na ligacao a base de dados: ' . $conn->connect_error);
     if (php_sapi_name() === 'cli') {
         die('Erro na ligacao a base de dados: ' . $conn->connect_error . "\n");
     }

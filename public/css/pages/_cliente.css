@@ -1,5 +1,5 @@
 /* =============================================
-   ÁREA DE CLIENTE — DESIGN PREMIUM
+   ÃREA DE CLIENTE â€” DESIGN PREMIUM
    ============================================= */
 
 /* --- BASE --- */
@@ -53,7 +53,7 @@ main.cliente-area-page {
     gap: 14px;
     margin-top: 18px;
     font-size: 0.86rem;
-    font-weight: 650;
+    font-weight: 600;
 }
 
 .cliente-auth-links a,
@@ -121,26 +121,67 @@ main.cliente-area-page {
     position: absolute;
     top: 0;
     left: 0;
-    height: 20px;
-    width: 20px;
+    height: 22px;
+    width: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background-color: var(--cor-branco);
-    border: 2px solid var(--cor-slate-200);
-    border-radius: 6px;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1.5px solid var(--cor-slate-300);
+    border-radius: 7px;
+    box-sizing: border-box;
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cliente-custom-check::after {
+    content: "";
+    display: block;
+    width: 13px;
+    height: 13px;
+    background-color: var(--cor-preto-suave);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    opacity: 0;
+    transform: scale(0.3) rotate(-14deg);
+    transition: opacity 0.16s ease, transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .cliente-check:hover input ~ .cliente-custom-check {
-    border-color: var(--cor-preto-suave);
     background-color: var(--cor-slate-50);
+    border-color: var(--cor-preto-suave);
+    transform: scale(1.06);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.cliente-check:active input ~ .cliente-custom-check {
+    transform: scale(0.92);
 }
 
 .cliente-check input:checked ~ .cliente-custom-check {
-    background-color: var(--cor-preto-suave);
+    background-color: var(--cor-branco);
     border-color: var(--cor-preto-suave);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
-    background-size: 13px;
-    background-position: center;
-    background-repeat: no-repeat;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.cliente-check input:checked ~ .cliente-custom-check::after {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+}
+
+.cliente-check:hover input:checked ~ .cliente-custom-check {
+    background-color: var(--cor-slate-50);
+    border-color: #000000;
+    transform: scale(1.06);
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12);
 }
 
 /* --- PROFILE CHOICE BUTTONS --- */
@@ -195,7 +236,7 @@ main.cliente-area-page {
 .perfil-choice-form .choice-content strong {
     color: var(--cor-gray-900);
     font-size: 0.98rem;
-    font-weight: 750;
+    font-weight: 700;
     letter-spacing: -0.01em;
 }
 
@@ -244,7 +285,7 @@ main.cliente-area-page {
     /* Identical styles as defined above */
 }
 
-/* --- BOTÕES TIPO PÍLULA (PADRÃO SITE) --- */
+/* --- BOTÃ•ES TIPO PÃLULA (PADRÃƒO SITE) --- */
 .btn-premium {
     display: inline-flex;
     align-items: center;
@@ -282,7 +323,7 @@ main.cliente-area-page {
 }
 
 /* =============================================
-   LAYOUT PRINCIPAL DA ÁREA DE CLIENTE
+   LAYOUT PRINCIPAL DA ÃREA DE CLIENTE
    ============================================= */
 
 .cliente-shell {
@@ -327,7 +368,7 @@ main.cliente-area-page {
     background: linear-gradient(135deg, var(--cor-gray-900), #374151);
     color: var(--cor-branco);
     font-size: 1.2rem;
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: -0.02em;
 }
 
@@ -412,7 +453,7 @@ main.cliente-area-page {
 }
 
 /* =============================================
-   CONTEÚDO PRINCIPAL
+   CONTEÃšDO PRINCIPAL
    ============================================= */
 
 .cliente-content {
@@ -427,7 +468,7 @@ main.cliente-area-page {
     margin: 0;
     color: var(--cor-slate-900);
     font-size: clamp(1.7rem, 3vw, 2.2rem);
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: -0.03em;
     line-height: 1.1;
 }
@@ -443,7 +484,7 @@ main.cliente-area-page {
     margin-bottom: 0;
 }
 
-/* --- CARDS SUMÁRIO --- */
+/* --- CARDS SUMÃRIO --- */
 .cliente-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -515,7 +556,7 @@ main.cliente-area-page {
     font-size: 0.82rem;
 }
 
-/* --- PAINÉIS --- */
+/* --- PAINÃ‰IS --- */
 .cliente-panel {
     margin-bottom: 24px;
     padding: 0;
@@ -616,7 +657,7 @@ main.cliente-area-page {
     color: var(--cor-gray-900);
 }
 
-/* Painéis sem head  — padding direto */
+/* PainÃ©is sem head  â€” padding direto */
 .cliente-panel>h2:first-child {
     padding: 20px 24px 16px;
     border-bottom: 1px solid var(--cor-slate-100);
@@ -675,7 +716,7 @@ main.cliente-area-page {
     background: var(--cor-slate-50);
     color: #667085;
     font-size: 0.72rem;
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: 0.06em;
     text-align: center;
     text-transform: uppercase;
@@ -730,7 +771,7 @@ main.cliente-area-page {
 .order-delivery {
     color: var(--cor-slate-600);
     font-size: 0.84rem;
-    font-weight: 650;
+    font-weight: 600;
     text-transform: capitalize;
 }
 
@@ -833,7 +874,7 @@ main.cliente-area-page {
         content: attr(data-label);
         color: var(--cor-slate-400);
         font-size: 0.72rem;
-        font-weight: 800;
+        font-weight: 700;
         letter-spacing: 0.05em;
         text-align: left;
         text-transform: uppercase;
@@ -1056,7 +1097,7 @@ main.cliente-area-page {
     background: var(--cor-gray-900);
     color: var(--cor-branco);
     font-size: 0.68rem;
-    font-weight: 800;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -1071,7 +1112,7 @@ main.cliente-area-page {
 .address-details strong {
     color: var(--cor-gray-900);
     font-size: 1.05rem;
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .address-details span {
@@ -1098,7 +1139,7 @@ main.cliente-area-page {
     font-weight: 600;
 }
 
-/* --- AÇÕES INLINE --- */
+/* --- AÃ‡Ã•ES INLINE --- */
 .cliente-inline-actions {
     display: flex;
     align-items: center;
@@ -1118,7 +1159,7 @@ main.cliente-area-page {
     padding: 8px 16px;
 }
 
-/* Botões .btn-edit-single e .btn-del-single herdam diretamente de components/_admin-buttons.css (DRY) */
+/* BotÃµes .btn-edit-single e .btn-del-single herdam diretamente de components/_admin-buttons.css (DRY) */
 
 @media (max-width: 480px) {
     .cliente-address-list {
@@ -1127,7 +1168,7 @@ main.cliente-area-page {
     }
 }
 
-/* --- FORMULÁRIOS --- */
+/* --- FORMULÃRIOS --- */
 .cliente-form-wrap {
     padding: 24px;
 }
@@ -1181,17 +1222,22 @@ main.cliente-area-page {
 
 .cliente-form-grid .cliente-check,
 .cliente-form-grid .button,
+.cliente-form-grid .ui-btn,
 .cliente-form-grid input[type="submit"],
+.cliente-form-grid button[type="submit"],
 .cliente-form-grid .form-morada-actions {
     grid-column: 1 / -1;
 }
 
 .cliente-form-grid > .button:not(.voltar-btn),
-.cliente-form-grid input[type="submit"] {
+.cliente-form-grid > .ui-btn:not(.voltar-btn),
+.cliente-form-grid input[type="submit"],
+.cliente-form-grid > button[type="submit"] {
     width: 100%;
 }
 
-.cliente-panel-danger .cliente-form-wrap > .button {
+.cliente-panel-danger .cliente-form-wrap > .button,
+.cliente-panel-danger .cliente-form-wrap > .ui-btn {
     width: 100%;
 }
 
@@ -1279,7 +1325,7 @@ main.cliente-area-page {
     font-weight: 700;
 }
 
-/* --- LINK BOTÃO VAZIO (empty state) --- */
+/* --- LINK BOTÃƒO VAZIO (empty state) --- */
 
 /* --- RESPONSIVO --- */
 @media (max-width: 900px) {
@@ -1348,7 +1394,7 @@ main.cliente-area-page {
         min-height: 36px;
         padding: 0 16px;
         font-size: 0.8rem;
-        font-weight: 750;
+        font-weight: 700;
         justify-content: center;
         white-space: nowrap;
         border-radius: 99px;

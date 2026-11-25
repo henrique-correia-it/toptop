@@ -3,10 +3,10 @@ $titulo_pagina = 'Trocas e Devoluções';
 $descricao_pagina = 'Política de trocas da TopTop: prazos, condições e como proceder. Trocas simples até 6 dias após a receção da tua encomenda.';
 include 'templates/header.php';
 
-// Modo de edição global (apenas superadmin/desenvolvedor com edição ativada — definido no header.php).
+// Modo de edição global (definido via is_global_edit_mode() no header.php).
 $isGlobalEditMode = $isAdminHeader ?? false;
 
-// Conteúdo padrão (seed) — usado enquanto não houver conteúdo guardado em BD.
+// Conteúdo padrão (seed) - usado enquanto não houver conteúdo guardado em BD.
 $trocas_default = [
     'kicker' => 'Apoio ao Cliente',
     'titulo' => 'Política de Trocas',
@@ -56,7 +56,7 @@ $trocas['cards']  = (isset($trocas['cards']) && is_array($trocas['cards'])) ? $t
 $ed = $isGlobalEditMode;
 
 // Conjunto de ícones disponíveis (chave => SVG). Guardamos só a CHAVE em BD e
-// resolvemos aqui no servidor — nunca aceitamos SVG vindo do cliente (evita XSS).
+// resolvemos aqui no servidor - nunca aceitamos SVG vindo do cliente (evita XSS).
 $troca_icones = [
     'exchange' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>',
     'clock'    => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
@@ -186,7 +186,7 @@ $troca_icone = function ($chave) use ($troca_icones, $troca_icone_default) {
         if (aGravar) { agendarGravacao(); return; } // gravação a decorrer, reagenda
         aGravar = true;
         try {
-            const res = await fetch('/dev/ajax_save_trocas.php', {
+            const res = await fetch('/admin/ajax_save_trocas.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ conteudo, csrf_token: TROCA_CSRF }),

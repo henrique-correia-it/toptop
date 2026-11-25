@@ -13,7 +13,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 999;
+    z-index: var(--z-fab, 400);
     opacity: 0;
     visibility: hidden;
     transform: translateY(20px) scale(0.8);
@@ -60,7 +60,7 @@ body.app-panel-open .voltar-ao-topo-btn.ativo {
     transition-duration: 0.1s;
 }
 
-/* Animação de pulso suave enquanto visível */
+/* AnimaÃ§Ã£o de pulso suave enquanto visÃ­vel */
 @keyframes pulse-ring {
     0% {
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 0 0 0 rgba(0, 0, 0, 0.12);

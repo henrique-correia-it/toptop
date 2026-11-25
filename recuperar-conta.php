@@ -42,8 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         '{nome_cliente}' => htmlspecialchars($customer['nome'], ENT_QUOTES, 'UTF-8'),
                         '{link_recuperacao}' => $url
                     ]);
+                    log_seguranca("Pedido de recuperação de palavra-passe (cliente) para {$email}.", 'recuperar-conta.php');
                 } catch (Throwable $e) {
-                    log_app($e->getMessage(), 'ERROR', 'recuperar-conta.php');
+                    log_exception($e, 'recuperar-conta.php');
                 }
             }
 
@@ -69,8 +70,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         '{nome_admin}' => htmlspecialchars($admin['username'], ENT_QUOTES, 'UTF-8'),
                         '{link_recuperacao}' => $link_recuperacao
                     ]);
+                    log_seguranca("Pedido de recuperação de senha (admin:{$admin['username']}) para {$email}.", 'recuperar-conta.php');
                 } catch (Throwable $e) {
-                    log_app($e->getMessage(), 'ERROR', 'recuperar-conta.php (admin)');
+                    log_exception($e, 'recuperar-conta.php (admin)');
                 }
             }
 
@@ -88,7 +90,7 @@ include __DIR__ . '/templates/header.php';
         <div class="login-card">
             <h2>Recuperar Conta</h2>
             <?php if ($tipo === 'sucesso'): ?>
-                <?php echo ui_alert('Verifica a tua caixa de entrada (e pasta de spam) para o link de recuperação.', 'success'); ?>
+                <p class="cliente-auth-copy" style="text-align:center;">Verifica a tua caixa de entrada (e a pasta de spam) e segue o link enviado para redefinir a palavra-passe.</p>
             <?php else: ?>
                 <?php if ($tipo === 'erro' && $mensagem !== ''): ?>
                     <?php echo ui_alert($mensagem, 'danger'); ?>
@@ -100,7 +102,7 @@ include __DIR__ . '/templates/header.php';
                         <label for="email">Email</label>
                         <?php echo ui_input('email', ['type' => 'email', 'id' => 'email', 'required' => true, 'autocomplete' => 'email', 'placeholder' => 'O seu email']); ?>
                     </div>
-                    <?php echo ui_button('Enviar link', ['type' => 'submit', 'variant' => 'primary', 'full' => true]); ?>
+                    <?php echo ui_button('Enviar link', ['type' => 'submit', 'class' => 'button add-btn', 'full' => true]); ?>
                 </form>
             <?php endif; ?>
 
@@ -111,16 +113,14 @@ include __DIR__ . '/templates/header.php';
     </div>
 </main>
 
+<?php if ($tipo === 'sucesso' && $mensagem !== ''): ?>
 <script>
-<?php if (!empty($mensagem) && $tipo === 'erro'): ?>
-document.addEventListener('DOMContentLoaded', function() {
-    mostrarPopup(<?php echo json_encode($mensagem); ?>, 'erro');
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof mostrarPopup === 'function') {
+        mostrarPopup(<?php echo json_encode($mensagem, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>, 'sucesso');
+    }
 });
-<?php elseif (!empty($mensagem) && $tipo === 'sucesso'): ?>
-document.addEventListener('DOMContentLoaded', function() {
-    mostrarPopup(<?php echo json_encode($mensagem); ?>, 'sucesso');
-});
-<?php endif; ?>
 </script>
+<?php endif; ?>
 
 <?php include __DIR__ . '/templates/footer.php'; ?>

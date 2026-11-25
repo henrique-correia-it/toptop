@@ -1,6 +1,6 @@
-/* ── ADMIN UI COMPONENTS (SHARED) ── */
+/* â”€â”€ ADMIN UI COMPONENTS (SHARED) â”€â”€ */
 
-/* ── Sistema unificado de badges / pills ── */
+/* â”€â”€ Sistema unificado de badges / pills â”€â”€ */
 .badge,
 .badge-status {
     display: inline-flex;
@@ -15,7 +15,7 @@
     white-space: nowrap;
 }
 
-/* Variantes de cor genéricas */
+/* Variantes de cor genÃ©ricas */
 .badge-verde    { background: var(--cor-sucesso-bg); color: #15803d; border-color: #dcfce7; }
 .badge-vermelho { background: var(--cor-perigo-bg); color: #b91c1c; border-color: #fee2e2; }
 .badge-azul     { background: #eff6ff; color: #1d4ed8; border-color: #dbeafe; }
@@ -25,7 +25,7 @@
 .badge-cinzento { background: var(--cor-slate-50); color: var(--cor-slate-600); border-color: var(--cor-slate-200); }
 .badge-dourado  { background: #fefce8; color: #a16207; border-color: #fef08a; }
 
-/* Visibilidade (toggle em admin_produtos — classes mantidas para compat. JS) */
+/* Visibilidade (toggle em admin_produtos â€” classes mantidas para compat. JS) */
 .badge.visivel, .badge-status.visivel { background: var(--cor-sucesso-bg); color: #15803d; border-color: #dcfce7; }
 .badge.oculto,  .badge-status.oculto  { background: var(--cor-slate-50); color: var(--cor-slate-600); border-color: var(--cor-slate-200); }
 
@@ -45,142 +45,117 @@
 }
 
 
-/* Barras de Seleção e Ações em Massa (Bulk) */
-.sel-mode-bar {
-    max-width: 1200px;
-    margin: 0 auto 14px;
-    display: none;
-    align-items: center;
-    gap: 12px;
-    background: #eff6ff;
-    border: 1.5px solid #bfdbfe;
-    border-radius: 10px;
-    padding: 10px 16px;
-    font-size: .85rem;
-    color: #1e40af;
-    font-weight: 500;
-}
-.sel-mode-bar.visible { display: flex; }
-
-.btn-sel-all {
-    background: var(--cor-branco);
-    color: var(--cor-info);
-    border: 1px solid #bfdbfe;
-    padding: 7px 14px;
-    border-radius: 8px;
-    font-size: 0.7rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    line-height: 1;
-}
-
-.btn-sel-all:hover {
-    background: var(--cor-info);
-    color: var(--cor-branco);
-    border-color: var(--cor-info);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-    transform: translateY(-1px);
-}
-
-.btn-sel-all:active {
-    transform: translateY(0);
+/* Barras de Seleção e Ações em Massa (Bulk) - unificadas na barra flutuante inferior */
+.sel-mode-bar,
+.sel-mode-bar.visible {
+    display: none !important;
 }
 
 .bulk-bar {
-    position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%);
-    background: var(--cor-preto); color: var(--cor-branco);
-    border-radius: 18px;
-    padding: 12px 24px;
-    display: flex; align-items: center; gap: 20px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-    transition: bottom .3s cubic-bezier(.34,1.56,.64,1);
-    z-index: 500;
-    white-space: nowrap;
-    min-width: 320px;
-    border: 1px solid rgba(255,255,255,0.1);
-}
-.bulk-bar.visible { bottom: 30px; }
-.bulk-bar-spacer { flex: 1; }
-
-/* ── Checkbox de seleção (partilhado) ── */
-.log-check-circle {
-    width: 20px; height: 20px; border-radius: 50%;
-    border: 2px solid var(--cor-slate-300);
-    display: inline-flex; align-items: center; justify-content: center;
-    transition: all 0.2s; vertical-align: middle;
-}
-.log-check-circle svg { width: 12px; height: 12px; color: var(--cor-branco); opacity: 0; }
-
-/* ── Sel-mode genérico para todas as tabelas com .table-wrapper ── */
-.table-wrapper .col-sel                  { display: none; width: 40px; }
-.table-wrapper.sel-mode .col-sel         { display: table-cell !important; }
-.table-wrapper.sel-mode tbody tr[data-id]{ cursor: pointer; }
-.table-wrapper.sel-mode tbody tr[data-id]:hover td { background: #f0f7ff; }
-.table-wrapper.sel-mode tbody tr.selecionado td    { background: #dbeafe; }
-.table-wrapper.sel-mode .acoes-tabela    { pointer-events: none; opacity: .25; }
-.table-wrapper.sel-mode tr.selecionado .log-check-circle     { background: #3b82f6; border-color: #3b82f6; }
-.table-wrapper.sel-mode tr.selecionado .log-check-circle svg { opacity: 1; }
-
-/* ── Input de pesquisa partilhado (toolbar de todas as páginas admin) ── */
-.search-input-wrap {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-}
-.search-input-wrap .search-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--cor-slate-400);
-    pointer-events: none;
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translate(-50%, 120px);
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    color: var(--cor-slate-800);
+    border-radius: 16px;
+    padding: 10px 14px 10px 18px;
     display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.14), 0 2px 6px rgba(15, 23, 42, 0.06);
+    transition: transform .28s cubic-bezier(.34,1.56,.64,1), opacity .22s ease;
+    opacity: 0;
+    pointer-events: none;
+    z-index: var(--z-fab, 400);
+    white-space: nowrap;
+    border: 1px solid var(--cor-slate-200);
 }
-.search-input-toolbar {
-    height: 44px;
-    padding: 0 18px 0 40px;
-    border-radius: 99px;
-    border: 1px solid var(--cor-borda-subtil);
-    background: var(--cor-branco);
-    font-family: 'Inter', sans-serif;
+.bulk-bar.visible { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+.bulk-bar-spacer { width: 6px; flex: 1; }
+
+.bulk-bar-count {
     font-size: 0.85rem;
     font-weight: 500;
-    color: var(--cor-texto);
-    box-sizing: border-box;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    min-width: 240px;
+    color: var(--cor-slate-600);
 }
-.search-input-toolbar:focus {
-    outline: none;
-    border-color: var(--cor-preto-suave);
-    box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.06);
+.bulk-bar-count #bulk-count {
+    font-weight: 700;
+    color: var(--cor-preto);
 }
-.search-input-toolbar::placeholder { color: var(--cor-slate-400); }
-/* remove o X nativo do type=search em webkit */
-.search-input-toolbar::-webkit-search-cancel-button { -webkit-appearance: none; }
 
-/* Checkboxes Customizados em Tabelas */
-.prod-foto-wrap { position: relative; display: inline-block; }
-.prod-check-badge {
-    display: none;
-    position: absolute; top: -5px; left: -5px;
-    width: 20px; height: 20px;
-    background: var(--cor-slate-200); border-radius: 50%;
-    border: 2px solid var(--cor-branco);
-    align-items: center; justify-content: center;
-    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+/* ── Sel-mode unificado para todas as tabelas (sem colunas extras nem bolinhas, zero layout shift) ── */
+.table-wrapper.sel-mode tbody tr[data-id] {
+    cursor: pointer;
+    user-select: none;
 }
-.prod-check-badge svg { width: 11px; height: 11px; color: var(--cor-branco); opacity: 0; }
-.sel-mode .prod-check-badge { display: flex; }
-.sel-mode tr.selecionado .prod-check-badge { background: #3b82f6; }
-.sel-mode tr.selecionado .prod-check-badge svg { opacity: 1; }
+.table-wrapper.sel-mode tbody tr[data-id] td {
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.table-wrapper.sel-mode tbody tr[data-id]:hover td {
+    background: #f0f7ff;
+}
+.table-wrapper.sel-mode tbody tr[data-id]:hover td:first-child {
+    box-shadow: inset 3px 0 0 #93c5fd;
+}
+.table-wrapper.sel-mode tbody tr.selecionado td {
+    background: #dbeafe !important;
+}
+.table-wrapper.sel-mode tbody tr.selecionado td:first-child {
+    box-shadow: inset 4px 0 0 #2563eb;
+}
+.table-wrapper.sel-mode .acoes-tabela {
+    pointer-events: none;
+    opacity: .25;
+}
+
+/* Foto de produto em tabela */
+.prod-foto-wrap { position: relative; display: inline-block; }
 
 /* Bloqueio de scroll ao abrir modal */
 .scroll-lock { overflow: hidden !important; }
+
+@media (max-width: 768px) {
+    .bulk-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+        gap: 10px 8px;
+        min-width: 0;
+        width: calc(100% - 24px);
+        max-width: 420px;
+        padding: 12px 14px;
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        border-radius: 18px;
+        white-space: normal;
+    }
+    .bulk-bar-spacer {
+        display: none;
+    }
+    .bulk-bar-count {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: start;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+    .bulk-bar__all {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: end;
+    }
+    .bulk-bar__cancel {
+        grid-column: 1;
+        grid-row: 2;
+        width: 100%;
+    }
+    .bulk-bar__action {
+        grid-column: 2;
+        grid-row: 2;
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}

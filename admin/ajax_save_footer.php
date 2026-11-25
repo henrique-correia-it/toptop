@@ -4,8 +4,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/csrf.php';
 require_once __DIR__ . '/../config/http.php';
 
-// Segurança: Apenas Superadmin ou Desenvolvedor
-if (!admin_has_role(['superadmin', 'desenvolvedor'])) {
+if (!is_admin_manager()) {
     json_error('Acesso negado.', 403);
 }
 
@@ -19,7 +18,6 @@ if (!$data || !isset($data['seccao']) || !isset($data['conteudo']) || !isset($da
     json_error('Dados incompletos.', 400);
 }
 
-// Validar CSRF
 if (!csrf_from_array($data)) {
     json_error('Erro de segurança (CSRF).', 403);
 }
@@ -60,7 +58,6 @@ if ($seccao !== 'horario_funcionamento') {
     $conteudo = trim(preg_replace('#</?p\b[^>]*>#i', '', $conteudo));
 }
 
-// Upsert (Insert ou Update)
 $stmt = $conn->prepare("INSERT INTO footer_config (seccao, conteudo) VALUES (?, ?) ON DUPLICATE KEY UPDATE conteudo = ?, ultima_atualizacao = CURRENT_TIMESTAMP");
 $stmt->bind_param("sss", $seccao, $conteudo, $conteudo);
 

@@ -5,7 +5,7 @@ require_once __DIR__ . '/../config/csrf.php';
 include '../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); exit('Acesso inválido.'); }
-if (!admin_has_role(['superadmin', 'desenvolvedor'])) {
+if (!is_admin_manager()) {
     http_response_code(403);
     exit('Não autorizado.');
 }
@@ -19,7 +19,6 @@ if (empty($ids)) {
     header('Location: listar_admins.php'); exit;
 }
 
-$minha_role = $_SESSION['admin_role'];
 $meu_id = (int)($_SESSION['admin_id'] ?? 0);
 
 $conn->begin_transaction();
@@ -30,21 +29,17 @@ try {
     $admins = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 
-    // Bloquear e contar superadmins e devs totais para proteger o último
+    // Contar superadmins totais para proteger o último
     $resSA = $conn->query("SELECT id FROM administradores WHERE role = 'superadmin' FOR UPDATE");
     $totalSA = $resSA ? $resSA->num_rows : 0;
-    $resDev = $conn->query("SELECT id FROM administradores WHERE role = 'desenvolvedor' FOR UPDATE");
-    $totalDev = $resDev ? $resDev->num_rows : 0;
 
     $ids_a_apagar = [];
     foreach ($admins as $admin) {
         if ((int)$admin['id'] === $meu_id) continue;
-        if ($admin['role'] === 'desenvolvedor' && $minha_role !== 'desenvolvedor') continue;
+        if (!in_array(($admin['role'] ?? ''), ['admin', 'superadmin'], true)) continue;
         if ($admin['role'] === 'superadmin' && $totalSA <= 1) continue;
-        if ($admin['role'] === 'desenvolvedor' && $totalDev <= 1) continue;
         $ids_a_apagar[] = (int)$admin['id'];
         if ($admin['role'] === 'superadmin') $totalSA--;
-        if ($admin['role'] === 'desenvolvedor') $totalDev--;
     }
 
     if (empty($ids_a_apagar)) {
@@ -60,11 +55,12 @@ try {
     $stmtDel->close();
 
     $conn->commit();
+    log_seguranca("{$removidos} administrador(es) removido(s) em massa.", 'apagar_admins_massa.php');
     $_SESSION['flash_message'] = ['tipo' => 'sucesso', 'texto' => $removidos . ' administrador(es) removido(s) com sucesso.'];
     header('Location: listar_admins.php'); exit;
 } catch (\Throwable $e) {
     $conn->rollback();
-    error_log('Erro em apagar_admins_massa.php: ' . $e->getMessage());
+    log_exception($e, 'apagar_admins_massa.php');
     $_SESSION['flash_message'] = ['tipo' => 'erro', 'texto' => 'Erro ao remover administradores.'];
     header('Location: listar_admins.php'); exit;
 }

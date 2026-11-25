@@ -1,6 +1,6 @@
-/* ===== PÁGINAS DE INFORMAÇÃO (trocas, envios, consultar-encomenda...) =====
+/* ===== PÃƒÂGINAS DE INFORMAÃƒâ€¡ÃƒÆ’O (trocas, envios, consultar-encomenda...) =====
    Design editorial alinhado com a homepage: serif Fraunces, accent quente,
-   cards sólidos com borda subtil, ícones accent, botões pílula. */
+   cards sÃƒÂ³lidos com borda subtil, ÃƒÂ­cones accent, botÃƒÂµes pÃƒÂ­lula. */
 
 .pagina-info {
     /* Tokens espelhados da homepage */
@@ -24,12 +24,7 @@
     animation: fadeInPage 0.7s var(--i-ease, ease-out);
 }
 
-@keyframes fadeInPage {
-    from { opacity: 0; transform: translateY(18px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* ---- CABEÇALHO (kicker + título serif) ---- */
+/* ---- CABEÃƒâ€¡ALHO (kicker + tÃƒÂ­tulo serif) ---- */
 .pagina-info-header {
     text-align: center;
     margin-bottom: clamp(2.6rem, 5vw, 4rem);
@@ -54,6 +49,7 @@
     background: currentColor;
     opacity: .55;
 }
+.pagina-info-header h1,
 .pagina-info-header h2 {
     display: block;
     font-family: var(--i-display);
@@ -82,7 +78,7 @@
     text-decoration-thickness: 1px;
 }
 
-/* ---- BLOCO GENÉRICO (ex.: formulário consultar-encomenda) ---- */
+/* ---- BLOCO GENÃƒâ€°RICO (ex.: formulÃƒÂ¡rio consultar-encomenda) ---- */
 .pagina-info .info-bloco {
     background: var(--i-surface);
     border: 1px solid var(--i-line);
@@ -136,7 +132,7 @@
     opacity: 1;
 }
 
-/* título do card + ícone accent (estilo trust-badge da home) */
+/* tÃƒÂ­tulo do card + ÃƒÂ­cone accent (estilo trust-badge da home) */
 .pagina-info .info-card h3 {
     display: flex;
     align-items: center;
@@ -193,7 +189,7 @@
 }
 .pagina-info .info-card ul li strong {
     color: var(--i-ink);
-    font-weight: 650;
+    font-weight: 600;
 }
 .pagina-info .info-card p {
     text-align: left;
@@ -272,7 +268,8 @@
 }
 .portes-filtro {
     position: relative;
-    min-width: 250px;
+    width: 180px;
+    max-width: 100%;
 }
 .portes-filtro input {
     width: 100%;
@@ -343,7 +340,7 @@
     font-size: 1.05rem;
 }
 
-/* ---- ACORDEÃO DE PAÍSES ---- */
+/* ---- ACORDEÃƒÆ’O DE PAÃƒÂSES ---- */
 .accordion-pais {
     border-bottom: 1px solid var(--i-line);
 }
@@ -363,8 +360,8 @@
     background: var(--i-surface);
     color: inherit;
 }
-/* Realce arredondado e recolhido das margens — consistente em todas as linhas
-   (não toca nos cantos do container, evitando o efeito meio-redondo na última). */
+/* Realce arredondado e recolhido das margens Ã¢â‚¬â€ consistente em todas as linhas
+   (nÃƒÂ£o toca nos cantos do container, evitando o efeito meio-redondo na ÃƒÂºltima). */
 .accordion-header::before {
     content: "";
     position: absolute;
@@ -411,7 +408,7 @@
     padding-bottom: 18px;
 }
 
-/* ---- FORMULÁRIO (consultar-encomenda) ---- */
+/* ---- FORMULÃƒÂRIO (consultar-encomenda) ---- */
 .pagina-info .form-group {
     margin-bottom: 1.3rem;
 }
@@ -473,7 +470,8 @@
     margin-top: 1.6rem;
 }
 .pagina-info .button.add-btn,
-.pagina-info .form-actions .add-btn {
+.pagina-info .form-actions .add-btn,
+.pagina-info .form-actions button[type="submit"] {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -541,13 +539,13 @@
 }
 
 /* ===================================================================
-   MODO DE EDIÇÃO DA PÁGINA DE TROCAS (apenas admin com edição ativa)
-   Adiciona/remove cards e linhas + edição inline com auto-save. Só aplica
-   quando o markup de edição está presente (.troca-editavel).
+   MODO DE EDIÃƒâ€¡ÃƒÆ’O DA PÃƒÂGINA DE TROCAS (apenas admin com ediÃƒÂ§ÃƒÂ£o ativa)
+   Adiciona/remove cards e linhas + ediÃƒÂ§ÃƒÂ£o inline com auto-save. SÃƒÂ³ aplica
+   quando o markup de ediÃƒÂ§ÃƒÂ£o estÃƒÂ¡ presente (.troca-editavel).
    =================================================================== */
 
-/* Campos editáveis — contorno azul tracejado no hover, sólido no foco
-   (sem lápis, porque a edição é inline e não abre modal). */
+/* Campos editÃƒÂ¡veis Ã¢â‚¬â€ contorno azul tracejado no hover, sÃƒÂ³lido no foco
+   (sem lÃƒÂ¡pis, porque a ediÃƒÂ§ÃƒÂ£o ÃƒÂ© inline e nÃƒÂ£o abre modal). */
 .troca-editavel [contenteditable="true"] {
     position: relative;
     cursor: text;
@@ -571,7 +569,7 @@
     pointer-events: none;
 }
 
-/* Em edição o card não "levanta" no hover e deixa o contorno transbordar
+/* Em ediÃƒÂ§ÃƒÂ£o o card nÃƒÂ£o "levanta" no hover e deixa o contorno transbordar
    (o card normal tem overflow:hidden, que cortaria o outline-offset). */
 .troca-editavel .info-card.troca-card {
     overflow: visible;
@@ -580,7 +578,7 @@
     transform: none;
 }
 
-/* Botão remover card (canto superior direito) */
+/* BotÃƒÂ£o remover card (canto superior direito) */
 .troca-card .troca-del-card {
     position: absolute;
     top: 12px;
@@ -612,7 +610,7 @@
     color: var(--cor-branco);
 }
 
-/* Linhas editáveis: texto + botão remover lado a lado (mantém o bullet ::before) */
+/* Linhas editÃƒÂ¡veis: texto + botÃƒÂ£o remover lado a lado (mantÃƒÂ©m o bullet ::before) */
 .troca-editavel .info-card ul li.troca-item {
     display: flex;
     align-items: flex-start;
@@ -650,7 +648,7 @@
     color: var(--cor-erro, #c0392b);
 }
 
-/* Botão "adicionar linha" */
+/* BotÃƒÂ£o "adicionar linha" */
 .troca-card .troca-add-item {
     margin-top: 1rem;
     padding: .4rem .9rem;
@@ -669,7 +667,7 @@
     background: color-mix(in srgb, var(--cor-accent) 7%, transparent);
 }
 
-/* Tile "adicionar card" — ocupa uma célula da grelha */
+/* Tile "adicionar card" Ã¢â‚¬â€ ocupa uma cÃƒÂ©lula da grelha */
 .troca-add-card-tile {
     display: flex;
     flex-direction: column;
@@ -698,7 +696,7 @@
     line-height: 1;
 }
 
-/* Botão de ícone do card (abre o seletor) */
+/* BotÃƒÂ£o de ÃƒÂ­cone do card (abre o seletor) */
 .troca-icon-btn {
     padding: 0;
     border: 0;
@@ -713,9 +711,9 @@
     transform: translateY(-1px);
 }
 
-/* Popover de seleção de ícones. As variáveis --i-* são declaradas em .pagina-info;
-   como a popover é renderizada FORA do <main>, re-herdamos aqui os tokens do tema
-   (senão var(--i-ink) etc. não resolvem e a popover fica transparente). */
+/* Popover de seleÃƒÂ§ÃƒÂ£o de ÃƒÂ­cones. As variÃƒÂ¡veis --i-* sÃƒÂ£o declaradas em .pagina-info;
+   como a popover ÃƒÂ© renderizada FORA do <main>, re-herdamos aqui os tokens do tema
+   (senÃƒÂ£o var(--i-ink) etc. nÃƒÂ£o resolvem e a popover fica transparente). */
 .troca-icon-popover {
     --i-surface: var(--tema-superficie);
     --i-ink: var(--tema-ink);
@@ -725,7 +723,7 @@
     --i-accent: var(--cor-accent);
     --i-accent-soft: var(--cor-accent-soft);
     position: absolute;
-    z-index: 9100;
+    z-index: var(--z-modal, 2000);
     display: flex;
     flex-wrap: wrap;
     gap: 6px;

@@ -30,22 +30,6 @@
     margin-left: auto;
 }
 
-.admin-page-header .btn-back-arrow {
-    margin-bottom: 0 !important;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--cor-accent, #B08968);
-}
-
-.admin-page-header .btn-back-arrow:hover {
-    background: var(--cor-accent, #B08968);
-    border-color: var(--cor-accent, #B08968);
-    color: var(--cor-branco);
-    transform: translateX(-4px);
-}
-
 .admin-page-header h2 {
     margin: 0 !important;
     font-size: 1.8rem;
@@ -71,10 +55,6 @@
     }
     .admin-page-header h2 {
         font-size: 1.2rem;
-    }
-    .admin-page-header .btn-back-arrow svg {
-        width: 20px;
-        height: 20px;
     }
     .header-actions-container,
     .admin-page-header > div:last-child:not(:first-child) {

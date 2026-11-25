@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/http.php';
 
-if (!admin_has_role(['superadmin', 'desenvolvedor'])) {
+if (!is_admin_manager()) {
     json_response(['rua' => '', 'cp' => '', 'localidade' => '']);
 }
 

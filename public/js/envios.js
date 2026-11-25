@@ -6,11 +6,20 @@
 (function () {
     'use strict';
 
+    function normalizarTexto(str) {
+        return String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    }
+
     // Preenche o nome nativo do país quando o servidor não o conseguiu resolver.
-    // iso vem dos dados do servidor e nativeName da API Intl — sem input do utilizador.
     function localizarNomesPaises() {
-        try {
-            document.querySelectorAll('.accordion-pais').forEach(function (acc) {
+        if (typeof Intl === 'undefined' || typeof Intl.DisplayNames !== 'function') return;
+        const isoToLocale = {
+            CH: 'de', LU: 'fr', BE: 'fr', GB: 'en', IE: 'en', AT: 'de',
+            SE: 'sv', BR: 'pt', DK: 'da', CZ: 'cs', GR: 'el', SI: 'sl',
+            EE: 'et', UA: 'uk', NO: 'nb', CY: 'el', MT: 'mt', US: 'en', CA: 'en', AU: 'en'
+        };
+        document.querySelectorAll('.accordion-pais').forEach(function (acc) {
+            try {
                 const isoEl = acc.querySelector('.iso-code');
                 const label = acc.querySelector('.badge-pais');
                 if (!isoEl || !label) return;
@@ -19,26 +28,36 @@
                 const restante = label.textContent.replace(iso, '').trim();
                 if (restante && restante !== iso) return; // já tem nome
 
-                const isoToLocale = { CH: 'de', LU: 'fr', BE: 'fr', GB: 'en', IE: 'en', AT: 'de' };
-                const locale = isoToLocale[iso.toUpperCase()] || iso.toLowerCase();
-                const nativeName = new Intl.DisplayNames([locale], { type: 'region' }).of(iso.toUpperCase());
+                const upper = iso.toUpperCase();
+                const locale = isoToLocale[upper] || iso.toLowerCase();
+                const nativeName = new Intl.DisplayNames([locale], { type: 'region' }).of(upper);
 
                 if (nativeName) {
-                    label.innerHTML = '<span class="iso-code">' + iso + '</span> ' + nativeName;
-                    acc.setAttribute('data-pais', nativeName.toLowerCase() + ' ' + iso.toLowerCase());
+                    label.textContent = '';
+                    const span = document.createElement('span');
+                    span.className = 'iso-code';
+                    span.textContent = iso;
+                    label.appendChild(span);
+                    label.appendChild(document.createTextNode(' ' + nativeName));
+                    acc.setAttribute('data-pais', normalizarTexto(nativeName + ' ' + iso));
                 }
-            });
-        } catch (e) {
-            console.warn('Intl.DisplayNames não suportado ou erro na localização:', e);
-        }
+            } catch (e) {
+                // Ignora país individual com locale inválido sem abortar os restantes
+            }
+        });
     }
 
     function filtrarTabela(termo) {
-        const filtro = (termo || '').toLowerCase();
+        const filtro = normalizarTexto(termo);
+        let visiveis = 0;
         document.querySelectorAll('.accordion-pais').forEach(function (acc) {
-            const pais = acc.getAttribute('data-pais') || '';
-            acc.style.display = pais.indexOf(filtro) !== -1 ? '' : 'none';
+            const pais = normalizarTexto(acc.getAttribute('data-pais') || '');
+            const match = pais.indexOf(filtro) !== -1;
+            acc.style.display = match ? '' : 'none';
+            if (match) visiveis++;
         });
+        const vazio = document.getElementById('portesSemResultados');
+        if (vazio) vazio.style.display = visiveis === 0 ? '' : 'none';
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -49,7 +68,10 @@
         if (lista) {
             lista.addEventListener('click', function (e) {
                 const header = e.target.closest('.accordion-header');
-                if (header) header.parentElement.classList.toggle('active');
+                if (header) {
+                    const isOpen = header.parentElement.classList.toggle('active');
+                    header.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                }
             });
         }
 

@@ -1,5 +1,82 @@
 // public/js/utils.js
 
+window.escapeHtml = window.escapeHtml || function escapeHtml(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, function(ch) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+    });
+};
+
+window.debounce = window.debounce || function debounce(fn, delay) {
+    let timer = null;
+    return function() {
+        const ctx = this;
+        const args = arguments;
+        clearTimeout(timer);
+        timer = setTimeout(function() { fn.apply(ctx, args); }, delay || 200);
+    };
+};
+
+// Coordenador de scroll-lock para múltiplos overlays/modais (evita conflitos de body.style.overflow)
+window.ttScrollLock = window.ttScrollLock || (function() {
+    const locks = new Set();
+    return {
+        lock: function(key) {
+            locks.add(key || 'default');
+            document.documentElement.classList.add('scroll-lock');
+            document.body.style.overflow = 'hidden';
+        },
+        unlock: function(key) {
+            locks.delete(key || 'default');
+            if (locks.size === 0) {
+                document.documentElement.classList.remove('scroll-lock');
+                document.body.style.overflow = '';
+            }
+        },
+        isLocked: function() { return locks.size > 0; }
+    };
+})();
+
+// Helper reutilizável de focus-trap + restauro de foco para modais/drawers
+window.ttFocusTrap = window.ttFocusTrap || function(container, onEscape) {
+    if (!container) return { release: function() {} };
+    const previousFocus = document.activeElement;
+    const selector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const onKeyDown = function(e) {
+        if (e.key === 'Escape' && typeof onEscape === 'function') {
+            e.preventDefault();
+            onEscape();
+            return;
+        }
+        if (e.key !== 'Tab') return;
+        const focusables = Array.from(container.querySelectorAll(selector)).filter(function(el) {
+            return el.offsetParent !== null;
+        });
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+        }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    const firstEl = container.querySelector(selector);
+    if (firstEl && typeof firstEl.focus === 'function') {
+        try { firstEl.focus({ preventScroll: true }); } catch (_) { firstEl.focus(); }
+    }
+    return {
+        release: function() {
+            document.removeEventListener('keydown', onKeyDown);
+            if (previousFocus && typeof previousFocus.focus === 'function') {
+                try { previousFocus.focus({ preventScroll: true }); } catch (_) {}
+            }
+        }
+    };
+};
+
 /**
  * Formata um número de forma idêntica à função number_format do PHP.
  * @param {number} number O número a ser formatado.
@@ -17,7 +94,7 @@ function number_format(number, decimals, dec_point, thousands_sep) {
         s = '',
         toFixedFix = function(n, prec) {
             var k = Math.pow(10, prec);
-            return '' + Math.round(n * k) / k;
+            return (Math.round((n + Number.EPSILON) * k) / k).toFixed(prec);
         };
     s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
     if (s[0].length > 3) {
@@ -31,6 +108,23 @@ function number_format(number, decimals, dec_point, thousands_sep) {
 }
 
 (function() {
+    if (window.__ttCustomSelectsInit) return;
+    window.__ttCustomSelectsInit = true;
+
+    let optionUidCounter = 0;
+    let measureCanvasCtx = null;
+
+    const medirLarguraTexto = function(texto, estilo) {
+        if (!measureCanvasCtx) {
+            const canvas = document.createElement('canvas');
+            measureCanvasCtx = canvas.getContext ? canvas.getContext('2d') : null;
+        }
+        if (measureCanvasCtx) {
+            measureCanvasCtx.font = (estilo.fontWeight || '400') + ' ' + (estilo.fontSize || '14px') + ' ' + (estilo.fontFamily || 'sans-serif');
+            return measureCanvasCtx.measureText(texto).width;
+        }
+        return texto.length * 8;
+    };
     const limparFocoOpcoes = function(lista) {
         if (!lista) return;
         lista.querySelectorAll('.custom-select-option.is-focused').forEach(function(el) {
@@ -62,27 +156,12 @@ function number_format(number, decimals, dec_point, thousands_sep) {
         const rect = trigger.getBoundingClientRect();
         const larguraTrigger = rect.width || trigger.offsetWidth || 0;
         const larguraMaxima = Math.max(200, Math.min(380, window.innerWidth - margemViewport));
+        const estiloTrigger = window.getComputedStyle(trigger);
         let larguraTexto = 0;
 
-        const medidor = document.createElement('span');
-        medidor.dataset.customSelectMeasure = '1';
-        const estiloTrigger = window.getComputedStyle(trigger);
-        medidor.style.position = 'fixed';
-        medidor.style.left = '-9999px';
-        medidor.style.top = '-9999px';
-        medidor.style.visibility = 'hidden';
-        medidor.style.whiteSpace = 'nowrap';
-        medidor.style.fontFamily = estiloTrigger.fontFamily;
-        medidor.style.fontSize = estiloTrigger.fontSize;
-        medidor.style.fontWeight = estiloTrigger.fontWeight;
-        document.body.appendChild(medidor);
-
         Array.from(select.options).forEach(function(option) {
-            medidor.textContent = textoOpcao(option);
-            larguraTexto = Math.max(larguraTexto, medidor.offsetWidth);
+            larguraTexto = Math.max(larguraTexto, medirLarguraTexto(textoOpcao(option), estiloTrigger));
         });
-
-        medidor.remove();
 
         const larguraConteudo = larguraTexto + 64;
         const larguraIdeal = Math.min(Math.max(larguraTrigger, larguraConteudo), larguraMaxima);
@@ -96,13 +175,16 @@ function number_format(number, decimals, dec_point, thousands_sep) {
         wrapper.classList.toggle('drop-up', deveSubir);
     };
 
-    const focarOpcaoPorIndice = function(lista, index) {
+    const focarOpcaoPorIndice = function(lista, index, trigger) {
         const opcoes = Array.from(lista.querySelectorAll('.custom-select-option:not(.is-disabled)'));
         if (!opcoes.length) return;
         const clamped = Math.max(0, Math.min(index, opcoes.length - 1));
         limparFocoOpcoes(lista);
         const alvo = opcoes[clamped];
         alvo.classList.add('is-focused');
+        if (trigger && alvo.id) {
+            trigger.setAttribute('aria-activedescendant', alvo.id);
+        }
         alvo.scrollIntoView({ block: 'nearest' });
     };
 
@@ -147,6 +229,7 @@ function number_format(number, decimals, dec_point, thousands_sep) {
         Array.from(select.options).forEach(function(option) {
             const item = document.createElement('button');
             item.type = 'button';
+            item.id = 'tt-opt-' + (++optionUidCounter);
             item.className = 'custom-select-option';
             item.textContent = textoOpcao(option);
             item.dataset.value = option.value;
@@ -180,7 +263,7 @@ function number_format(number, decimals, dec_point, thousands_sep) {
 
         const opcoesAtivas = Array.from(lista.querySelectorAll('.custom-select-option:not(.is-disabled)'));
         const idxSel = opcoesAtivas.findIndex(function(el) { return el.classList.contains('is-selected'); });
-        focarOpcaoPorIndice(lista, idxSel >= 0 ? idxSel : 0);
+        focarOpcaoPorIndice(lista, idxSel >= 0 ? idxSel : 0, trigger);
     };
 
     const inicializarCustomSelect = function(select) {
@@ -329,8 +412,13 @@ function number_format(number, decimals, dec_point, thousands_sep) {
             });
         }
 
+        let mutRaf = 0;
         new MutationObserver(function() {
-            atualizarCustomSelect(select);
+            if (mutRaf) return;
+            mutRaf = requestAnimationFrame(function() {
+                mutRaf = 0;
+                atualizarCustomSelect(select);
+            });
         }).observe(select, { childList: true, subtree: true, attributes: true });
 
         atualizarCustomSelect(select);

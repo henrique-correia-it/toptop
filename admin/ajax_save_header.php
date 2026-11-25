@@ -1,10 +1,11 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true || !in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor'])) {
+if (!is_admin_manager()) {
     echo json_encode(['sucesso' => false, 'mensagem' => 'Acesso negado.']);
     exit;
 }
@@ -27,7 +28,7 @@ if ($isMultipart) {
     $conteudo = $data['conteudo'] ?? null;
 }
 
-if (!hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+if (!hash_equals($_SESSION['csrf_token'], (string)$csrfToken)) {
     echo json_encode(['sucesso' => false, 'mensagem' => 'Erro de seguranca (CSRF).']);
     exit;
 }
@@ -78,7 +79,7 @@ if ($isMultipart && $seccao === 'logo_src') {
         default => 'jpg',
     };
 
-    $dir = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') . '/public/assets/header/';
+    $dir = __DIR__ . '/../public/assets/header/';
     if (!is_dir($dir)) {
         mkdir($dir, 0755, true);
     }
@@ -107,15 +108,17 @@ if ($isMultipart && $seccao === 'logo_src') {
     }
 
     if (guardarHeaderConfig($conn, 'logo_src', $url)) {
-        if (!empty($oldUrl)) {
+        if (!empty($oldUrl) && str_starts_with($oldUrl, '/public/assets/header/')) {
             $oldFilename = basename($oldUrl);
-            $oldPath = $dir . $oldFilename;
-            if (file_exists($oldPath) && is_file($oldPath) && $oldFilename !== $filename) {
+            $realDir = realpath($dir);
+            $oldPath = $realDir ? realpath($dir . $oldFilename) : false;
+            if ($oldFilename !== $filename && $realDir && $oldPath && str_starts_with($oldPath, $realDir . DIRECTORY_SEPARATOR) && is_file($oldPath)) {
                 unlink($oldPath);
             }
         }
         echo json_encode(['sucesso' => true, 'url' => $url, 'mensagem' => 'Logo atualizado com sucesso!']);
     } else {
+        @unlink($dest);
         echo json_encode(['sucesso' => false, 'mensagem' => 'Erro ao guardar na base de dados.']);
     }
 
@@ -124,8 +127,8 @@ if ($isMultipart && $seccao === 'logo_src') {
 }
 
 if (!$isMultipart && $seccao && $conteudo !== null) {
-    $permitidas = ['nav_home', 'nav_produtos', 'nav_contacto', 'logo_alt', 'nav_admin', 'nav_dev'];
-    if (!in_array($seccao, $permitidas)) {
+    $permitidas = ['nav_home', 'nav_produtos', 'nav_contacto', 'logo_alt', 'nav_admin'];
+    if (!in_array($seccao, $permitidas, true)) {
         echo json_encode(['sucesso' => false, 'mensagem' => 'Seccao invalida.']);
         exit;
     }

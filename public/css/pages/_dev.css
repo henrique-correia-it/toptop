@@ -1,4 +1,4 @@
-/* ── Painel Dev Overrides ── */
+/* â”€â”€ Painel Dev Overrides â”€â”€ */
 
 .dev-badge {
     background: var(--cor-preto);
@@ -6,7 +6,7 @@
     padding: 4px 12px;
     border-radius: 6px;
     font-size: 0.7rem;
-    font-weight: 800;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-left: 15px;
@@ -15,13 +15,13 @@
 }
 
 
-/* Estilo para simular o terminal no ícone de atividade */
+/* Estilo para simular o terminal no Ã­cone de atividade */
 .activity-icon-wrapper.dev-terminal {
     background: var(--cor-preto) !important;
     color: #10b981 !important;
 }
 
-/* ── Cores do Card Stripe ── */
+/* â”€â”€ Cores do Card Stripe â”€â”€ */
 .stat-card.stripe-live .stat-card-icon {
     background: #ecfdf5 !important;
     color: #10b981 !important;
@@ -32,22 +32,6 @@
     color: #f59e0b !important;
 }
 
-/* ── Cores do Card Header Dinâmico ── */
-.stat-card.header-hide-on .stat-card-icon {
-    background: #ecfdf5 !important;
-    color: #10b981 !important;
-}
-
-.stat-card.header-hide-off .stat-card-icon {
-    background: var(--cor-slate-100) !important;
-    color: var(--cor-slate-500) !important;
-}
-
-
-
-
-
-/* ── Ajuste de Largura dos Cards ── */
 @media (min-width: 993px) {
     .dev-dashboard .dashboard-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -91,38 +75,46 @@
     }
 }
 
-/* ── Dropdown de Simulação de Encomenda ── */
+/* ── Dropdown de Simulação de Encomenda (alinhado com .custom-select-options) ── */
 .simulate-dropdown {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + 6px);
     right: 0;
     background: var(--cor-branco);
     border: 1px solid var(--cor-slate-200);
     border-radius: 14px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+    box-shadow: 0 12px 32px -6px rgba(15, 23, 42, 0.12), 0 4px 10px -2px rgba(15, 23, 42, 0.05);
     min-width: 260px;
+    max-width: calc(100vw - 24px);
+    max-height: min(360px, 60vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     z-index: 500;
-    overflow: hidden;
     padding: 6px;
 }
 
 .simulate-dropdown-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: 10px;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 9px;
     cursor: pointer;
-    transition: background 0.15s ease;
+    font-family: var(--font-sans);
+    transition: background-color 0.14s ease, color 0.14s ease;
+}
+
+.simulate-dropdown-item + .simulate-dropdown-item {
+    margin-top: 3px;
 }
 
 .simulate-dropdown-item:hover {
-    background: var(--cor-slate-50);
+    background: var(--cor-slate-100);
 }
 
 .simulate-dropdown-item .sim-dot {
-    width: 9px;
-    height: 9px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
 }
@@ -131,21 +123,29 @@
     display: flex;
     flex-direction: column;
     gap: 1px;
+    min-width: 0;
 }
 
 .simulate-dropdown-item strong {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--cor-slate-800);
+    font-size: 0.86rem;
+    font-weight: 500;
+    color: var(--cor-slate-700);
+    line-height: 1.3;
+    transition: color 0.14s ease;
+}
+
+.simulate-dropdown-item:hover strong {
+    color: var(--cor-slate-900);
 }
 
 .simulate-dropdown-item span {
-    font-size: 0.73rem;
+    font-size: 0.74rem;
     color: var(--cor-slate-400);
     font-weight: 400;
+    line-height: 1.25;
 }
 
-/* ── Fim das Ações Rápidas ── */
+/* â”€â”€ Fim das AÃ§Ãµes RÃ¡pidas â”€â”€ */
 
 .btn-customer {
     background: #eff6ff !important;

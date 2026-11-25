@@ -98,10 +98,11 @@ try {
     }
 
     $_SESSION['flash_message'] = ['tipo' => 'sucesso', 'texto' => 'Encomenda #' . $id . ' apagada permanentemente com sucesso!'];
+    log_app("Encomenda #{$id} eliminada permanentemente.", 'INFO', 'apagar_encomenda.php');
 
 } catch (\Throwable $e) {
     $conn->rollback();
-    error_log($e->getMessage());
+    log_exception($e, "apagar_encomenda.php enc#{$id}");
     $_SESSION['flash_message'] = ['tipo' => 'erro', 'texto' => 'Ocorreu um erro ao apagar a encomenda.'];
 }
 

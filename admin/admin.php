@@ -1,19 +1,15 @@
 <?php
 // Verificação de sessão ANTES de qualquer output HTML
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/formatters.php';
-if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true) {
-    header("Location: /entrar");
-    exit;
-}
+require_admin_login('/entrar');
 
 include '../templates/header.php';
 include '../config/database.php';
-require_once '../config/interface_labels.php';
 
-// Variável de controlo para superadmin e dev
-$isSuperAdmin = isset($_SESSION['admin_role']) && in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor']);
-$isDev        = isset($_SESSION['admin_role']) && $_SESSION['admin_role'] === 'desenvolvedor';
+// Variável de controlo para gestores de loja
+$isSuperAdmin = is_admin_manager();
 
 // --- QUERIES PARA ESTATÍSTICAS E ATIVIDADE RECENTE ---
 $res_prod = $conn->query("SELECT COUNT(id) FROM produtos WHERE ativo = 1");
@@ -84,27 +80,18 @@ $atividade_recente = array_slice($atividade_recente, 0, 5);
 
     <div class="stats-grid">
         <?php
-        $label = getInterfaceString('card_produtos_ativos', 'Produtos Ativos');
-        echo ui_stat_card((string)$total_produtos, $label['title'], [
+        echo ui_stat_card((string)$total_produtos, 'Produtos Ativos', [
             'href'  => 'admin_produtos.php',
-            'class' => 'editable-card',
-            'attrs' => ['data-label-key' => 'card_produtos_ativos'],
             'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>',
         ]);
 
-        $label = getInterfaceString('card_encomendas_por_enviar', 'Encomendas por Enviar');
-        echo ui_stat_card((string)$encomendas_nao_enviadas_count, $label['title'], [
+        echo ui_stat_card((string)$encomendas_nao_enviadas_count, 'Encomendas por Enviar', [
             'href'  => 'encomendas.php?estado=por_enviar',
-            'class' => 'editable-card',
-            'attrs' => ['data-label-key' => 'card_encomendas_por_enviar'],
             'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>',
         ]);
 
-        $label = getInterfaceString('card_mensagens_por_responder', 'Mensagens por Responder');
-        echo ui_stat_card((string)$mensagens_pendentes_count, $label['title'], [
+        echo ui_stat_card((string)$mensagens_pendentes_count, 'Mensagens por Responder', [
             'href'  => 'mensagens.php',
-            'class' => 'editable-card',
-            'attrs' => ['data-label-key' => 'card_mensagens_por_responder'],
             'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>',
         ]);
         ?>
@@ -115,15 +102,11 @@ $atividade_recente = array_slice($atividade_recente, 0, 5);
             <h3 class="dashboard-section-title">Ações do Dia a Dia</h3>
             <div class="dashboard-grid">
                 <?php
-                $l = getInterfaceString('nav_adicionar_produto', 'Adicionar Produto', 'Criar um novo item para a loja.');
-                echo ui_nav_card($l['title'], $l['description'], 'adicionar.php', [
-                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_adicionar_produto'],
+                echo ui_nav_card('Adicionar Produto', 'Criar um novo item para a loja.', 'adicionar.php', [
                     'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>',
                 ]);
 
-                $l = getInterfaceString('nav_gerir_produtos', 'Gerir Produtos', 'Editar, apagar ou duplicar produtos.');
-                echo ui_nav_card($l['title'], $l['description'], 'admin_produtos.php', [
-                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_gerir_produtos'],
+                echo ui_nav_card('Gerir Produtos', 'Editar, apagar ou duplicar produtos.', 'admin_produtos.php', [
                     'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>',
                 ]);
 
@@ -131,9 +114,7 @@ $atividade_recente = array_slice($atividade_recente, 0, 5);
                     'icon' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg>',
                 ]);
 
-                $l = getInterfaceString('nav_gerir_encomendas', 'Gerir Encomendas', 'Processar e atualizar estado dos pedidos.');
-                echo ui_nav_card($l['title'], $l['description'], 'encomendas.php', [
-                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_gerir_encomendas'],
+                echo ui_nav_card('Gerir Encomendas', 'Processar e atualizar estado dos pedidos.', 'encomendas.php', [
                     'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>',
                 ]);
 
@@ -151,37 +132,23 @@ $atividade_recente = array_slice($atividade_recente, 0, 5);
                     'icon' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>',
                 ]);
 
-                echo ui_nav_card('Paleta de Cores', 'Personalizar a cor de fundo global do site.', 'paleta_cores.php', [
-                    'icon' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle><path d="M12 2a10 10 0 0 0 0 20h1.65a2.35 2.35 0 0 0 1.72-3.95 1.8 1.8 0 0 1 1.32-3.02H19a3 3 0 0 0 3-3A10 10 0 0 0 12 2z"></path></svg>',
-                ]);
-
-                $l = getInterfaceString('nav_atributos', 'Atributos', 'Gerir cores, tamanhos, etc.');
-                echo ui_nav_card($l['title'], $l['description'], 'gerir_atributos.php', [
-                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_atributos'],
+                echo ui_nav_card('Atributos', 'Gerir cores, tamanhos, etc.', 'gerir_atributos.php', [
                     'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>',
                 ]);
 
-                $l = getInterfaceString('nav_guias_tamanho', 'Guias de Tamanho', 'Gerir tabelas de medidas.');
-                echo ui_nav_card($l['title'], $l['description'], 'gerir_guias_tamanho.php', [
-                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_guias_tamanho'],
+                echo ui_nav_card('Guias de Tamanho', 'Gerir tabelas de medidas.', 'gerir_guias_tamanho.php', [
                     'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2" ry="2"></rect><line x1="7" y1="7" x2="7" y2="12"></line><line x1="12" y1="7" x2="12" y2="12"></line><line x1="17" y1="7" x2="17" y2="12"></line><line x1="7" y1="12" x2="17" y2="12"></line></svg>',
                 ]);
 
-                $l = getInterfaceString('nav_templates_email', 'Templates de Email', 'Personalizar emails automáticos.');
-                echo ui_nav_card($l['title'], $l['description'], 'gestor_emails.php', [
-                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_templates_email'],
+                echo ui_nav_card('Templates de Email', 'Personalizar emails automáticos.', 'gestor_emails.php', [
                     'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>',
                 ]);
 
-                $l = getInterfaceString('nav_administradores', 'Administradores', 'Gerir contas de acesso.');
-                echo ui_nav_card($l['title'], $l['description'], 'listar_admins.php', [
-                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_administradores'],
+                echo ui_nav_card('Administradores', 'Gerir contas de acesso.', 'listar_admins.php', [
                     'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
                 ]);
 
-                $l = getInterfaceString('nav_portes', 'Configurações de Portes', 'Gerir preços de envio por peso.');
-                echo ui_nav_card($l['title'], $l['description'], 'portes.php', [
-                    'class' => 'editable-card', 'attrs' => ['data-label-key' => 'nav_portes'],
+                echo ui_nav_card('Configurações de Portes', 'Gerir preços de envio por peso.', 'portes.php', [
                     'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>',
                 ]);
                 ?>
@@ -229,15 +196,6 @@ $atividade_recente = array_slice($atividade_recente, 0, 5);
 
 <?php if ($isSuperAdmin): ?>
 <?php
-// Context Menu for Cards
-renderContextMenu([
-    [
-        'id' => 'ctx-edit-label',
-        'label' => 'Personalizar Card',
-        'icon' => '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
-    ]
-], 'ctx-menu');
-
 // Context Menu for Activity
 renderContextMenu([
     [
@@ -255,23 +213,6 @@ renderContextMenu([
 ], 'ctx-menu-activity');
 ?>
 
-<!-- ── Quick Edit Modal ── -->
-<?php renderQuickEditModal('qe-modal', 'Personalizar Card'); ?>
-
-<template id="tpl-card-modal">
-    <input type="hidden" id="qe-key" name="key">
-    <div class="qe-body">
-        <div class="qe-f">
-            <label>Título do Card</label>
-            <?php echo ui_input('title', ['id' => 'qe-title', 'class' => 'qe-in', 'required' => true]); ?>
-        </div>
-        <div class="qe-f" id="qe-desc-group">
-            <label>Descrição / Legenda</label>
-            <?php echo ui_textarea('description', '', ['id' => 'qe-desc', 'class' => 'qe-in', 'rows' => 3]); ?>
-        </div>
-    </div>
-</template>
-
 <!-- ── Hidden Deletion Forms ── -->
 <form id="form-delete-activity" method="POST" style="display:none;">
     <input type="hidden" name="id" id="delete-activity-id">
@@ -282,32 +223,11 @@ renderContextMenu([
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    let currentTarget = null;
-
     // --- MANUSEAMENTO DE MENUS DE CONTEXTO ---
     document.addEventListener('admin:contextmenu', function(e) {
         const { row, menu } = e.detail;
-        currentTarget = row;
 
-        if (row.classList.contains('editable-card')) {
-            // Context Menu de Cards
-            menu.querySelector('#ctx-edit-label').onclick = () => {
-                const modal = document.getElementById('qe-modal');
-                const form = modal.querySelector('form');
-                form.innerHTML = document.getElementById('tpl-card-modal').innerHTML + form.querySelector('.qe-btns').outerHTML;
-
-                const key = row.dataset.labelKey;
-                const titleEl = row.querySelector('h3, .stat-label');
-                const descEl = row.querySelector('p');
-
-                modal.querySelector('#qe-key').value = key;
-                modal.querySelector('#qe-title').value = titleEl?.textContent.trim() || '';
-                modal.querySelector('#qe-desc').value = descEl?.textContent.trim() || '';
-                modal.querySelector('#qe-desc-group').style.display = descEl ? 'flex' : 'none';
-                modal.style.display = 'flex';
-                form.onsubmit = submeterEdicaoCard;
-            };
-        } else if (row.classList.contains('activity-item-ctx')) {
+        if (row.classList.contains('activity-item-ctx')) {
             // Context Menu de Atividade
             const type = row.dataset.tipo;
             const id = row.dataset.id;
@@ -332,31 +252,6 @@ document.addEventListener('DOMContentLoaded', function() {
             };
         }
     });
-
-    function submeterEdicaoCard(e) {
-        e.preventDefault();
-        const form = e.target;
-        const btnSave = form.querySelector('.qe-btn-save');
-        btnSave.disabled = true; btnSave.textContent = 'A guardar...';
-
-        const fd = new FormData(form);
-        fd.set('csrf_token', <?php echo json_encode($_SESSION['csrf_token']); ?>);
-        fetch('ajax_edit_interface_label.php', { method: 'POST', body: fd })
-            .then(r => r.json()).then(data => {
-                if (data.sucesso) {
-                    const titleEl = currentTarget.querySelector('h3, .stat-label');
-                    const descEl = currentTarget.querySelector('p');
-                    if (titleEl) titleEl.textContent = data.title;
-                    if (descEl) descEl.textContent = data.description;
-                    document.getElementById('qe-modal').style.display = 'none';
-                    mostrarPopup('Interface atualizada!', 'sucesso');
-                } else {
-                    mostrarPopup(data.mensagem || 'Erro ao atualizar interface.', 'erro');
-                }
-            })
-            .catch(() => mostrarPopup('Erro de comunicação ao guardar.', 'erro'))
-            .finally(() => { btnSave.disabled = false; btnSave.textContent = 'Guardar'; });
-    }
 
     // Toggle Global Edit Mode
     const toggleBtn = document.getElementById('toggleGlobalEditBtn');

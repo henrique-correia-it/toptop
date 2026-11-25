@@ -1,220 +1,293 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/auth.php';
 include '../config/database.php';
 
-// Segurança: Apenas superadmins e desenvolvedores podem aceder
-if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true || !in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor'])) {
-    header("Location: /admin/admin.php");
-    exit;
-}
+// Segurança: Apenas gestores da loja podem aceder
+require_admin_manager('/admin/admin.php');
 
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-$guias = $conn->query("SELECT * FROM guias_tamanho ORDER BY titulo ASC")->fetch_all(MYSQLI_ASSOC);
+$filtro_q = trim((string)($_GET['q'] ?? ''));
+
+$sort_map = [
+    'titulo'   => 'g.titulo',
+    'produtos' => 'total_produtos',
+];
+$sort_by   = isset($_GET['sort']) && array_key_exists($_GET['sort'], $sort_map) ? $_GET['sort'] : '';
+$sort_dir  = (isset($_GET['dir']) && strtolower((string)$_GET['dir']) === 'desc') ? 'desc' : 'asc';
+$order_sql = $sort_by !== '' ? ($sort_map[$sort_by] . ' ' . strtoupper($sort_dir) . ', g.titulo ASC') : 'g.titulo ASC';
+
+$where_sql = '';
+$params    = [];
+$types     = '';
+if ($filtro_q !== '') {
+    $where_sql = 'WHERE g.titulo LIKE ?';
+    $params[]  = '%' . $filtro_q . '%';
+    $types     = 's';
+}
+
+$sql = "SELECT g.*, COALESCE(p.total_produtos, 0) AS total_produtos
+        FROM guias_tamanho g
+        LEFT JOIN (
+            SELECT guia_tamanho_id, COUNT(*) AS total_produtos
+            FROM produtos
+            WHERE guia_tamanho_id IS NOT NULL
+            GROUP BY guia_tamanho_id
+        ) p ON p.guia_tamanho_id = g.id
+        {$where_sql}
+        ORDER BY {$order_sql}";
+
+$stmt = $conn->prepare($sql);
+if ($params) {
+    $stmt->bind_param($types, ...$params);
+}
+$stmt->execute();
+$guias = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+function resumir_estrutura_guia(string $html): string
+{
+    if (trim($html) === '') {
+        return '-';
+    }
+    $cols = 0;
+    if (preg_match('/<tr\b[^>]*>(.*?)<\/tr>/is', $html, $m)) {
+        $cols = preg_match_all('/<(?:th|td)\b/i', $m[1]);
+    }
+    $totalRows = preg_match_all('/<tr\b/i', $html);
+    $bodyRows  = max(0, $totalRows - 1);
+    if ($cols <= 0 && $totalRows <= 0) {
+        return '-';
+    }
+    return $bodyRows . ' ' . ($bodyRows === 1 ? 'linha' : 'linhas') . ' · ' . $cols . ' ' . ($cols === 1 ? 'coluna' : 'colunas');
+}
 
 include '../templates/header.php';
 ?>
 
-<main class="dashboard-container animate-entry guias-premium-content">
+<main class="dashboard-container animate-entry">
 
-<!-- Bloquear scroll automático no refresh -->
-<script>
-    if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-    }
-    window.scrollTo(0, 0);
-</script>
     <?php echo ui_page_header("Gerir Guias de Tamanho", ['layout' => 'admin', 'back_url' => '/admin', 'back_title' => 'Voltar ao Painel']); ?>
 
-    <div class="admin-container" style="max-width: 1200px; margin: 0 auto;">
+    <?php echo ui_table_toolbar([
+        'primary_action' => ui_button('Novo Guia', ['id' => 'btn-novo-guia', 'class' => 'button btn-with-plus btn-with-plus-text']),
+        'search'         => ['name' => 'q', 'value' => $filtro_q],
+    ]); ?>
 
-        <div class="guias-container-premium">
-            <div class="guias-list-header">
-                <?php
-                echo ui_search_input('', 'Procurar guia por título...', [
-                    'id'              => 'filtro-guias',
-                    'type'            => 'text',
-                    'class'           => 'search-filter-wrapper',
-                    'raw_wrap_class'  => true,
-                    'raw_input_class' => true,
-                ]);
-                echo ui_button('Novo Guia', ['id' => 'btn-novo-guia', 'class' => 'button add-btn btn-with-plus btn-with-plus-text', 'style' => 'margin:0;']);
-                ?>
-            </div>
-            
-            <div style="padding: 30px;">
-                <div class="guias-grid" id="lista-guias">
-            <?php if (empty($guias)): ?>
-                <?php echo ui_empty_state('Ainda não foram criados guias de tamanho.', ['style' => 'grid-column: 1/-1;']); ?>
-            <?php else: ?>
-                <?php foreach ($guias as $guia): ?>
-                    <div class="guia-card" data-id="<?php echo $guia['id']; ?>">
-                        <div class="guia-card-content">
-                            <div class="guia-card-header">
-                                <div class="guia-card-icon">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                                </div>
-                                <h3 class="guia-card-title" data-titulo="<?php echo htmlspecialchars($guia['titulo']); ?>" data-conteudo="<?php echo htmlspecialchars($guia['conteudo']); ?>">
-                                    <?php echo htmlspecialchars($guia['titulo']); ?>
-                                </h3>
-                            </div>
-                        </div>
-                        <div class="guia-card-actions">
-                            <?php
-                            echo ui_icon_button('view', ['class' => 'btn-preview-guia', 'title' => 'Ver Guia']);
-                            echo ui_icon_button('edit', ['class' => 'btn-editar-guia', 'title' => 'Editar Guia']);
-                            echo ui_icon_button('delete', ['class' => 'btn-apagar-guia', 'title' => 'Apagar Guia']);
-                            ?>
-                        </div>
-                    </div> <!-- fecha guia-card -->
-                <?php endforeach; ?>
-            <?php endif; ?>
-                </div> <!-- fecha guias-grid -->
-            </div>
-        </div>
-    </div>
+    <?php
+    $guiaRows = [];
+    foreach ($guias as $guia) {
+        $gid       = (int)$guia['id'];
+        $totalProd = (int)$guia['total_produtos'];
+        $estrutura = resumir_estrutura_guia((string)$guia['conteudo']);
+
+        $acoesCell = '<div class="acoes-tabela">'
+            . ui_icon_button('view', ['class' => 'btn-preview-guia', 'title' => 'Ver Guia'])
+            . ui_icon_button('edit', ['class' => 'btn-editar-guia', 'title' => 'Editar Guia'])
+            . ui_icon_button('delete', ['class' => 'btn-apagar-guia', 'title' => 'Apagar Guia'])
+            . '</div>';
+
+        $guiaRows[] = [
+            'attrs' => [
+                'data-id'       => $gid,
+                'data-titulo'   => (string)$guia['titulo'],
+                'data-conteudo' => (string)$guia['conteudo'],
+            ],
+            'cells' => [
+                '<strong style="color:var(--cor-slate-800);">' . ui_e($guia['titulo']) . '</strong>',
+                '<span class="guia-estrutura-meta">' . ui_e($estrutura) . '</span>',
+                ui_badge($totalProd . ' ' . ($totalProd === 1 ? 'produto' : 'produtos'), $totalProd > 0 ? 'info' : 'neutral'),
+                $acoesCell,
+            ],
+        ];
+    }
+
+    echo ui_table([
+        ['label' => 'Título', 'sort' => 'titulo'],
+        'Estrutura',
+        ['label' => 'Produtos', 'sort' => ['key' => 'produtos', 'default_dir' => 'desc']],
+        'Ações',
+    ], $guiaRows, [
+        'wrap_id'       => 'table-wrapper',
+        'wrap_style'    => 'max-width: 1200px; margin: 0 auto;',
+        'table_class'   => 'admin-table tabela-guias',
+        'empty_message' => $filtro_q !== '' ? 'Nenhum guia encontrado com essa pesquisa.' : 'Ainda não foram criados guias de tamanho.',
+        'sort'          => ['by' => $sort_by, 'dir' => $sort_dir],
+    ]);
+    ?>
 </main>
 
-<div id="modal-guia" class="qe-modal">
-    <div class="qe-card" style="max-width: 850px;">
-        <?php echo ui_close_button(['class' => 'qe-close']); ?>
-        <h3 id="modal-guia-titulo">Adicionar Novo Guia de Tamanhos</h3>
-        <form id="form-guia">
-            <input type="hidden" name="id" id="guia-id">
-            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-            
-            <div class="form-group">
-                <label for="guia-titulo-input">Título</label>
-                <?php echo ui_input('titulo', ['id' => 'guia-titulo-input', 'required' => true]); ?>
-            </div>
-            
-            <div class="tabela-visual-editor">
-                <div class="editor-toolbar">
-                    <div class="toolbar-section">
-                        <div class="control-group">
-                            <span class="control-label">Linhas</span>
-                            <div class="control-buttons">
-                                <?php
-                                echo ui_button('+', ['id' => 'btn-adicionar-linha', 'class' => 'btn-ctrl add', 'title' => 'Adicionar Linha']);
-                                echo ui_button('-', ['id' => 'btn-remover-linha', 'class' => 'btn-ctrl remove', 'title' => 'Remover Linha']);
-                                ?>
-                            </div>
-                        </div>
-                        <div class="control-group">
-                            <span class="control-label">Colunas</span>
-                            <div class="control-buttons">
-                                <?php
-                                echo ui_button('+', ['id' => 'btn-adicionar-coluna', 'class' => 'btn-ctrl add', 'title' => 'Adicionar Coluna']);
-                                echo ui_button('-', ['id' => 'btn-remover-coluna', 'class' => 'btn-ctrl remove', 'title' => 'Remover Coluna']);
-                                ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div id="gerador-visual-wrapper">
-                    <!-- A tabela será gerada aqui -->
-                </div>
-            </div>
+<?php echo ui_bulk_bar('', '', [
+    'unit'         => 'guia(s)',
+    'action_label' => 'Apagar Selecionados',
+]); ?>
 
-            <div class="form-group" style="display: none;">
-                <label for="guia-conteudo-input">Conteúdo (HTML da Tabela)</label>
-                <?php echo ui_textarea('conteudo', '', ['id' => 'guia-conteudo-input', 'rows' => 10]); ?>
-            </div>
+<!-- Modal: Criar / Editar Guia -->
+<?php
+$iconPlus  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+$iconMinus = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>';
 
-            <div class="qe-footer">
-                <?php
-                echo ui_button('Cancelar', ['class' => 'btn-admin-secondary qe-btn-cancel']);
-                echo ui_button('Guardar Guia', ['type' => 'submit', 'class' => 'btn-admin-primary']);
-                ?>
-            </div>
-        </form>
-    </div>
-</div>
+$editorBody = '<form id="form-guia" class="guia-editor-form">'
+    . '<input type="hidden" name="id" id="guia-id">'
+    . '<input type="hidden" name="csrf_token" value="' . ui_e($_SESSION['csrf_token']) . '">'
+    . '<div class="qe-f">'
+    . '  <label for="guia-titulo-input">Título</label>'
+    . ui_input('titulo', ['id' => 'guia-titulo-input', 'class' => 'qe-in', 'placeholder' => 'Ex: Vestidos, Calças, Bebé...', 'required' => true, 'attrs' => ['autocomplete' => 'off']])
+    . '</div>'
+    . '<div class="tabela-visual-editor">'
+    . '  <div class="editor-toolbar">'
+    . '    <span class="editor-hint">Clica nas células para editar</span>'
+    . '    <div class="toolbar-section">'
+    . '      <div class="control-group">'
+    . '        <span class="control-label">Linhas</span>'
+    . '        <div class="control-buttons">'
+    . '          <button type="button" id="btn-remover-linha" class="guia-ctrl-btn remove" title="Remover Linha" aria-label="Remover Linha">' . $iconMinus . '</button>'
+    . '          <button type="button" id="btn-adicionar-linha" class="guia-ctrl-btn add" title="Adicionar Linha" aria-label="Adicionar Linha">' . $iconPlus . '</button>'
+    . '        </div>'
+    . '      </div>'
+    . '      <div class="control-group">'
+    . '        <span class="control-label">Colunas</span>'
+    . '        <div class="control-buttons">'
+    . '          <button type="button" id="btn-remover-coluna" class="guia-ctrl-btn remove" title="Remover Coluna" aria-label="Remover Coluna">' . $iconMinus . '</button>'
+    . '          <button type="button" id="btn-adicionar-coluna" class="guia-ctrl-btn add" title="Adicionar Coluna" aria-label="Adicionar Coluna">' . $iconPlus . '</button>'
+    . '        </div>'
+    . '      </div>'
+    . '    </div>'
+    . '  </div>'
+    . '  <div id="gerador-visual-wrapper"></div>'
+    . '</div>'
+    . '<div style="display:none;">'
+    . ui_textarea('conteudo', '', ['id' => 'guia-conteudo-input', 'rows' => 10])
+    . '</div>'
+    . '</form>';
 
-<div id="modalGuiaTamanhos" class="qe-modal">
-    <div class="qe-card" style="max-width: 850px;">
-        <?php echo ui_close_button(['class' => 'qe-close']); ?>
-        <h3 id="guia-titulo"></h3>
-        <div id="guia-conteudo"></div>
-    </div>
-</div>
+echo ui_modal('modal-guia', 'Novo Guia de Tamanhos', $editorBody, [
+    'class'  => 'guia-modal-wide',
+    'footer' => ui_button('Cancelar', ['id' => 'btn-cancelar-guia', 'class' => 'qe-btn-cancel'])
+        . ui_button('Guardar Guia', ['type' => 'submit', 'variant' => 'primary', 'form' => 'form-guia', 'id' => 'btn-guardar-guia']),
+]);
+
+echo ui_modal('modalGuiaTamanhos', 'Pré-visualização do Guia', '<div id="guia-conteudo"></div>', [
+    'class'  => 'guia-modal-wide',
+    'footer' => ui_button('Fechar', ['id' => 'btn-fechar-preview-guia', 'class' => 'qe-btn-cancel']),
+]);
+?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Bloco de seletores de elementos
-    const modal = document.getElementById('modal-guia');
-    const form = document.getElementById('form-guia');
-    const modalTitulo = document.getElementById('modal-guia-titulo');
-    const guiaIdInput = document.getElementById('guia-id');
-    const guiaTituloInput = document.getElementById('guia-titulo-input');
-    const guiaConteudoInput = document.getElementById('guia-conteudo-input');
-    const listaGuias = document.getElementById('lista-guias');
-    const btnNovoGuia = document.getElementById('btn-novo-guia');
-    const filtroInput = document.getElementById('filtro-guias');
-
-    // Filtro de pesquisa
-    filtroInput.addEventListener('input', function() {
-        const termo = this.value.toLowerCase().trim();
-        const cards = document.querySelectorAll('.guia-card');
-        
-        cards.forEach(card => {
-            const titulo = card.querySelector('.guia-card-title').textContent.toLowerCase();
-            if (titulo.includes(termo)) {
-                card.style.display = '';
-            } else {
-                card.style.display = 'none';
-            }
-        });
-    });
-
-    // Elementos do gerador
-    const btnAdicionarLinha = document.getElementById('btn-adicionar-linha');
-    const btnRemoverLinha = document.getElementById('btn-remover-linha');
-    const btnAdicionarColuna = document.getElementById('btn-adicionar-coluna');
-    const btnRemoverColuna = document.getElementById('btn-remover-coluna');
+    const csrfToken            = <?php echo json_encode($_SESSION['csrf_token']); ?>;
+    const tableWrap            = document.getElementById('table-wrapper');
+    const modal                = document.getElementById('modal-guia');
+    const form                 = document.getElementById('form-guia');
+    const modalTitulo          = document.getElementById('modal-guia-title');
+    const guiaIdInput          = document.getElementById('guia-id');
+    const guiaTituloInput      = document.getElementById('guia-titulo-input');
+    const guiaConteudoInput    = document.getElementById('guia-conteudo-input');
+    const btnNovoGuia          = document.getElementById('btn-novo-guia');
     const geradorVisualWrapper = document.getElementById('gerador-visual-wrapper');
 
-    // Elementos do Modal de Pré-visualização
-    const modalPreview = document.getElementById('modalGuiaTamanhos');
-    const previewTitulo = document.getElementById('guia-titulo');
+    const modalPreview    = document.getElementById('modalGuiaTamanhos');
+    const previewTitulo   = document.getElementById('modalGuiaTamanhos-title');
     const previewConteudo = document.getElementById('guia-conteudo');
-    const btnFecharPreview = modalPreview.querySelector('.qe-close');
 
-    // --- Funções do Editor de Tabela ---
+    function esc(str) {
+        return String(str ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
 
-    const gerarTabelaDefault = () => {
+    // --- Editor Visual de Tabela (inputs limpos, sem contenteditable) ---
+    const criarCelulaInput = (valor = '', isHeader = false) => {
+        const el = document.createElement(isHeader ? 'th' : 'td');
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = isHeader ? 'guia-cell-input is-header' : 'guia-cell-input';
+        inp.value = String(valor ?? '').trim();
+        inp.setAttribute('autocomplete', 'off');
+        inp.placeholder = isHeader ? 'Título' : '-';
+        inp.addEventListener('input', atualizarHtmlDoTextarea);
+        inp.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const td = inp.closest('th, td');
+                const tr = td?.closest('tr');
+                const table = td?.closest('table');
+                if (!td || !tr || !table) return;
+                const colIdx = td.cellIndex;
+                const nextTr = table.rows[tr.rowIndex + 1];
+                const nextInput = nextTr?.cells[colIdx]?.querySelector('input');
+                if (nextInput) {
+                    nextInput.focus();
+                    nextInput.select();
+                } else {
+                    inp.blur();
+                }
+            }
+        });
+        el.appendChild(inp);
+        return el;
+    };
+
+    const atualizarHtmlDoTextarea = () => {
+        const tabelaVisual = document.getElementById('tabela-visual-gerada');
+        if (!tabelaVisual) {
+            guiaConteudoInput.value = '';
+            return;
+        }
+        const cleanTable = document.createElement('table');
+        const thead = cleanTable.createTHead();
+        const headerRow = thead.insertRow();
+        const srcHeadRow = tabelaVisual.tHead?.rows[0] || tabelaVisual.rows[0];
+        if (srcHeadRow) {
+            Array.from(srcHeadRow.cells).forEach(cell => {
+                const th = document.createElement('th');
+                const inp = cell.querySelector('input');
+                th.textContent = (inp ? inp.value : cell.textContent).trim();
+                headerRow.appendChild(th);
+            });
+        }
+        const tbody = cleanTable.createTBody();
+        const srcBodyRows = tabelaVisual.tBodies[0] ? Array.from(tabelaVisual.tBodies[0].rows) : Array.from(tabelaVisual.rows).slice(1);
+        srcBodyRows.forEach(srcRow => {
+            const row = tbody.insertRow();
+            Array.from(srcRow.cells).forEach(cell => {
+                const td = row.insertCell();
+                const inp = cell.querySelector('input');
+                td.textContent = (inp ? inp.value : cell.textContent).trim();
+            });
+        });
+        guiaConteudoInput.value = cleanTable.outerHTML;
+    };
+
+    const montarTabelaEditor = (headers, rowsData) => {
         const table = document.createElement('table');
         table.id = 'tabela-visual-gerada';
 
         const thead = table.createTHead();
         const headerRow = thead.insertRow();
-        ['Tamanho', 'Peito (cm)', 'Cintura (cm)'].forEach(text => {
-            const th = document.createElement('th');
-            th.setAttribute('contenteditable', 'true');
-            th.textContent = text;
-            headerRow.appendChild(th);
-        });
+        headers.forEach(text => headerRow.appendChild(criarCelulaInput(text, true)));
 
         const tbody = table.createTBody();
-        ['S', 'M', 'L'].forEach(size => {
+        rowsData.forEach(cols => {
             const row = tbody.insertRow();
-            const td1 = row.insertCell();
-            td1.setAttribute('contenteditable', 'true');
-            td1.textContent = size;
-            
-            for(let i = 0; i < 2; i++) {
-                const td = row.insertCell();
-                td.setAttribute('contenteditable', 'true');
-                td.textContent = '-';
-            }
+            cols.forEach(val => row.appendChild(criarCelulaInput(val, false)));
         });
-        
+
         geradorVisualWrapper.innerHTML = '';
         geradorVisualWrapper.appendChild(table);
-        table.addEventListener('input', atualizarHtmlDoTextarea);
         atualizarHtmlDoTextarea();
+    };
+
+    const gerarTabelaDefault = () => {
+        montarTabelaEditor(
+            ['Tamanho', 'Peito (cm)', 'Cintura (cm)'],
+            [
+                ['S', '-', '-'],
+                ['M', '-', '-'],
+                ['L', '-', '-'],
+            ]
+        );
     };
 
     const manipularTabela = (acao) => {
@@ -223,23 +296,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (acao === 'addLinha') {
             const novaLinha = tabela.tBodies[0].insertRow(-1);
-            for (let i = 0; i < tabela.rows[0].cells.length; i++) {
-                const novaCelula = novaLinha.insertCell(-1);
-                novaCelula.setAttribute('contenteditable', 'true');
-                novaCelula.textContent = '...';
+            const numCols = tabela.rows[0].cells.length;
+            for (let i = 0; i < numCols; i++) {
+                novaLinha.appendChild(criarCelulaInput('', false));
             }
+            novaLinha.cells[0]?.querySelector('input')?.focus();
         } else if (acao === 'removerLinha' && tabela.rows.length > 2) {
             tabela.deleteRow(-1);
         } else if (acao === 'addColuna') {
-            const novoHeader = document.createElement('th');
-            novoHeader.setAttribute('contenteditable', 'true');
-            novoHeader.textContent = `Titulo ${tabela.rows[0].cells.length + 1}`; // CORREÇÃO AQUI
+            const newIdx = tabela.rows[0].cells.length + 1;
+            const novoHeader = criarCelulaInput(`Coluna ${newIdx}`, true);
             tabela.rows[0].appendChild(novoHeader);
             for (let i = 1; i < tabela.rows.length; i++) {
-                const novaCelula = tabela.rows[i].insertCell(-1);
-                novaCelula.setAttribute('contenteditable', 'true');
-                novaCelula.textContent = '...';
+                tabela.rows[i].appendChild(criarCelulaInput('', false));
             }
+            const hInp = novoHeader.querySelector('input');
+            hInp?.focus();
+            hInp?.select();
         } else if (acao === 'removerColuna' && tabela.rows[0].cells.length > 1) {
             for (let i = 0; i < tabela.rows.length; i++) {
                 tabela.rows[i].deleteCell(-1);
@@ -248,55 +321,41 @@ document.addEventListener('DOMContentLoaded', function() {
         atualizarHtmlDoTextarea();
     };
 
-    const atualizarHtmlDoTextarea = () => {
-        const tabelaVisual = document.getElementById('tabela-visual-gerada');
-        if (tabelaVisual) {
-            const cloneTabela = tabelaVisual.cloneNode(true);
-            cloneTabela.removeAttribute('id');
-            cloneTabela.querySelectorAll('[contenteditable]').forEach(el => {
-                el.removeAttribute('contenteditable');
-            });
-            guiaConteudoInput.value = cloneTabela.outerHTML;
-        } else {
-            guiaConteudoInput.value = '';
-        }
-    };
-    
     const abrirModal = (id = null, titulo = '', conteudo = '') => {
         form.reset();
         guiaIdInput.value = id || '';
         guiaTituloInput.value = titulo;
         guiaConteudoInput.value = conteudo;
         modalTitulo.textContent = id ? 'Editar Guia de Tamanhos' : 'Novo Guia de Tamanhos';
-        
         geradorVisualWrapper.innerHTML = '';
-        
+
         if (conteudo) {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = conteudo;
             const tabelaExistente = tempDiv.querySelector('table');
-            
-            if (tabelaExistente) {
-                tabelaExistente.id = 'tabela-visual-gerada';
-                // Removemos classes antigas para garantir o estilo novo e limpo
-                tabelaExistente.className = ''; 
-                tabelaExistente.querySelectorAll('th, td').forEach(cell => {
-                    cell.setAttribute('contenteditable', 'true');
-                });
-                
-                geradorVisualWrapper.appendChild(tabelaExistente);
-                tabelaExistente.addEventListener('input', atualizarHtmlDoTextarea);
+            if (tabelaExistente && tabelaExistente.rows.length > 0) {
+                const headers = Array.from(tabelaExistente.rows[0].cells).map(c => c.textContent.trim());
+                const rowsData = Array.from(tabelaExistente.rows).slice(1).map(r =>
+                    Array.from(r.cells).map(c => c.textContent.trim())
+                );
+                if (rowsData.length === 0) {
+                    rowsData.push(headers.map(() => ''));
+                }
+                montarTabelaEditor(headers, rowsData);
             } else {
-                 gerarTabelaDefault();
+                gerarTabelaDefault();
             }
         } else {
             gerarTabelaDefault();
         }
         modal.classList.add('ativo');
+        document.documentElement.classList.add('scroll-lock');
+        setTimeout(() => guiaTituloInput.focus(), 50);
     };
 
     const fecharModal = () => {
         modal.classList.remove('ativo');
+        document.documentElement.classList.remove('scroll-lock');
         geradorVisualWrapper.innerHTML = '';
     };
 
@@ -304,88 +363,137 @@ document.addEventListener('DOMContentLoaded', function() {
         previewTitulo.textContent = titulo;
         previewConteudo.innerHTML = conteudo;
         modalPreview.classList.add('ativo');
+        document.documentElement.classList.add('scroll-lock');
     };
 
-    const fecharPreview = () => modalPreview.classList.remove('ativo');
+    const fecharPreview = () => {
+        modalPreview.classList.remove('ativo');
+        document.documentElement.classList.remove('scroll-lock');
+    };
 
-    // Event Listeners
-    btnNovoGuia.addEventListener('click', () => abrirModal());
-    modal.querySelector('.qe-close').addEventListener('click', fecharModal);
-    modal.querySelector('.qe-btn-cancel').addEventListener('click', fecharModal);
-    btnFecharPreview.addEventListener('click', fecharPreview);
-    modalPreview.addEventListener('click', (e) => { if (e.target === modalPreview) fecharPreview(); });
+    // Fechar modais
+    btnNovoGuia?.addEventListener('click', () => abrirModal());
+    document.getElementById('btn-cancelar-guia')?.addEventListener('click', fecharModal);
+    document.getElementById('btn-fechar-preview-guia')?.addEventListener('click', fecharPreview);
+    modal?.addEventListener('click', e => { if (e.target === modal) fecharModal(); });
+    modalPreview?.addEventListener('click', e => { if (e.target === modalPreview) fecharPreview(); });
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape') return;
+        const c = document.getElementById('modalConfirmacao');
+        if (c && c.classList.contains('ativo')) return;
+        if (modal?.classList.contains('ativo')) fecharModal();
+        if (modalPreview?.classList.contains('ativo')) fecharPreview();
+    });
 
-    btnAdicionarLinha.addEventListener('click', () => manipularTabela('addLinha'));
-    btnRemoverLinha.addEventListener('click', () => manipularTabela('removerLinha'));
-    btnAdicionarColuna.addEventListener('click', () => manipularTabela('addColuna'));
-    btnRemoverColuna.addEventListener('click', () => manipularTabela('removerColuna'));
-    
-    listaGuias.addEventListener('click', function(e) {
+    document.getElementById('btn-adicionar-linha')?.addEventListener('click', () => manipularTabela('addLinha'));
+    document.getElementById('btn-remover-linha')?.addEventListener('click', () => manipularTabela('removerLinha'));
+    document.getElementById('btn-adicionar-coluna')?.addEventListener('click', () => manipularTabela('addColuna'));
+    document.getElementById('btn-remover-coluna')?.addEventListener('click', () => manipularTabela('removerColuna'));
 
-        const target = e.target;
-        const card = target.closest('.guia-card');
-        if (!card) return;
-        const id = card.dataset.id;
-        const info = card.querySelector('.guia-card-title');
+    // Seleção em massa
+    const bulkSel = window.initAdminBulkSelection({
+        onAction: ids => {
+            mostrarModalConfirmacao(
+                'Apagar Guias',
+                `Tens a certeza que queres apagar permanentemente ${ids.length} guia(s) de tamanhos?`,
+                async () => {
+                    const tbody = document.querySelector('.tabela-guias tbody');
+                    let ok = 0;
+                    for (const id of ids) {
+                        const fd = new FormData();
+                        fd.append('action', 'delete');
+                        fd.append('id', id);
+                        fd.append('csrf_token', csrfToken);
+                        try {
+                            const data = await fetch('ajax_operations_guias.php', { method: 'POST', body: fd }).then(r => r.json());
+                            if (data.sucesso) {
+                                tbody?.querySelector(`tr[data-id="${id}"]`)?.remove();
+                                ok++;
+                            }
+                        } catch {}
+                    }
+                    if (bulkSel) bulkSel.setMode(false);
+                    if (tbody && !tbody.querySelector('tr[data-id]')) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="reservation-empty">Ainda não foram criados guias de tamanho.</td></tr>';
+                    }
+                    if (ok > 0) mostrarPopup(`${ok} guia(s) apagado(s) com sucesso!`, 'sucesso');
+                }
+            );
+        }
+    });
 
-        if (target.closest('.btn-editar-guia')) {
-            abrirModal(id, info.dataset.titulo, info.dataset.conteudo);
-        } else if (target.closest('.btn-preview-guia')) {
-            abrirPreview(info.dataset.titulo, info.dataset.conteudo);
-        } else if (target.closest('.btn-apagar-guia')) {
-            const escTitulo = String(info.dataset.titulo || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-            mostrarModalConfirmacao('Apagar Guia', `Tem a certeza que quer apagar o guia "${escTitulo}"?`, () => {
+    // Delegação na tabela (funciona também após ordenar/pesquisar via AJAX)
+    tableWrap?.addEventListener('click', function(e) {
+        if (bulkSel && bulkSel.isSelMode()) return;
+        const tr = e.target.closest('tr[data-id]');
+        if (!tr) return;
+        const id = tr.dataset.id;
+
+        if (e.target.closest('.btn-editar-guia')) {
+            abrirModal(id, tr.dataset.titulo, tr.dataset.conteudo);
+        } else if (e.target.closest('.btn-preview-guia')) {
+            abrirPreview(tr.dataset.titulo, tr.dataset.conteudo);
+        } else if (e.target.closest('.btn-apagar-guia')) {
+            mostrarModalConfirmacao('Apagar Guia', `Tens a certeza que queres apagar o guia "<strong>${esc(tr.dataset.titulo)}</strong>"?`, () => {
                 const formData = new FormData();
                 formData.append('action', 'delete');
                 formData.append('id', id);
-                formData.append('csrf_token', '<?php echo $_SESSION['csrf_token']; ?>');
-                
+                formData.append('csrf_token', csrfToken);
                 fetch('ajax_operations_guias.php', { method: 'POST', body: formData })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.sucesso) {
-                        mostrarPopup('Guia apagado com sucesso!', 'sucesso');
-                        card.remove();
-                    } else {
-                        mostrarPopup(data.mensagem, 'erro');
-                    }
-                }).catch(() => mostrarPopup('Ocorreu um erro de comunicação.', 'erro'));
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.sucesso) {
+                            mostrarPopup('Guia apagado com sucesso!', 'sucesso');
+                            tr.remove();
+                            const tbody = document.querySelector('.tabela-guias tbody');
+                            if (tbody && !tbody.querySelector('tr[data-id]')) {
+                                tbody.innerHTML = '<tr><td colspan="4" class="reservation-empty">Ainda não foram criados guias de tamanho.</td></tr>';
+                            }
+                        } else {
+                            mostrarPopup(data.mensagem || 'Erro ao apagar.', 'erro');
+                        }
+                    })
+                    .catch(() => mostrarPopup('Ocorreu um erro de comunicação.', 'erro'));
             });
         }
     });
 
-    // Duplo clique para editar
-    listaGuias.addEventListener('dblclick', function(e) {
-        const card = e.target.closest('.guia-card');
-        if (card) {
-            const id = card.dataset.id;
-            const info = card.querySelector('.guia-card-title');
-            abrirModal(id, info.dataset.titulo, info.dataset.conteudo);
-        }
+    // Duplo clique na linha abre o editor (bloqueado em modo seleção)
+    tableWrap?.addEventListener('dblclick', function(e) {
+        if (bulkSel && bulkSel.isSelMode()) return;
+        if (e.target.closest('button, a')) return;
+        const tr = e.target.closest('tr[data-id]');
+        if (tr) abrirModal(tr.dataset.id, tr.dataset.titulo, tr.dataset.conteudo);
     });
 
-    form.addEventListener('submit', function(e) {
+    form?.addEventListener('submit', function(e) {
         e.preventDefault();
+        atualizarHtmlDoTextarea();
         const formData = new FormData(this);
         formData.append('action', guiaIdInput.value ? 'edit' : 'add');
-        
-        const botao = form.querySelector('button[type="submit"]');
+
+        const botao = document.getElementById('btn-guardar-guia');
         botao.disabled = true;
+        botao.textContent = 'A guardar...';
 
         fetch('ajax_operations_guias.php', { method: 'POST', body: formData })
-        .then(res => res.json())
-        .then(data => {
-            if (data.sucesso) {
-                mostrarPopup('Guia guardado com sucesso!', 'sucesso');
-                setTimeout(() => window.location.reload(), 1000);
-            } else {
-                mostrarPopup(data.mensagem, 'erro');
+            .then(res => res.json())
+            .then(data => {
+                if (data.sucesso) {
+                    fecharModal();
+                    mostrarPopup('Guia guardado com sucesso!', 'sucesso');
+                    setTimeout(() => window.location.reload(), 450);
+                } else {
+                    mostrarPopup(data.mensagem || 'Erro ao guardar guia.', 'erro');
+                    botao.disabled = false;
+                    botao.textContent = 'Guardar Guia';
+                }
+            })
+            .catch(() => {
+                mostrarPopup('Ocorreu um erro de comunicação.', 'erro');
                 botao.disabled = false;
-            }
-        }).catch(() => {
-            mostrarPopup('Ocorreu um erro de comunicação.', 'erro');
-            botao.disabled = false;
-        });
+                botao.textContent = 'Guardar Guia';
+            });
     });
 });
 </script>

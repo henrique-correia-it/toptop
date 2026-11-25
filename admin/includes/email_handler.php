@@ -7,8 +7,10 @@ use PHPMailer\PHPMailer\Exception;
 require_once __DIR__ . '/../../phpmailer/src/Exception.php';
 require_once __DIR__ . '/../../phpmailer/src/PHPMailer.php';
 require_once __DIR__ . '/../../phpmailer/src/SMTP.php';
+require_once __DIR__ . '/../../config/env.php';
 require_once __DIR__ . '/../../config/formatters.php';
 require_once __DIR__ . '/../../config/header_functions.php';
+require_once __DIR__ . '/../../config/footer_functions.php';
 
 // Instância SMTP partilhada para toda a execução do script.
 // SMTPKeepAlive mantém a ligação aberta entre envios, evitando
@@ -31,11 +33,7 @@ function _resetSmtpMailer() {
 function _getSmtpMailer() {
     global $_smtp_mailer_instance, $_smtp_shutdown_registered;
 
-    $env_path = __DIR__ . '/../../.env';
-    $env_vars = file_exists($env_path) ? parse_ini_file($env_path, false, INI_SCANNER_RAW) : [];
-    if (!is_array($env_vars)) {
-        $env_vars = [];
-    }
+    $env_vars = tt_load_env();
 
     if ($_smtp_mailer_instance !== null) {
         // Limpa destinatários, cabeçalhos personalizados e anexos do envio anterior
@@ -78,6 +76,33 @@ function _getSmtpMailer() {
     return [$mail, $env_vars];
 }
 
+function _isNoReplyEmail(string $email): bool {
+    return (bool)preg_match('/^(?:no-?reply|donotreply)@/i', trim($email));
+}
+
+function _getStoreEmailAddress(array $env_vars): string {
+    global $conn;
+
+    $envStore = trim((string)($env_vars['MAIL_STORE_ADDRESS'] ?? ''));
+    if ($envStore !== '' && filter_var($envStore, FILTER_VALIDATE_EMAIL) && !_isNoReplyEmail($envStore)) {
+        return $envStore;
+    }
+
+    if (function_exists('getFooterText') && isset($conn) && $conn) {
+        $footerEmail = trim((string)getFooterText('email', ''));
+        if ($footerEmail !== '' && filter_var($footerEmail, FILTER_VALIDATE_EMAIL) && !_isNoReplyEmail($footerEmail)) {
+            return $footerEmail;
+        }
+    }
+
+    $envReplyTo = trim((string)($env_vars['MAIL_REPLY_TO_ADDRESS'] ?? ''));
+    if ($envReplyTo !== '' && filter_var($envReplyTo, FILTER_VALIDATE_EMAIL) && !_isNoReplyEmail($envReplyTo)) {
+        return $envReplyTo;
+    }
+
+    return 'toptopclothingstore@gmail.com';
+}
+
 function enviarEmailEncomenda($tipo, $dados) {
     global $conn;
 
@@ -86,7 +111,10 @@ function enviarEmailEncomenda($tipo, $dados) {
     try {
         $from_address     = $env_vars['MAIL_FROM_ADDRESS'] ?? 'noreply@toptop.pt';
         $from_name        = $env_vars['MAIL_FROM_NAME']    ?? 'TopTop';
-        $reply_to_address = $env_vars['MAIL_REPLY_TO_ADDRESS'] ?? $from_address;
+        $env_reply_to     = trim((string)($env_vars['MAIL_REPLY_TO_ADDRESS'] ?? ''));
+        $reply_to_address = ($env_reply_to !== '' && filter_var($env_reply_to, FILTER_VALIDATE_EMAIL) && !_isNoReplyEmail($env_reply_to))
+            ? $env_reply_to
+            : _getStoreEmailAddress($env_vars);
         $reply_to_name    = $env_vars['MAIL_REPLY_TO_NAME']    ?? $from_name;
 
         $mail->setFrom($from_address, $from_name);
@@ -193,9 +221,10 @@ function enviarEmailEncomenda($tipo, $dados) {
         </div></body></html>";
 
         $mail->send();
+        $encomenda_id = (int)($dados['id'] ?? 0);
+        log_email("Enviado [{$tipo}]" . ($encomenda_id > 0 ? " enc#{$encomenda_id}" : '') . " para {$dados['cliente_email']} | Assunto: {$assunto_final}", 'email_handler.php', 'INFO');
 
         // Guardar email no histórico da encomenda
-        $encomenda_id = (int)($dados['id'] ?? 0);
         if ($encomenda_id > 0 && isset($conn)) {
             $stmt_get = $conn->prepare("SELECT mensagens_cliente FROM encomendas WHERE id = ?");
             $stmt_get->bind_param("i", $encomenda_id);
@@ -222,8 +251,7 @@ function enviarEmailEncomenda($tipo, $dados) {
         return ['assunto' => $assunto_final, 'corpo' => $corpo_html_inner];
 
     } catch (Exception $e) {
-        log_email("PHPMailer falhou (tipo:{$tipo}): {$mail->ErrorInfo}", 'email_handler.php');
-        error_log("PHPMailer (tipo:{$tipo}) falhou: {$mail->ErrorInfo}");
+        log_email("PHPMailer falhou (tipo:{$tipo}, para:{$dados['cliente_email']}): {$mail->ErrorInfo}", 'email_handler.php', 'ERROR');
         _resetSmtpMailer();
         throw new Exception("Envio de email falhou.");
     }
@@ -236,10 +264,13 @@ function enviarEmailNotificacaoLoja($tipo, $dados) {
     try {
         $from_address  = $env_vars['MAIL_FROM_ADDRESS'] ?? 'noreply@toptop.pt';
         $from_name     = $env_vars['MAIL_FROM_NAME']    ?? 'TopTop';
-        $store_address = $env_vars['MAIL_STORE_ADDRESS'] ?? ($env_vars['MAIL_REPLY_TO_ADDRESS'] ?? 'toptopclothingstore@gmail.com');
+        $store_address = _getStoreEmailAddress($env_vars);
 
         $mail->setFrom($from_address, $from_name);
         $mail->addAddress($store_address, 'TopTop Loja');
+        if (!empty($dados['email_remetente']) && filter_var($dados['email_remetente'], FILTER_VALIDATE_EMAIL)) {
+            $mail->addReplyTo($dados['email_remetente'], (string)($dados['nome_remetente'] ?? ''));
+        }
         $mail->isHTML(true);
 
         // Buscar template na base de dados
@@ -250,8 +281,8 @@ function enviarEmailNotificacaoLoja($tipo, $dados) {
         
         if ($res_tpl->num_rows === 0) {
             $stmt_tpl->close();
-            log_email("Template '{$tipo}' não encontrado na base de dados.", 'enviarEmailNotificacaoLoja');
-            error_log("enviarEmailNotificacaoLoja: template '{$tipo}' não encontrado na base de dados.");
+            log_email("Template '{$tipo}' não encontrado na base de dados.", 'enviarEmailNotificacaoLoja', 'ERROR');
+            log_app("Template de email '{$tipo}' não encontrado na BD.", 'ERROR', 'enviarEmailNotificacaoLoja');
             return;
         }
         
@@ -300,10 +331,10 @@ function enviarEmailNotificacaoLoja($tipo, $dados) {
         </div></body></html>";
 
         $mail->send();
+        log_email("Enviado [{$tipo}] para loja ({$store_address}) | Assunto: {$assunto_final}", 'email_handler.php', 'INFO');
 
     } catch (Exception $e) {
-        log_email("Notificação loja falhou (tipo:{$tipo}): {$mail->ErrorInfo}", 'email_handler.php');
-        error_log("Notificação loja (tipo:{$tipo}) falhou: {$mail->ErrorInfo}");
+        log_email("Notificação loja falhou (tipo:{$tipo}): {$mail->ErrorInfo}", 'email_handler.php', 'ERROR');
         _resetSmtpMailer();
     }
 }
@@ -314,7 +345,10 @@ function enviarEmailTemplate($template_key, $to_email, $to_name, $placeholders =
     try {
         $from_address = $env_vars['MAIL_FROM_ADDRESS'] ?? 'noreply@toptop.pt';
         $from_name    = $env_vars['MAIL_FROM_NAME']    ?? 'TopTop';
-        $reply_to     = $env_vars['MAIL_REPLY_TO_ADDRESS'] ?? $from_address;
+        $env_reply_to = trim((string)($env_vars['MAIL_REPLY_TO_ADDRESS'] ?? ''));
+        $reply_to     = ($env_reply_to !== '' && filter_var($env_reply_to, FILTER_VALIDATE_EMAIL) && !_isNoReplyEmail($env_reply_to))
+            ? $env_reply_to
+            : _getStoreEmailAddress($env_vars);
 
         $mail->setFrom($from_address, $from_name);
         $mail->addAddress($to_email, $to_name);
@@ -373,10 +407,10 @@ function enviarEmailTemplate($template_key, $to_email, $to_name, $placeholders =
         </div></body></html>";
 
         $mail->send();
+        log_email("Enviado [{$template_key}] para {$to_email} | Assunto: {$assunto_final}", 'email_handler.php', 'INFO');
         return true;
     } catch (Exception $e) {
-        log_email("enviarEmailTemplate ({$template_key}) falhou: " . $mail->ErrorInfo, 'email_handler.php');
-        error_log("enviarEmailTemplate ({$template_key}) falhou: " . $mail->ErrorInfo);
+        log_email("enviarEmailTemplate ({$template_key}, para:{$to_email}) falhou: " . ($mail->ErrorInfo ?: $e->getMessage()), 'email_handler.php', 'ERROR');
         _resetSmtpMailer();
         return false;
     }

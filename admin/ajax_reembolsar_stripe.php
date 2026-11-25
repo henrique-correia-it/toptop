@@ -9,7 +9,7 @@ require_once __DIR__ . '/../config/stripe.php';
 
 header('Content-Type: application/json');
 
-if (!admin_has_role(['superadmin', 'desenvolvedor'])) {
+if (!is_admin_manager()) {
     http_response_code(403);
     echo json_encode(['sucesso' => false, 'mensagem' => 'Acesso negado.']);
     exit;
@@ -76,11 +76,11 @@ $reembolso_ok = ($http_code === 200 && in_array($refund['status'] ?? '', ['succe
 
 if (!$reembolso_ok) {
     $stripe_error = $refund['error']['message'] ?? 'Erro desconhecido na API Stripe.';
-    // Se já foi completamente reembolsado, não é um erro real — avança para sincronizar BD
+    // Se já foi completamente reembolsado, não é um erro real - avança para sincronizar BD
     if (($refund['error']['code'] ?? '') === 'charge_already_refunded') {
         $reembolso_ok = true;
     } else {
-        error_log("Stripe reembolso falhou para encomenda #{$encomenda_id}: " . $stripe_error);
+        log_stripe("Stripe reembolso falhou para encomenda #{$encomenda_id}: {$stripe_error}", 'ERROR', 'ajax_reembolsar_stripe.php');
         echo json_encode(['sucesso' => false, 'mensagem' => 'Erro Stripe: ' . $stripe_error]);
         exit;
     }
@@ -115,16 +115,28 @@ try {
     $conn->commit();
 } catch (\Throwable $e) {
     $conn->rollback();
-    error_log("Reembolso Stripe OK mas falha ao cancelar encomenda #{$encomenda_id}: " . $e->getMessage());
+    log_exception($e, "ajax_reembolsar_stripe.php enc#{$encomenda_id} (Stripe OK, DB falhou)");
+    log_stripe("Reembolso Stripe OK mas falha BD ao cancelar encomenda #{$encomenda_id}: " . $e->getMessage(), 'ERROR', 'ajax_reembolsar_stripe.php');
     echo json_encode(['sucesso' => false, 'mensagem' => 'Reembolso processado mas erro ao atualizar a encomenda. Contacte o suporte.']);
     exit;
 }
 
 // Enviar email ao cliente apenas se esta transação cancelou a encomenda
 if ($foi_cancelada) {
+    log_stripe("Reembolso Stripe concluído e stock reposto para encomenda #{$encomenda_id}.", 'INFO', 'ajax_reembolsar_stripe.php');
+    log_app("Reembolso Stripe processado para encomenda #{$encomenda_id}.", 'INFO', 'ajax_reembolsar_stripe.php');
     try {
         require_once __DIR__ . '/includes/email_handler.php';
-        enviarEmailEncomenda('cancelada', [
+        $tpl_reembolso = 'cancelada';
+        $stmt_tpl_chk = $conn->prepare("SELECT 1 FROM email_templates WHERE template_key = 'reembolsada' LIMIT 1");
+        if ($stmt_tpl_chk) {
+            $stmt_tpl_chk->execute();
+            if ($stmt_tpl_chk->get_result()->num_rows > 0) {
+                $tpl_reembolso = 'reembolsada';
+            }
+            $stmt_tpl_chk->close();
+        }
+        enviarEmailEncomenda($tpl_reembolso, [
             'id'               => $encomenda['id'],
             'token'            => $encomenda['token'],
             'cliente_nome'     => $encomenda['cliente_nome'],
@@ -135,7 +147,7 @@ if ($foi_cancelada) {
             'metodo_pagamento' => $encomenda['metodo_pagamento'],
         ]);
     } catch (\Throwable $e) {
-        error_log("Reembolso OK mas falha no email para encomenda #{$encomenda_id}: " . $e->getMessage());
+        log_email("Reembolso OK mas falha no email para encomenda #{$encomenda_id}: " . $e->getMessage(), 'ajax_reembolsar_stripe.php', 'ERROR');
     }
 }
 

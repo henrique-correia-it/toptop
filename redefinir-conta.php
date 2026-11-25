@@ -43,13 +43,6 @@ if ($token !== '') {
         
         if ($reset) {
             $perfil_token = 'admin';
-            // Buscar nome do admin
-            $stmt_user = $conn->prepare("SELECT username FROM administradores WHERE email = ?");
-            $stmt_user->bind_param("s", $reset['email']);
-            $stmt_user->execute();
-            $row_user = $stmt_user->get_result()->fetch_assoc();
-            $reset['nome'] = $row_user['username'] ?? 'Administrador';
-            $stmt_user->close();
         }
     } else {
         $perfil_token = 'cliente';
@@ -105,13 +98,19 @@ if (!$reset) {
                 }
 
                 $conn->commit();
+                log_seguranca("Palavra-passe redefinida via token ({$perfil_token}: {$reset['email']}).", 'redefinir-conta.php');
+                require_once __DIR__ . '/admin/includes/email_handler.php';
+                $nome_dest = ($perfil_token === 'cliente') ? (string)($reset['nome'] ?? '') : (string)($reset['email'] ?? '');
+                enviarEmailTemplate('password_alterada', (string)$reset['email'], $nome_dest, [
+                    '{nome_cliente}' => $nome_dest,
+                ]);
                 session_regenerate_id(true);
                 $mensagem = 'Palavra-passe atualizada com sucesso. Já podes entrar.';
                 $tipo = 'sucesso';
                 $reset = null;
             } catch (Throwable $e) {
                 $conn->rollback();
-                log_app($e->getMessage(), 'ERROR', 'redefinir-conta.php');
+                log_exception($e, 'redefinir-conta.php');
                 $mensagem = 'Nao foi possivel atualizar a palavra-passe.';
             }
         }
@@ -140,21 +139,21 @@ include __DIR__ . '/templates/header.php';
                     <label for="password">Nova palavra-passe</label>
                     <div class="password-wrapper">
                         <?php echo ui_input('password', ['type' => 'password', 'id' => 'password', 'required' => true, 'autocomplete' => 'new-password']); ?>
-                        <span class="toggle-senha" data-target="password">
+                        <button type="button" class="toggle-senha" aria-label="Mostrar ou ocultar palavra-passe" data-target="password" style="background:none;border:none;padding:0;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        </span>
+                        </button>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="password_confirm">Confirmar palavra-passe</label>
                     <div class="password-wrapper">
                         <?php echo ui_input('password_confirm', ['type' => 'password', 'id' => 'password_confirm', 'required' => true, 'autocomplete' => 'new-password']); ?>
-                        <span class="toggle-senha" data-target="password_confirm">
+                        <button type="button" class="toggle-senha" aria-label="Mostrar ou ocultar palavra-passe" data-target="password_confirm" style="background:none;border:none;padding:0;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        </span>
+                        </button>
                     </div>
                 </div>
-                <?php echo ui_button('Guardar palavra-passe', ['type' => 'submit', 'class' => 'button add-btn']); ?>
+                <?php echo ui_button('Guardar palavra-passe', ['type' => 'submit', 'class' => 'button add-btn', 'full' => true]); ?>
             </form>
             <?php endif; ?>
 

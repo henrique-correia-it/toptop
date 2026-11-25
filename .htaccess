@@ -3,20 +3,11 @@ ErrorDocument 404 /404.php
 
 # --- BLOQUEIO DE FICHEIROS E DIRETÓRIOS SENSÍVEIS ---
 
-<Files ".env">
-    Require all denied
-</Files>
-
 <FilesMatch "^\.">
     Require all denied
 </FilesMatch>
 
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteRule (^|/)\.(?!well-known) - [F,L]
-</IfModule>
-
-# Bloqueia acesso direto a logs
+# Bloqueia acesso direto a logs e ficheiros sensíveis
 <Files "error_log">
     Require all denied
 </Files>
@@ -28,21 +19,23 @@ ErrorDocument 404 /404.php
 </FilesMatch>
 
 # Bloqueia ficheiros de documentação e configuração do projecto
-<FilesMatch "^(CLAUDE|README|CHANGELOG|composer\.json|composer\.lock|package\.json|package-lock\.json)">
+<FilesMatch "^(CLAUDE|README|CHANGELOG|LICENSE|composer\.json|composer\.lock|package\.json|package-lock\.json)">
     Require all denied
 </FilesMatch>
 
-# Bloqueia acesso direto a ficheiros PHP de configuração e includes sensíveis
+# --- REESCRITA DE URLS E PROTEÇÃO DE DIRETÓRIOS INTERNOS ---
 <IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Bloqueia ficheiros/diretórios ocultos (exceto .well-known)
+    RewriteRule (^|/)\.(?!well-known) - [F,L]
+
+    # Bloqueia acesso direto a ficheiros PHP de configuração, includes e logs
     RewriteRule ^config/ - [F,L]
     RewriteRule ^includes/ - [F,L]
     RewriteRule ^admin/includes/ - [F,L]
     RewriteRule ^admin/config/ - [F,L]
     RewriteRule ^logs/ - [F,L]
-</IfModule>
-
-<IfModule mod_rewrite.c>
-    RewriteEngine On
 
     # REGRA 1: Forçar HTTPS apenas no servidor online (não em localhost)
     # GET/HEAD -> 301 (SEO); POST/outros -> 308 (preserva método e corpo)
@@ -52,7 +45,7 @@ ErrorDocument 404 /404.php
     RewriteCond %{HTTP:X-Forwarded-Proto} !https
     RewriteCond %{HTTPS} off
     RewriteCond %{HTTP:CF-Visitor} !{"scheme":"https"}
-    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    RewriteRule (.*) https://toptop.pt%{REQUEST_URI} [L,R=301]
 
     RewriteCond %{REQUEST_METHOD} POST [NC]
     RewriteCond %{HTTP_HOST} !^localhost$ [NC]
@@ -60,7 +53,16 @@ ErrorDocument 404 /404.php
     RewriteCond %{HTTP:X-Forwarded-Proto} !https
     RewriteCond %{HTTPS} off
     RewriteCond %{HTTP:CF-Visitor} !{"scheme":"https"}
-    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [L,R=308]
+    RewriteRule (.*) https://toptop.pt%{REQUEST_URI} [L,R=308]
+
+    # REGRA 1b: Domínio canónico sem www (www.toptop.pt -> toptop.pt)
+    RewriteCond %{REQUEST_METHOD} !POST [NC]
+    RewriteCond %{HTTP_HOST} ^www\.toptop\.pt$ [NC]
+    RewriteRule (.*) https://toptop.pt%{REQUEST_URI} [L,R=301]
+
+    RewriteCond %{REQUEST_METHOD} POST [NC]
+    RewriteCond %{HTTP_HOST} ^www\.toptop\.pt$ [NC]
+    RewriteRule (.*) https://toptop.pt%{REQUEST_URI} [L,R=308]
 
     # Regras para os painéis e login (limpam a URL)
     RewriteRule ^dev/?$ dev/dev.php [L]
@@ -82,7 +84,10 @@ ErrorDocument 404 /404.php
     RewriteRule ^minha-conta/dados/?$ minha-conta-dados.php [L]
 
     # Regra para URLs amigáveis de produtos (existente)
-    RewriteRule ^produto/([a-zA-Z0-9-]+)$ produto.php?slug=$1 [L,QSA]
+    RewriteRule ^produto/([a-zA-Z0-9-]+)/?$ produto.php?slug=$1 [L,QSA]
+
+    # Sitemap XML padrão (serve sitemap.php internamente)
+    RewriteRule ^sitemap\.xml$ sitemap.php [L]
 
     # Evita redirecionar POST para preservar dados do formulário (existente)
     RewriteCond %{REQUEST_METHOD} !POST
@@ -99,17 +104,19 @@ ErrorDocument 404 /404.php
 <IfModule mod_expires.c>
   ExpiresActive On
   
-  # Imagens (Podem ficar em cache)
-  ExpiresByType image/jpg "access 1 year"
+  # Imagens e fontes (Podem ficar em cache)
   ExpiresByType image/jpeg "access 1 year"
   ExpiresByType image/gif "access 1 year"
   ExpiresByType image/png "access 1 year"
   ExpiresByType image/webp "access 1 year"
   ExpiresByType image/avif "access 1 year"
+  ExpiresByType image/svg+xml "access 1 year"
+  ExpiresByType image/x-icon "access 1 year"
+  ExpiresByType font/woff2 "access 1 year"
   ExpiresByType text/css "access 1 month"
   ExpiresByType application/javascript "access 1 month"
   
-  # HTML e PHP (NUNCA guardar em cache)
+  # HTML e JSON (NUNCA guardar em cache)
   ExpiresByType text/html "access 0 seconds"
   ExpiresByType application/json "access 0 seconds"
   
@@ -120,6 +127,9 @@ ErrorDocument 404 /404.php
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE application/javascript
   AddOutputFilterByType DEFLATE application/x-javascript
+  AddOutputFilterByType DEFLATE application/json
+  AddOutputFilterByType DEFLATE application/xml
+  AddOutputFilterByType DEFLATE image/svg+xml
   AddOutputFilterByType DEFLATE text/css
   AddOutputFilterByType DEFLATE text/html
   AddOutputFilterByType DEFLATE text/xml

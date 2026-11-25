@@ -17,6 +17,8 @@ const abrirModal = (titulo, texto, callback) => {
     // Armazenar o callback num atributo do modal para acesso posterior
     modal.onConfirmCallback = callback;
 
+    let trap = null;
+
     const clickFora = (e) => {
         if (e.target === modal) {
             fecharModal();
@@ -27,6 +29,7 @@ const abrirModal = (titulo, texto, callback) => {
         modal.classList.remove('ativo');
         modal.onConfirmCallback = null;
         modal.removeEventListener('click', clickFora);
+        if (trap) { trap.release(); trap = null; }
     };
 
     // Configurar botões (remover eventos antigos para evitar duplicados se a função for chamada múltiplas vezes)
@@ -49,6 +52,11 @@ const abrirModal = (titulo, texto, callback) => {
     modal.addEventListener('click', clickFora);
 
     modal.classList.add('ativo');
+    if (typeof window.ttFocusTrap === 'function') {
+        trap = window.ttFocusTrap(modal, fecharModal);
+    } else {
+        novoBtnCancelar.focus();
+    }
 };
 
 // Expõe a função para que outros scripts a possam chamar IMEDIATAMENTE

@@ -1,24 +1,49 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
-header('Content-Type: application/json');
+require_once __DIR__ . '/../config/auth.php';
+header('Content-Type: application/json; charset=UTF-8');
 
-if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true) {
+if (!is_admin_logged_in()) {
+    http_response_code(403);
     echo json_encode(null);
     exit;
 }
 
-$key = $_GET['key'] ?? '';
-if (empty($key)) {
+$key = trim((string)($_GET['key'] ?? ''));
+if ($key === '') {
+    echo json_encode(null);
+    exit;
+}
+
+$system_keys = [
+    'verificacao_email',
+    'recuperacao_cliente',
+    'recuperacao_admin',
+    'password_alterada',
+    'conta_eliminada',
+    'nova_encomenda_loja',
+    'novo_contacto_loja',
+];
+
+if (in_array($key, $system_keys, true)) {
+    http_response_code(403);
     echo json_encode(null);
     exit;
 }
 
 include '../config/database.php';
 
-$stmt = $conn->prepare("SELECT subject, body FROM email_templates WHERE template_key = ? LIMIT 1");
-$stmt->bind_param("s", $key);
+$has_scope_col = ($colRes = $conn->query("SHOW COLUMNS FROM email_templates LIKE 'scope'")) && $colRes->num_rows > 0;
+if ($has_scope_col) {
+    $stmt = $conn->prepare("SELECT subject, body, scope FROM email_templates WHERE template_key = ? LIMIT 1");
+} else {
+    $stmt = $conn->prepare("SELECT subject, body FROM email_templates WHERE template_key = ? LIMIT 1");
+}
+
+$stmt->bind_param('s', $key);
 $stmt->execute();
-$row = $stmt->get_result()->fetch_assoc();
+$result = $stmt->get_result();
+$row = $result ? $result->fetch_assoc() : null;
 $stmt->close();
 
 if (!$row) {
@@ -26,4 +51,13 @@ if (!$row) {
     exit;
 }
 
-echo json_encode(['assunto' => $row['subject'], 'corpo' => $row['body']]);
+if ($has_scope_col && ($row['scope'] ?? '') !== 'loja') {
+    http_response_code(403);
+    echo json_encode(null);
+    exit;
+}
+
+echo json_encode([
+    'subject' => $row['subject'],
+    'body' => $row['body'],
+]);

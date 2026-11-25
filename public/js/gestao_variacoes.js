@@ -67,17 +67,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const todosOsGrupos = new Set([...Object.keys(estado.atributos), ...Array.from(estado.gruposParaVariacao)]);
 
         if (todosOsGrupos.size === 0) {
-            variacoesWrapper.innerHTML = `<div class="variacoes-placeholder"><p>Adicione atributos ao produto para poder gerir o stock.</p></div>`;
+            variacoesWrapper.innerHTML = '';
             return;
         }
 
-        let html = '<div class="variacoes-controlos"><h4>Gerar Variações de Stock com Base em:</h4>';
+        let html = '<div class="variacoes-controlos"><span class="variacoes-controlos-label">Gerir stock por variação:</span><div class="variacoes-checks">';
         todosOsGrupos.forEach(nome => {
             const isChecked = estado.gruposParaVariacao.has(nome) ? 'checked' : '';
             const nomeSeguro = escapeHtml(nome);
-            html += `<label class="filtro-checkbox"><input type="checkbox" class="variacao-control-checkbox" data-grupo-nome="${nomeSeguro}" ${isChecked}> ${nomeSeguro}</label>`;
+            html += `<label class="ui-checkbox variacao-check-item"><input type="checkbox" class="variacao-control-checkbox" data-grupo-nome="${nomeSeguro}" ${isChecked}><span class="ui-checkbox__box" aria-hidden="true"></span><span class="ui-checkbox__text">${nomeSeguro}</span></label>`;
         });
-        html += '</div><div class="variacoes-table-wrapper"></div>';
+        html += '</div></div><div class="variacoes-table-wrapper"></div>';
         
         variacoesWrapper.innerHTML = html;
         gerarCombinacoesDeVariacoes();

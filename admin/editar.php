@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/csrf.php';
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
@@ -31,34 +32,38 @@ $popupTipo = "";
 
 // LÓGICA DE SUBMISSÃO DO FORMULÁRIO (POST)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+    if (!csrf_from_post()) {
         $popupMensagem = "Erro de segurança. Ação não permitida.";
         $popupTipo = "erro";
     } else {
+        $ficheiros_novos_criados = [];
         $conn->begin_transaction();
         try {
-            // --- INÍCIO DA CORREÇÃO DE VALIDAÇÃO ---
             $nome = trim($_POST['nome'] ?? '');
             $referencia = trim($_POST['referencia'] ?? '');
             $preco_post = trim($_POST['preco'] ?? '');
             $descricao = trim($_POST['descricao'] ?? '');
 
             if (empty($nome) || empty($referencia) || empty($preco_post) || empty($descricao)) {
-                throw new Exception("Os campos Nome, Referência, Preço e Descrição são de preenchimento obrigatório.");
+                throw new DomainException("Os campos Nome, Referência, Preço e Descrição são de preenchimento obrigatório.");
             }
-            // --- FIM DA CORREÇÃO DE VALIDAÇÃO ---
 
-            $preco = (float)$preco_post;
-            if ($preco <= 0) { throw new Exception("O preço deve ser superior a zero."); }
-            $preco_promocional = !empty($_POST['preco_promocional']) ? (float)$_POST['preco_promocional'] : NULL;
-            if ($preco_promocional !== NULL && ($preco_promocional <= 0 || $preco_promocional >= $preco)) {
-                throw new Exception("O preço promocional não pode ser maior ou igual ao preço normal.");
+            $preco = parsePrecoProduto($preco_post);
+            if ($preco === null || $preco <= 0) {
+                throw new DomainException("O preço deve ser um valor numérico superior a zero.");
+            }
+            $promo_raw = trim((string)($_POST['preco_promocional'] ?? ''));
+            $preco_promocional = null;
+            if ($promo_raw !== '') {
+                $preco_promocional = parsePrecoProduto($promo_raw);
+                if ($preco_promocional === null || $preco_promocional <= 0 || $preco_promocional >= $preco) {
+                    throw new DomainException("O preço promocional deve ser positivo e inferior ao preço normal.");
+                }
             }
             
-            // CORREÇÃO: Utiliza a nova função centralizada para validar
             $resultado_validacao = validarProduto($conn, $nome, $referencia, $id);
             if (!$resultado_validacao['valido']) {
-                throw new Exception($resultado_validacao['mensagem']);
+                throw new DomainException($resultado_validacao['mensagem']);
             }
 
             // ===== NOVA LÓGICA DE GESTÃO DE IMAGENS =====
@@ -74,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             $stmt_img_antigas->close();
 
-            // 2. Processar imagens marcadas para apagar (só colecionar — unlink após commit)
+            // 2. Processar imagens marcadas para apagar (só colecionar - unlink após commit)
             $ficheiros_para_unlink = [];
             $ids_para_apagar = json_decode($_POST['imagens_a_apagar_json'] ?? '[]', true);
             if (!empty($ids_para_apagar)) {
@@ -116,6 +121,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (count($nomes_ficheiros_finais_ordenados) > 5) {
                 throw new Exception("O produto pode ter no máximo 5 imagens.");
             }
+            // Colecionar também imagens antigas omitidas da ordem final para evitar órfãos no disco
+            $nomes_finais_set = array_flip($nomes_ficheiros_finais_ordenados);
+            foreach ($mapa_id_para_nome_antigo as $nome_antigo) {
+                if (!isset($nomes_finais_set[$nome_antigo])) {
+                    $ficheiros_para_unlink[] = basename($nome_antigo);
+                }
+            }
+            $ficheiros_para_unlink = array_values(array_unique($ficheiros_para_unlink));
             $stmt_del_img = $conn->prepare("DELETE FROM produto_imagens WHERE produto_id = ?");
             $stmt_del_img->bind_param("i", $id);
             $stmt_del_img->execute();
@@ -152,17 +165,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // 6. Atualizar a informação principal do produto
             $foto_principal_nova = $nomes_ficheiros_finais_ordenados[0] ?? '';
 
-            // --- INÍCIO DA ALTERAÇÃO ---
-            $guia_tamanho_id = !empty($_POST['guia_tamanho_id']) ? (int)$_POST['guia_tamanho_id'] : NULL;
-            $peso_gramas = (int)($_POST['peso_gramas'] ?? 0);
-            $ativo_post = (int)($_POST['ativo'] ?? 1);
+            $guia_tamanho_id = !empty($_POST['guia_tamanho_id']) ? (int)$_POST['guia_tamanho_id'] : null;
+            $peso_gramas = filter_var($_POST['peso_gramas'] ?? 0, FILTER_VALIDATE_INT);
+            if ($peso_gramas === false || $peso_gramas < 0) {
+                throw new DomainException("O peso em gramas deve ser um número inteiro igual ou superior a zero.");
+            }
+            $ativo_post = in_array((string)($_POST['ativo'] ?? '1'), ['0', '1'], true) ? (int)$_POST['ativo'] : 1;
             $categoria_post = trim((string)($_POST['categoria'] ?? ''));
-            $atributos_json_post = (string)($_POST['atributos_json'] ?? '{}');
+            if ($categoria_post === '') {
+                throw new DomainException("A categoria é obrigatória.");
+            }
+            $atributos_decoded = json_decode((string)($_POST['atributos_json'] ?? '{}'), true);
+            if (!is_array($atributos_decoded)) {
+                throw new DomainException("Formato de atributos inválido.");
+            }
+            $atributos_json_post = json_encode($atributos_decoded ?: new stdClass(), JSON_UNESCAPED_UNICODE);
 
-            // 6. Atualizar a informação principal do produto
+            $variacoes_js = json_decode($_POST['variacoes_json'] ?? '[]', true);
+            if (empty($variacoes_js) || !is_array($variacoes_js)) {
+                throw new DomainException("O produto deve ter pelo menos uma variação ou stock definido.");
+            }
+            foreach ($variacoes_js as $v) {
+                if (!is_array($v) || !isset($v['atributos']) || !is_array($v['atributos'])) {
+                    throw new DomainException("Dados de variação inválidos.");
+                }
+                $qtd_check = filter_var($v['quantidade'] ?? null, FILTER_VALIDATE_INT);
+                if ($qtd_check === false || $qtd_check < 0) {
+                    throw new DomainException("A quantidade de stock deve ser um número inteiro igual ou superior a zero.");
+                }
+            }
+
             $stmt_update_prod = $conn->prepare("UPDATE produtos SET nome=?, referencia=?, ativo=?, preco=?, preco_promocional=?, categoria=?, descricao=?, atributos=?, foto_principal=?, guia_tamanho_id=?, peso_gramas=? WHERE id=?");
             $stmt_update_prod->bind_param("ssiddssssiii", $nome, $referencia, $ativo_post, $preco, $preco_promocional, $categoria_post, $descricao, $atributos_json_post, $foto_principal_nova, $guia_tamanho_id, $peso_gramas, $id);
-            // --- FIM DA ALTERAÇÃO ---
             $stmt_update_prod->execute();
             $stmt_update_prod->close();
 
@@ -172,50 +206,63 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt_del_var->execute();
             $stmt_del_var->close();
 
-            $variacoes_js = json_decode($_POST['variacoes_json'] ?? '[]', true);
-            if (!empty($variacoes_js)) {
-                $stmt_insert_var = $conn->prepare("INSERT INTO produto_variacoes (produto_id, atributos, quantidade, referencia) VALUES (?, ?, ?, ?)");
-                $stmt_assoc_img = $conn->prepare("INSERT INTO variacao_imagens (variacao_id, imagem_id) VALUES (?, ?)");
+            $stmt_insert_var = $conn->prepare("INSERT INTO produto_variacoes (produto_id, atributos, quantidade, referencia) VALUES (?, ?, ?, ?)");
+            $stmt_assoc_img = $conn->prepare("INSERT INTO variacao_imagens (variacao_id, imagem_id) VALUES (?, ?)");
 
-                foreach ($variacoes_js as $v) {
-                    $json_v_atributos = json_encode($v['atributos']);
-                    $stmt_insert_var->bind_param("isis", $id, $json_v_atributos, $v['quantidade'], $v['referencia']);
-                    $stmt_insert_var->execute();
-                    $nova_variacao_id = $stmt_insert_var->insert_id;
+            foreach ($variacoes_js as $v) {
+                $json_v_atributos = json_encode($v['atributos'], JSON_UNESCAPED_UNICODE);
+                $qtd_var = (int)$v['quantidade'];
+                $ref_var = !empty($v['referencia']) ? trim((string)$v['referencia']) : null;
+                $stmt_insert_var->bind_param("isis", $id, $json_v_atributos, $qtd_var, $ref_var);
+                $stmt_insert_var->execute();
+                $nova_variacao_id = $stmt_insert_var->insert_id;
 
-                    if (!empty($v['imagens_associadas'])) {
-                        foreach ($v['imagens_associadas'] as $js_id) {
-                            if (isset($mapa_js_id_para_db_id_novo[$js_id])) {
-                                $db_imagem_id = $mapa_js_id_para_db_id_novo[$js_id];
-                                $stmt_assoc_img->bind_param("ii", $nova_variacao_id, $db_imagem_id);
-                                $stmt_assoc_img->execute();
-                            }
+                if (!empty($v['imagens_associadas']) && is_array($v['imagens_associadas'])) {
+                    foreach ($v['imagens_associadas'] as $js_id) {
+                        if (is_string($js_id) && isset($mapa_js_id_para_db_id_novo[$js_id])) {
+                            $db_imagem_id = $mapa_js_id_para_db_id_novo[$js_id];
+                            $stmt_assoc_img->bind_param("ii", $nova_variacao_id, $db_imagem_id);
+                            $stmt_assoc_img->execute();
                         }
                     }
                 }
-                $stmt_insert_var->close();
-                $stmt_assoc_img->close();
             }
+            $stmt_insert_var->close();
+            $stmt_assoc_img->close();
             
             $conn->commit();
 
             // Apagar ficheiros antigos só DEPOIS do commit bem-sucedido e apenas se não referenciados noutras tabelas
+            $images_dir_real = realpath(__DIR__ . '/../public/images');
             $stmt_ref_prod = $conn->prepare("SELECT COUNT(*) FROM produtos WHERE foto_principal = ?");
             $stmt_ref_imgs = $conn->prepare("SELECT COUNT(*) FROM produto_imagens WHERE nome_ficheiro = ?");
             $stmt_ref_snap = $conn->prepare("SELECT COUNT(*) FROM encomenda_itens WHERE foto_snapshot = ?");
             foreach ($ficheiros_para_unlink as $nome_arq) {
+                $base_arq = basename((string)$nome_arq);
+                if ($base_arq === '' || $base_arq === 'default.jpg' || $base_arq !== $nome_arq) {
+                    continue;
+                }
                 $em_uso = false;
                 foreach ([$stmt_ref_prod, $stmt_ref_imgs, $stmt_ref_snap] as $st_ref) {
                     if ($st_ref) {
-                        $st_ref->bind_param("s", $nome_arq);
+                        $st_ref->bind_param("s", $base_arq);
                         $st_ref->execute();
                         $cnt = (int)$st_ref->get_result()->fetch_row()[0];
                         if ($cnt > 0) { $em_uso = true; break; }
                     }
                 }
-                if (!$em_uso) {
-                    $caminho = __DIR__ . '/../public/images/' . basename($nome_arq);
-                    if (file_exists($caminho) && is_file($caminho)) @unlink($caminho);
+                if (!$em_uso && $images_dir_real !== false) {
+                    $caminho = $images_dir_real . DIRECTORY_SEPARATOR . $base_arq;
+                    $caminho_real = realpath($caminho);
+                    if ($caminho_real !== false && strpos($caminho_real, $images_dir_real . DIRECTORY_SEPARATOR) === 0 && is_file($caminho_real)) {
+                        @unlink($caminho_real);
+                    }
+                }
+            }
+            // Limpa também ficheiros novos que foram gravados mas omitidos da ordem final
+            foreach ($ficheiros_novos_criados as $caminho_novo_criado) {
+                if (!isset($nomes_finais_set[basename($caminho_novo_criado)]) && is_file($caminho_novo_criado)) {
+                    @unlink($caminho_novo_criado);
                 }
             }
             if ($stmt_ref_prod) $stmt_ref_prod->close();
@@ -223,16 +270,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($stmt_ref_snap) $stmt_ref_snap->close();
 
             $_SESSION['flash_message'] = ['tipo' => 'sucesso', 'texto' => 'Produto atualizado com sucesso!'];
+            log_app("Produto #{$id} atualizado ('{$nome}').", 'INFO', 'editar.php');
             header("Location: " . $return_url);
             exit;
 
-        } catch (Exception $e) {
+        } catch (DomainException $e) {
+            $conn->rollback();
+            foreach ($ficheiros_novos_criados ?? [] as $caminho) {
+                if (file_exists($caminho)) @unlink($caminho);
+            }
+            $popupMensagem = "Erro ao atualizar: " . $e->getMessage();
+            $popupTipo = "erro";
+        } catch (\Throwable $e) {
             $conn->rollback();
             // Apagar novos ficheiros criados durante esta tentativa falhada
             foreach ($ficheiros_novos_criados ?? [] as $caminho) {
                 if (file_exists($caminho)) @unlink($caminho);
             }
-            $popupMensagem = "Erro ao atualizar: " . $e->getMessage();
+            log_exception($e, "editar.php produto#{$id}");
+            $popupMensagem = ($e instanceof Exception && !($e instanceof mysqli_sql_exception))
+                ? "Erro ao atualizar: " . $e->getMessage()
+                : "Ocorreu um erro interno ao atualizar o produto. Verifique os dados e tente novamente.";
             $popupTipo = "erro";
         }
     }

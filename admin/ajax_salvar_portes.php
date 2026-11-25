@@ -1,22 +1,21 @@
 <?php
 require_once __DIR__ . '/../config/auth.php';
-include '../config/database.php';
 require_once __DIR__ . '/../config/csrf.php';
 require_once __DIR__ . '/../config/http.php';
 
-if (!admin_has_role(['superadmin', 'desenvolvedor'])) {
-    json_error('Acesso não autorizado.', 403);
-}
-
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_error('Método não permitido.', 405);
+}
+
+if (!is_admin_manager()) {
+    json_error('Acesso não autorizado.', 403);
 }
 
 if (!csrf_from_post()) {
     json_error('Erro de validação CSRF.', 403);
 }
 
-$portes = json_decode($_POST['portes_por_pais'] ?? '[]', true);
+$portes = json_decode((string)($_POST['portes_por_pais'] ?? '[]'), true);
 $limite_raw = str_replace(',', '.', trim((string)($_POST['portes_gratis_minimo'] ?? '')));
 $portes_gratis_ativo_raw = (string)($_POST['portes_gratis_ativo'] ?? '');
 $portes_gratis_ativo = $portes_gratis_ativo_raw === '1';
@@ -26,6 +25,8 @@ if (!is_array($portes) || empty($portes)) {
 }
 
 $regras_validadas = [];
+$paises_vistos = [];
+
 foreach ($portes as $pais => $regras) {
     if (!is_string($pais) || !is_array($regras) || empty($regras)) {
         json_error('Estrutura de país/regras inválida.', 400);
@@ -34,6 +35,12 @@ foreach ($portes as $pais => $regras) {
     if (!preg_match('/^[A-Z]{2,5}$/', $pais_limpo)) {
         json_error('Código de país inválido.', 400);
     }
+    if (isset($paises_vistos[$pais_limpo])) {
+        json_error("Código de país duplicado: {$pais_limpo}.", 400);
+    }
+    $paises_vistos[$pais_limpo] = true;
+
+    $intervalos_pais = [];
     foreach ($regras as $regra) {
         if (
             !is_array($regra)
@@ -47,9 +54,16 @@ foreach ($portes as $pais => $regras) {
         $min = (float)$regra['min'];
         $max = (float)$regra['max'];
         $preco = (float)$regra['preco'];
-        if ($min < 0 || $max < 0 || $preco < 0 || ($max > 0 && $max <= $min)) {
+        if (!is_finite($min) || !is_finite($max) || !is_finite($preco) || $min < 0 || $max < 0 || $preco < 0 || ($max > 0 && $max <= $min)) {
             json_error('Os intervalos de peso e preços devem ser válidos e não negativos.', 400);
         }
+        $effMax = $max > 0 ? $max : INF;
+        foreach ($intervalos_pais as [$prevMin, $prevEffMax]) {
+            if ($min < $prevEffMax && $effMax > $prevMin) {
+                json_error("Sobreposição de intervalos de peso detetada em {$pais_limpo}.", 400);
+            }
+        }
+        $intervalos_pais[] = [$min, $effMax];
         $regras_validadas[] = [$pais_limpo, $min, $max, $preco];
     }
 }
@@ -58,7 +72,7 @@ if (empty($regras_validadas)) {
     json_error('É necessária pelo menos uma regra de portes válida.', 400);
 }
 
-if (!is_numeric($limite_raw) || (float)$limite_raw <= 0) {
+if (!is_numeric($limite_raw) || !is_finite((float)$limite_raw) || (float)$limite_raw <= 0) {
     json_error('O valor mínimo para portes grátis deve ser superior a zero.', 400);
 }
 
@@ -67,6 +81,8 @@ $limite_portes_gratis = round((float)$limite_raw, 2);
 if (!in_array($portes_gratis_ativo_raw, ['0', '1'], true)) {
     json_error('O estado dos portes grátis é inválido.', 400);
 }
+
+require_once __DIR__ . '/../config/database.php';
 
 $conn->begin_transaction();
 try {
@@ -94,7 +110,7 @@ try {
     json_success(['mensagem' => 'Configurações de portes guardadas com sucesso!']);
 
 } catch (\Throwable $e) {
-    $conn->rollback();
+    try { $conn->rollback(); } catch (\Throwable $ignored) {}
     log_app($e->getMessage(), 'ERROR', 'ajax_salvar_portes.php');
     json_error('Não foi possível guardar a configuração de portes.', 500);
 }

@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/config/formatters.php';
 $titulo_pagina = 'Portes e Envios';
-$descricao_pagina = 'Tarifas de envio da TopTop por país e peso. Entregas rápidas e seguras em Portugal e em toda a Europa — consulta preços e prazos.';
+$descricao_pagina = 'Tarifas de envio da TopTop por país e peso. Entregas rápidas e seguras em Portugal e em toda a Europa - consulta preços e prazos.';
 include 'templates/header.php';
 
 // Os portes já são carregados no templates/header.php na variável $portes_js
@@ -70,7 +70,7 @@ function formatPrice($price, $iso) {
 <main class="pagina-info info-premium">
     <div class="pagina-info-header">
         <p class="info-kicker">Entregas</p>
-        <h2>Portes e Envios</h2>
+        <h1>Portes e Envios</h1>
         <p>Consulta as nossas tarifas de envio por país e peso. Entregas rápidas e seguras em toda a Europa.</p>
     </div>
 
@@ -90,12 +90,9 @@ function formatPrice($price, $iso) {
     <div class="portes-container">
         <div class="portes-header">
             <h3>Tabela de Preços</h3>
-            <?php echo ui_search_input('', 'Procurar país...', [
-                'id'              => 'filtroPais',
-                'type'            => 'text',
-                'class'           => 'portes-filtro',
-                'raw_wrap_class'  => true,
-                'raw_input_class' => true,
+            <?php echo ui_search_input('', 'Pesquisar...', [
+                'id'   => 'filtroPais',
+                'type' => 'search',
             ]); ?>
         </div>
 
@@ -128,12 +125,13 @@ function formatPrice($price, $iso) {
                             echo ui_table(
                                 [translateTerm('weight', $iso), translateTerm('cost', $iso)],
                                 $regraRows,
-                                ['wrap_class' => 'portes-tabela-wrapper', 'table_class' => 'portes-tabela']
+                                ['wrap_class' => 'portes-tabela-wrapper', 'table_class' => 'portes-tabela', 'client_sort' => true]
                             );
                             ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
+                <div id="portesSemResultados" class="portes-vazio" style="display:none;">Nenhum país encontrado para a pesquisa.</div>
             <?php endif; ?>
         </div>
     </div>

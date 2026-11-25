@@ -24,6 +24,9 @@ function getHeaderText($seccao, $fallback = '') {
             }
         } catch (Throwable $e) {
             $cache = null;
+            if (function_exists('log_sql')) {
+                log_sql('Erro ao carregar header_config: ' . $e->getMessage(), 'header_functions.php');
+            }
             return $fallback;
         }
     }
@@ -31,11 +34,18 @@ function getHeaderText($seccao, $fallback = '') {
     return array_key_exists($seccao, $cache) ? $cache[$seccao] : $fallback;
 }
 
-function getHeaderLogo($fallback = '/public/assets/logo1.jpg') {
+function getHeaderLogo($fallback = '/public/assets/logo1_branco.jpg') {
     $logo = trim((string)getHeaderText('logo_src', $fallback));
 
     if ($logo === '' || !preg_match('#^(/|https?://)#i', $logo)) {
         return $fallback;
+    }
+
+    if (str_starts_with($logo, '/public/')) {
+        $path = parse_url($logo, PHP_URL_PATH);
+        if (!is_string($path) || !is_file(__DIR__ . '/../' . ltrim($path, '/'))) {
+            return $fallback;
+        }
     }
 
     return $logo;

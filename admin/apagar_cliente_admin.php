@@ -1,16 +1,19 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/csrf.php';
 
 if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true) {
     header("Location: /entrar");
     exit;
 }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
     header("Location: clientes.php");
     exit;
 }
-if (!hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'] ?? '')) {
+if (!csrf_from_post()) {
+    http_response_code(403);
     header("Location: clientes.php?erro=csrf");
     exit;
 }
@@ -48,9 +51,10 @@ try {
     }
 
     $conn->commit();
+    log_seguranca("Conta de cliente #{$id} eliminada pelo admin.", 'apagar_cliente_admin.php');
 } catch (Throwable $e) {
     $conn->rollback();
-    error_log('apagar_cliente_admin: ' . $e->getMessage());
+    log_exception($e, "apagar_cliente_admin.php cliente#{$id}");
     header("Location: clientes.php?erro=1");
     exit;
 }

@@ -3,6 +3,17 @@ http_response_code(404);
 $titulo_pagina = 'Página Não Encontrada';
 $descricao_pagina = 'A página que procuras não existe. Volta à loja TopTop e encontra o teu estilo.';
 require_once __DIR__ . '/templates/header.php';
+
+$req404 = (string)($_SERVER['REQUEST_URI'] ?? '');
+$path404 = (string)(parse_url($req404, PHP_URL_PATH) ?? '');
+$ignorar404 = $path404 === '' || (bool)preg_match(
+    '#^/(?:\.well-known/|apple-touch-icon[^/]*\.png$|security\.txt$|llms\.txt$|ads\.txt$|sitemap_index\.xml$|wp-(?:sitemap\.xml|login\.php|admin|content/|includes/)|xmlrpc\.php$)|\.(?:ico|map)$#i',
+    $path404
+);
+if (!$ignorar404 && function_exists('log_app')) {
+    $ref404 = trim((string)($_SERVER['HTTP_REFERER'] ?? ''));
+    log_app('Página não encontrada: ' . $req404 . ($ref404 !== '' ? " (referer: {$ref404})" : ''), '404', '404.php');
+}
 ?>
 
 <main class="pagina-404 clean-version">
@@ -26,7 +37,7 @@ require_once __DIR__ . '/templates/header.php';
             <div class="acoes-404">
                 <?php
                 echo ui_button('Ir para a Home', ['href' => '/', 'class' => 'btn-boutique primary']);
-                echo ui_button('Ver Coleção', ['href' => '/produtos.php', 'class' => 'btn-boutique secondary']);
+                echo ui_button('Ver Coleção', ['href' => '/produtos', 'class' => 'btn-boutique secondary']);
                 ?>
             </div>
         </div>
@@ -43,10 +54,10 @@ require_once __DIR__ . '/templates/header.php';
             </div>
         </div>
         <!-- Modal de Vitória -->
-        <div id="win-modal" class="win-modal">
+        <div id="win-modal" class="win-modal" role="dialog" aria-modal="true" aria-labelledby="win-modal-title">
             <div class="win-modal-content">
-                <span class="win-icon">✨</span>
-                <h2 class="win-title">Estilo Impecável!</h2>
+                <span class="win-icon" aria-hidden="true">✨</span>
+                <h2 id="win-modal-title" class="win-title">Estilo Impecável!</h2>
                 <p class="win-text">Encontraste todos os pares em <span id="final-attempts">0</span> tentativas.</p>
                 <?php echo ui_button('Continuar a Compras', ['id' => 'close-win-modal', 'class' => 'btn-boutique primary']); ?>
             </div>
@@ -54,8 +65,8 @@ require_once __DIR__ . '/templates/header.php';
     </div>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-<script src="/public/js/game404.js?v=<?php echo $versao_global; ?>"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin="anonymous" defer></script>
+<script src="/public/js/game404.js?v=<?php echo htmlspecialchars((string)($versao_global ?? '1'), ENT_QUOTES, 'UTF-8'); ?>" defer></script>
 
 
 <?php require_once __DIR__ . '/templates/footer.php'; ?>

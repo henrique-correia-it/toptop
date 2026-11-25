@@ -61,7 +61,7 @@ if (!function_exists('require_cliente')) {
     {
         if (is_cliente_logged_in()) return;
 
-        // Admin logged in — try to access via linked client account (same email)
+        // Admin logged in - try to access via linked client account (same email)
         if (!empty($_SESSION['admin_logado']) && $_SESSION['admin_logado'] === true) {
             global $conn;
             if (isset($conn) && !empty($_SESSION['admin_email'])) {
@@ -81,7 +81,7 @@ if (!function_exists('require_cliente')) {
                     return;
                 }
             }
-            // Admin has no linked client account — avoid /entrar loop
+            // Admin has no linked client account - avoid /entrar loop
             header('Location: /admin');
             exit;
         }

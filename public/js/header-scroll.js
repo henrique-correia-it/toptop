@@ -1,4 +1,4 @@
-// Header dinâmico — esconde ao fazer scroll para baixo, revela ao scroll para cima.
+// Header dinâmico - esconde ao fazer scroll para baixo, revela ao scroll para cima.
 // Só ativa quando o <header> tem a classe .header-auto-hide (toggle no painel dev).
 (function () {
     var header = document.querySelector('.site-header.header-auto-hide');
@@ -83,7 +83,9 @@
         }
 
         if (y <= 1) {
-            finishAtTop();
+            if (trackingTop || header.classList.contains('is-hidden') || header.style.transform) {
+                finishAtTop();
+            }
             lastY = 0;
             return;
         }
@@ -115,6 +117,11 @@
         }
         lastY = y;
     }
+
+    header.addEventListener('focusin', function () {
+        if (trackingTop) stopTrackingTop(false);
+        header.classList.remove('is-hidden');
+    });
 
     window.addEventListener('scroll', function () {
         if (!ticking) {

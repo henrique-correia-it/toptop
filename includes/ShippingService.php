@@ -155,8 +155,10 @@ if (!function_exists('qualifies_for_free_shipping')) {
         ?string $postalCode,
         float $threshold
     ): bool {
-        return $threshold > 0
-            && $orderSubtotal >= $threshold
+        $subtotalCents = (int)round($orderSubtotal * 100);
+        $thresholdCents = (int)round($threshold * 100);
+        return $thresholdCents > 0
+            && $subtotalCents >= $thresholdCents
             && is_portugal_continental($countryCode, $postalCode);
     }
 }

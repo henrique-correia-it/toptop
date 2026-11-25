@@ -201,8 +201,12 @@ form input:focus, form textarea:focus {
     box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
 }
 
-.login-card input[type="submit"] {
+.login-card input[type="submit"],
+.login-card button[type="submit"]:not(.choice-btn),
+.login-card .button,
+.login-card .ui-btn {
     width: 100%;
+    min-height: 48px;
     padding: 15px;
     margin-top: 10px;
     background-color: var(--cor-preto);
@@ -215,11 +219,17 @@ form input:focus, form textarea:focus {
     transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
-.login-card input[type="submit"]:hover {
+.login-card input[type="submit"]:hover,
+.login-card button[type="submit"]:not(.choice-btn):hover,
+.login-card .button:hover,
+.login-card .ui-btn:hover {
     background-color: var(--cor-cinza-escuro);
 }
 
-.login-card input[type="submit"]:active {
+.login-card input[type="submit"]:active,
+.login-card button[type="submit"]:not(.choice-btn):active,
+.login-card .button:active,
+.login-card .ui-btn:active {
     transform: scale(0.98);
 }
 

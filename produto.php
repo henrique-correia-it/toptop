@@ -22,8 +22,20 @@ if ($produto_id > 0) {
 // --- PASSO B: Definir Título, Meta Description, Canonical e Open Graph de Produto ---
 if ($produto) {
     $slug_produto = criar_slug($produto['nome'] . '-' . $produto['id']);
+    if ($slug_url !== $slug_produto) {
+        $qs = $_SERVER['QUERY_STRING'] ?? '';
+        // Remove parâmetro interno 'slug' vindo do rewrite do .htaccess
+        parse_str($qs, $qs_arr);
+        unset($qs_arr['slug']);
+        $redirect_target = '/produto/' . $slug_produto . (!empty($qs_arr) ? '?' . http_build_query($qs_arr) : '');
+        header('Location: ' . $redirect_target, true, 301);
+        exit;
+    }
     $canonical_url = '/produto/' . $slug_produto;
-    $preco_seo = ($produto['preco_promocional'] > 0) ? (float)$produto['preco_promocional'] : (float)$produto['preco'];
+    $preco_normal = (float)$produto['preco'];
+    $preco_promo  = !empty($produto['preco_promocional']) ? (float)$produto['preco_promocional'] : 0.0;
+    $em_promocao  = ($preco_promo > 0 && $preco_promo < $preco_normal);
+    $preco_seo    = $em_promocao ? $preco_promo : $preco_normal;
     $preco_seo_fmt = number_format($preco_seo, 2, '.', '');
     $stock_para_js = (int)($produto['stock_total'] ?? 0);
 
@@ -55,17 +67,19 @@ if (!$produto) {
 }
 
 $imagens = [];
+$foto_principal_segura = !empty($produto['foto_principal']) ? (string)$produto['foto_principal'] : 'default.jpg';
 $stmt_img = $conn->prepare("SELECT nome_ficheiro FROM produto_imagens WHERE produto_id = ? ORDER BY FIELD(nome_ficheiro, ?) DESC, id ASC");
-$stmt_img->bind_param("is", $produto['id'], $produto['foto_principal']);
+$stmt_img->bind_param("is", $produto['id'], $foto_principal_segura);
 $stmt_img->execute();
 $result_img = $stmt_img->get_result();
 while($img_row = $result_img->fetch_assoc()){
-    $imagens[] = $img_row['nome_ficheiro'];
+    if (!empty($img_row['nome_ficheiro'])) {
+        $imagens[] = $img_row['nome_ficheiro'];
+    }
 }
+$stmt_img->close();
 $fotos_json = htmlspecialchars(json_encode($imagens), ENT_QUOTES, 'UTF-8');
-$atributos_json_html = htmlspecialchars($produto['atributos'] ?? '{}', ENT_QUOTES, 'UTF-8');
-$stock_para_js = (int)($produto['stock_total'] ?? 0);
-$slug_produto = criar_slug($produto['nome'] . '-' . $produto['id']);
+$atributos_json_html = htmlspecialchars((string)($produto['atributos'] ?? '{}'), ENT_QUOTES, 'UTF-8');
 
 // Capturamos todos os parâmetros GET para passar ao JavaScript
 $filtros_url = [];
@@ -91,15 +105,15 @@ $filtros_url_json = htmlspecialchars(json_encode($filtros_url), ENT_QUOTES, 'UTF
         <div class="modal-galeria">
             <div class="zoom-container">
                 <div class="image-loading-spinner"></div>
-                <img id="modalImagemPrincipal" src="/public/images/<?php echo rawurlencode($imagens[0] ?? ($produto['foto_principal'] ?? 'default.jpg')); ?>" alt="<?php echo htmlspecialchars($produto['nome'], ENT_QUOTES, 'UTF-8'); ?>" fetchpriority="high">
+                <img id="modalImagemPrincipal" src="/public/images/<?php echo rawurlencode($imagens[0] ?? $foto_principal_segura); ?>" alt="<?php echo htmlspecialchars((string)($produto['nome'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" fetchpriority="high">
             </div>
             <div id="modalThumbnails" class="modal-thumbnails">
                 </div>
         </div>
 
         <div class="modal-info">
-            <h1 id="modalNome"><?php echo htmlspecialchars($produto['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
-            <p id="modalPreco">€<?php echo number_format($preco_seo, 2, ',', '.'); ?></p>
+            <h1 id="modalNome"><?php echo htmlspecialchars((string)($produto['nome'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></h1>
+            <p id="modalPreco"><?php if ($em_promocao): ?><del>€<?php echo number_format($preco_normal, 2, ',', '.'); ?></del> <strong>€<?php echo number_format($preco_promo, 2, ',', '.'); ?></strong><?php else: ?>€<?php echo number_format($preco_seo, 2, ',', '.'); ?><?php endif; ?></p>
             <div class="produto-meta-info">
                 <span id="meta-referencia" class="meta-item" style="display: none;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
@@ -204,7 +218,7 @@ $schema_graph = [
     </script>
 </main>
 
-<script src="/public/js/modalProduto.js?v=<?php echo filemtime(__DIR__ . '/public/js/modalProduto.js'); ?>"></script>
+<script src="/public/js/modalProduto.js?v=<?php echo isset($asset_v) ? $asset_v : (@filemtime(__DIR__ . '/public/js/modalProduto.js') ?: '1'); ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // --- LÓGICA DO ACORDEÃO DE DESCRIÇÃO ---

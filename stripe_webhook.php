@@ -11,10 +11,7 @@ require_once __DIR__ . '/admin/includes/email_handler.php';
 header('Content-Type: application/json');
 
 function log_wh(string $msg, string $nivel = 'INFO'): void {
-    log_stripe($msg, $nivel);
-    if ($nivel !== 'INFO') {
-        error_log("[Stripe-{$nivel}] {$msg}");
-    }
+    log_stripe($msg, $nivel, 'stripe_webhook.php');
 }
 
 log_wh("--- Webhook invocado ---");
@@ -61,7 +58,7 @@ $encomenda = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if (!$encomenda) {
-    // PI não pertence a nenhuma encomenda conhecida — ignora sem erro
+    // PI não pertence a nenhuma encomenda conhecida - ignora sem erro
     http_response_code(200);
     echo json_encode(['received' => true]);
     exit;
@@ -138,7 +135,7 @@ switch ($event_type) {
                     log_email("Webhook: falha no email para encomenda #{$encomenda['id']}: " . $e->getMessage(), 'stripe_webhook.php');
                 }
             } else {
-                log_wh("INFO: Email não enviado pelo webhook — outro processo já atualizou o estado (Enc #{$encomenda['id']}).");
+                log_wh("INFO: Email não enviado pelo webhook - outro processo já atualizou o estado (Enc #{$encomenda['id']}).");
             }
         } else {
             log_wh("INFO: Encomenda #{$encomenda['id']} já estava com estado '{$encomenda['estado']}', ignorado.");

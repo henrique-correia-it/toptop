@@ -1,13 +1,34 @@
 <?php
-// config/rate_limit.php — Rate limiting leve por IP + ação via ficheiros temporários (sem alterações na BD)
+// config/rate_limit.php - Rate limiting leve por IP + ação via ficheiros temporários (sem alterações na BD)
 
 if (!function_exists('rate_limit_client_ip')) {
     function rate_limit_client_ip(): string
     {
-        if (!empty($_SERVER['HTTP_CF_CONNECTING_IP']) && filter_var($_SERVER['HTTP_CF_CONNECTING_IP'], FILTER_VALIDATE_IP)) {
+        $trustCf = function_exists('tt_env') && tt_env('TRUST_CLOUDFLARE', '0') === '1';
+        if ($trustCf && !empty($_SERVER['HTTP_CF_CONNECTING_IP']) && filter_var($_SERVER['HTTP_CF_CONNECTING_IP'], FILTER_VALIDATE_IP)) {
             return $_SERVER['HTTP_CF_CONNECTING_IP'];
         }
         return (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    }
+}
+
+if (!function_exists('rate_limit_gc')) {
+    function rate_limit_gc(string $dir, int $maxAgeSeconds = 7200): void
+    {
+        if (mt_rand(1, 100) !== 1) {
+            return;
+        }
+        $cutoff = time() - $maxAgeSeconds;
+        $files = @glob($dir . DIRECTORY_SEPARATOR . '*.json');
+        if (!is_array($files)) {
+            return;
+        }
+        foreach ($files as $f) {
+            $mtime = @filemtime($f);
+            if ($mtime !== false && $mtime < $cutoff) {
+                @unlink($f);
+            }
+        }
     }
 }
 
@@ -24,6 +45,8 @@ if (!function_exists('rate_limit_allow')) {
             return true; // fail-open se o SO não permitir temp dir
         }
 
+        rate_limit_gc($dir, max(7200, $windowSeconds * 2));
+
         $file = $dir . DIRECTORY_SEPARATOR . hash('sha256', $action . '|' . $id) . '.json';
         $fp = @fopen($file, 'c+b');
         if ($fp === false) {
@@ -37,10 +60,12 @@ if (!function_exists('rate_limit_allow')) {
                 $now = time();
                 $cutoff = $now - $windowSeconds;
                 $timestamps = [];
+                $origCount = 0;
 
                 if (is_string($raw) && $raw !== '') {
                     $decoded = json_decode($raw, true);
                     if (is_array($decoded)) {
+                        $origCount = count($decoded);
                         foreach ($decoded as $ts) {
                             if (is_int($ts) && $ts > $cutoff) {
                                 $timestamps[] = $ts;
@@ -49,20 +74,28 @@ if (!function_exists('rate_limit_allow')) {
                     }
                 }
 
+                $needsWrite = (count($timestamps) !== $origCount);
                 if (count($timestamps) >= $maxRequests) {
                     $allowed = false;
                 } else {
                     $timestamps[] = $now;
+                    $needsWrite = true;
                 }
 
-                rewind($fp);
-                ftruncate($fp, 0);
-                fwrite($fp, json_encode($timestamps));
-                fflush($fp);
+                if ($needsWrite) {
+                    rewind($fp);
+                    ftruncate($fp, 0);
+                    fwrite($fp, json_encode($timestamps));
+                    fflush($fp);
+                }
                 flock($fp, LOCK_UN);
             }
         } finally {
             fclose($fp);
+        }
+
+        if (!$allowed && function_exists('log_seguranca') && $action !== 'js_error_log') {
+            log_seguranca("Rate limit excedido: acao={$action} (max={$maxRequests}/{$windowSeconds}s, id=" . substr((string)$id, 0, 64) . ")", 'rate_limit.php');
         }
 
         return $allowed;

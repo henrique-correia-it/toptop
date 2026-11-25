@@ -11,14 +11,55 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const safeImageUrl = (url) => {
     const val = String(url ?? "").trim();
-    if (/^(\/|https?:\/\/)/i.test(val)) return escapeHtml(val);
+    if (/^(?:\/(?!\/)|https?:\/\/)/i.test(val)) return escapeHtml(val);
     return "/public/images/default.jpg";
+  };
+
+  const canonicalizeSelecoes = (sel) => {
+    if (!sel || typeof sel !== "object" || Array.isArray(sel)) return {};
+    const out = {};
+    Object.keys(sel)
+      .sort()
+      .forEach((k) => {
+        if (sel[k] !== undefined && sel[k] !== null) {
+          out[String(k)] = String(sel[k]);
+        }
+      });
+    return out;
+  };
+
+  const sanitizeCartItem = (raw) => {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    const id = parseInt(raw.id, 10);
+    if (!Number.isInteger(id) || id <= 0) return null;
+    const qty = parseInt(raw.quantidade, 10);
+    const quantidade = Number.isInteger(qty) && qty >= 1 ? qty : 1;
+    const precoNum = parseFloat(raw.preco);
+    const preco = Number.isFinite(precoNum) && precoNum >= 0 ? precoNum : 0;
+    const stockNum =
+      raw.stock !== undefined && raw.stock !== null && raw.stock !== ""
+        ? Number(raw.stock)
+        : null;
+    const stock =
+      stockNum !== null && Number.isFinite(stockNum) && stockNum >= 0
+        ? Math.floor(stockNum)
+        : null;
+    return {
+      ...raw,
+      id: String(raw.id),
+      quantidade: stock !== null && stock > 0 ? Math.min(quantidade, stock) : quantidade,
+      preco: preco,
+      stock: stock,
+      selecoes: canonicalizeSelecoes(raw.selecoes),
+    };
   };
 
   const lerCarrinhoStorage = () => {
     try {
       const parsed = JSON.parse(localStorage.getItem("carrinho") || "[]");
-      return Array.isArray(parsed) ? parsed : [];
+      return Array.isArray(parsed)
+        ? parsed.map(sanitizeCartItem).filter(Boolean)
+        : [];
     } catch (e) {
       return [];
     }
@@ -38,7 +79,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Esta variável agora é usada de forma consistente
   const isPaginaCarrinho = document.getElementById("itens-carrinho") !== null;
-  const isPaginaCheckout = document.getElementById("formCheckout") !== null;
+  const isPaginaCheckout =
+    document.getElementById("formCheckout") !== null ||
+    document.getElementById("form-dados") !== null ||
+    document.querySelector(".checkout-page") !== null;
 
   const atualizarEstadoIconeCarrinho = (aberto) => {
     if (!iconCarrinhoHeader) return;
@@ -47,6 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
     iconCarrinhoHeader.setAttribute("aria-label", aberto ? "Fechar carrinho" : "Abrir carrinho");
     iconCarrinhoHeader.setAttribute("title", aberto ? "Fechar Carrinho" : "Ver Carrinho");
   };
+
+  let sideCartTrap = null;
 
   const abrirSideCart = () => {
     // CORREÇÃO DEFINITIVA: A verificação é feita aqui.
@@ -62,7 +108,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (sideCartOverlay) sideCartOverlay.classList.add("ativo");
     atualizarEstadoIconeCarrinho(true);
     document.body.classList.add("app-panel-open");
-    document.body.style.overflow = "hidden";
+    if (window.ttScrollLock) window.ttScrollLock.lock("side-cart");
+    else document.body.style.overflow = "hidden";
+    if (typeof window.ttFocusTrap === "function" && sideCart) {
+      if (sideCartTrap) sideCartTrap.release();
+      sideCartTrap = window.ttFocusTrap(sideCart, fecharSideCart);
+    }
   };
 
   const fecharSideCart = () => {
@@ -70,9 +121,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (sideCart) sideCart.classList.remove("ativo");
     if (sideCartOverlay) sideCartOverlay.classList.remove("ativo");
     atualizarEstadoIconeCarrinho(false);
+    if (sideCartTrap) {
+      sideCartTrap.release();
+      sideCartTrap = null;
+    }
     if (estavaAberto) {
       document.body.classList.remove("app-panel-open");
-      document.body.style.overflow = "";
+      if (window.ttScrollLock) window.ttScrollLock.unlock("side-cart");
+      else document.body.style.overflow = "";
     }
   };
   
@@ -93,38 +149,44 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!match || pais !== String(regra.pais || "PT").toUpperCase()) return false;
 
     const prefixo = Number.parseInt(match[1], 10);
-    const minimo = Number(regra.valor_minimo || 0);
-    return minimo > 0
-      && subtotal >= minimo
+    const minimoCents = Math.round(Number(regra.valor_minimo || 0) * 100);
+    const subtotalCents = Math.round(Number(subtotal || 0) * 100);
+    return minimoCents > 0
+      && subtotalCents >= minimoCents
       && prefixo >= Number(regra.cp_min || 1000)
       && prefixo <= Number(regra.cp_max || 8999);
   };
 
   const atingiuLimitePortesGratis = (subtotal) => {
     const regra = window.LOJA_CONFIG_PORTES_GRATIS || {};
-    const minimo = Number(regra.valor_minimo || 0);
-    return regra.ativo === true && minimo > 0 && subtotal >= minimo;
+    const minimoCents = Math.round(Number(regra.valor_minimo || 0) * 100);
+    const subtotalCents = Math.round(Number(subtotal || 0) * 100);
+    return regra.ativo === true && minimoCents > 0 && subtotalCents >= minimoCents;
   };
 
   const getPortesEstimados = (pesoTotal, subtotal) => {
     const config = window.LOJA_CONFIG_PORTES || {};
-    const pais = String(getDadosEntregaEstimados().pais_regiao || "PT").toUpperCase();
-    const regras = config[pais] || config["PT"] || [];
+    const paisRaw = String(getDadosEntregaEstimados().pais_regiao || "PT").toUpperCase();
+    if (paisRaw === "OUTRO") return 0;
+    const pais = paisRaw === "UK" ? (config["UK"] ? "UK" : "GB") : (paisRaw === "GB" ? (config["GB"] ? "GB" : "UK") : paisRaw);
+    const regras = [...(config[pais] || config["PT"] || [])].sort((a, b) => Number(a.min) - Number(b.min));
 
     if (temPortesGratisEstimados(subtotal)) return 0;
-    
-    let portes = 0;
+    if (regras.length === 0) return 0;
+
+    if (pesoTotal < Number(regras[0].min || 0)) {
+      return parseFloat(regras[0].preco) || 0;
+    }
+
     for (let r of regras) {
-        if (pesoTotal >= r.min && (pesoTotal < r.max || Number(r.max) === 0)) {
-            portes = parseFloat(r.preco);
-            break;
-        }
+      const min = Number(r.min || 0);
+      const max = Number(r.max || 0);
+      if (pesoTotal >= min && (max === 0 || pesoTotal < max)) {
+        return parseFloat(r.preco) || 0;
+      }
     }
-    // Fallback para peso acima do definido
-    if (portes === 0 && regras.length > 0 && pesoTotal >= regras[regras.length - 1].max) {
-        portes = parseFloat(regras[regras.length - 1].preco);
-    }
-    return portes;
+
+    return parseFloat(regras[regras.length - 1].preco) || 0;
   };
 
   const renderSideCart = () => {
@@ -154,13 +216,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     sideCartSubtotal.parentElement.style.display = "block";
     if (finalizarSideCartBtn) finalizarSideCartBtn.style.display = "block";
-    let totalPreco = 0;
+    let totalPrecoCents = 0;
     let totalPeso = 0;
 
     let sideCartItemsHTML = "";
     carrinho.forEach((item, index) => {
-      totalPreco += parseFloat(item.preco) * item.quantidade;
-      totalPeso += (parseInt(item.peso_gramas) || 0) * item.quantidade;
+      const qty = parseInt(item.quantidade, 10) || 1;
+      totalPrecoCents += Math.round((parseFloat(item.preco) || 0) * 100) * qty;
+      totalPeso += (parseInt(item.peso_gramas, 10) || 0) * qty;
 
       let selecoesHTML = "";
       if (item.selecoes && Object.keys(item.selecoes).length > 0) {
@@ -172,8 +235,9 @@ document.addEventListener("DOMContentLoaded", () => {
           .join("");
       }
 
-      const isMaxStock = item.quantidade >= item.stock;
-      const isMinStock = item.quantidade <= 1;
+      const hasStock = item.stock !== undefined && item.stock !== null && item.stock !== "" && Number.isFinite(Number(item.stock));
+      const isMaxStock = hasStock && qty >= Number(item.stock);
+      const isMinStock = qty <= 1;
       const quantidadeHTML = `
                 <div class="cart-qty-editor">
                     <button class="qty-btn" onclick="diminuirQuantidade(${index})" ${isMinStock ? "disabled" : ""}>-</button>
@@ -200,11 +264,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     sideCartItemsContainer.innerHTML = sideCartItemsHTML;
     
+    const totalPreco = totalPrecoCents / 100;
     const valorPortes = getPortesEstimados(totalPeso, totalPreco);
     const portesGratis = temPortesGratisEstimados(totalPreco);
     const valorSubtotal = sideCartSubtotal.children[1];
-    valorSubtotal.innerHTML =
-      `€${number_format(totalPreco, 2, ",", ".")} <small>${portesGratis ? "Portes grátis para Portugal Continental" : `+ €${number_format(valorPortes, 2, ",", ".")} de portes estimados`}</small>`;
+    if (valorSubtotal) {
+      valorSubtotal.innerHTML =
+        `€${number_format(totalPreco, 2, ",", ".")} <small>${portesGratis ? "Portes grátis para Portugal Continental" : `+ €${number_format(valorPortes, 2, ",", ".")} de portes estimados`}</small>`;
+    }
 
     sideCartSubtotal.querySelector('.free-shipping-pending')?.remove();
     if (atingiuLimitePortesGratis(totalPreco) && !portesGratis) {
@@ -216,7 +283,9 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const guardarCarrinho = (notificar = true) => {
-    localStorage.setItem("carrinho", JSON.stringify(carrinho));
+    try {
+      localStorage.setItem("carrinho", JSON.stringify(carrinho));
+    } catch (_) {}
     if (notificar) window.dispatchEvent(new Event('cartUpdated'));
   };
 
@@ -272,30 +341,40 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = "/checkout";
   };
 
-  window.adicionarAoCarrinho = (produto, startElement = null) => {
+  window.adicionarAoCarrinho = (produtoRaw, startElement = null) => {
+    const produto = sanitizeCartItem(produtoRaw);
+    if (!produto) return;
+    const produtoSelJson = JSON.stringify(produto.selecoes);
     const itemExistenteIndex = carrinho.findIndex(
       (item) =>
-        item.id === produto.id &&
-        JSON.stringify(item.selecoes) === JSON.stringify(produto.selecoes),
+        String(item.id) === String(produto.id) &&
+        (produto.variacao_id && item.variacao_id
+          ? String(item.variacao_id) === String(produto.variacao_id)
+          : JSON.stringify(canonicalizeSelecoes(item.selecoes)) === produtoSelJson),
     );
 
     if (itemExistenteIndex > -1) {
       const novaQuantidade =
         carrinho[itemExistenteIndex].quantidade + produto.quantidade;
-      if (novaQuantidade > carrinho[itemExistenteIndex].stock) {
-        mostrarPopup(
-          `Não pode adicionar mais. Stock máximo (${carrinho[itemExistenteIndex].stock}) atingido.`,
-          "erro",
-        );
+      const maxStock = carrinho[itemExistenteIndex].stock;
+      if (maxStock !== null && novaQuantidade > maxStock) {
+        if (typeof mostrarPopup === "function") {
+          mostrarPopup(
+            `Não pode adicionar mais. Stock máximo (${maxStock}) atingido.`,
+            "erro",
+          );
+        }
         return;
       }
       carrinho[itemExistenteIndex].quantidade = novaQuantidade;
     } else {
-      if (produto.quantidade > produto.stock) {
-        mostrarPopup(
-          `A quantidade excede o stock disponível (${produto.stock}).`,
-          "erro",
-        );
+      if (produto.stock !== null && produto.quantidade > produto.stock) {
+        if (typeof mostrarPopup === "function") {
+          mostrarPopup(
+            `A quantidade excede o stock disponível (${produto.stock}).`,
+            "erro",
+          );
+        }
         return;
       }
       carrinho.push(produto);
@@ -305,7 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const temAnimacaoVoo = startElement && iconCarrinhoHeader;
     if (temAnimacaoVoo) {
       const imgToClone = document.createElement('img');
-      imgToClone.src = produto.foto;
+      imgToClone.src = safeImageUrl(produto.foto);
       imgToClone.style.position = 'fixed';
       imgToClone.style.zIndex = '10005'; // Acima de modais
       imgToClone.style.width = '60px';
@@ -396,7 +475,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
             </svg>
             <p>O seu carrinho está vazio.</p>
-            <a href="produtos.php" class="button voltar-btn" style="margin-top:20px; display:inline-block;">Explorar Produtos</a>
+            <a href="/produtos.php" class="button voltar-btn" style="margin-top:20px; display:inline-block;">Explorar Produtos</a>
         </div>`;
       const cartContainer = document.querySelector('.cart-container');
       if (cartContainer) cartContainer.classList.add('vazio');
@@ -414,12 +493,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const actionsBottom = document.querySelector('.cart-actions-bottom');
     if (actionsBottom) actionsBottom.style.display = "flex";
 
-    let totalPreco = 0;
+    let totalPrecoCents = 0;
     let totalPeso = 0;
     let itensHTML = "";
     carrinho.forEach((item, index) => {
-      totalPreco += parseFloat(item.preco) * item.quantidade;
-      totalPeso += (parseInt(item.peso_gramas) || 0) * item.quantidade;
+      const qty = parseInt(item.quantidade, 10) || 1;
+      totalPrecoCents += Math.round((parseFloat(item.preco) || 0) * 100) * qty;
+      totalPeso += (parseInt(item.peso_gramas, 10) || 0) * qty;
 
       let precoHTML = item.emPromocao
         ? `<strong>€${number_format(item.preco, 2, ",", ".")} <del style="font-weight:400; color:#94a3b8; font-size:0.85rem; margin-left:5px;">€${number_format(item.precoOriginal, 2, ",", ".")}</del></strong>`
@@ -432,8 +512,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      const isMaxStock = item.stock && item.quantidade >= item.stock;
-      const isMinStock = item.quantidade <= 1;
+      const hasStock = item.stock !== undefined && item.stock !== null && item.stock !== "" && Number.isFinite(Number(item.stock));
+      const isMaxStock = hasStock && qty >= Number(item.stock);
+      const isMinStock = qty <= 1;
 
       const quantidadeHTML = `
         <div class="cart-qty-editor">
@@ -461,6 +542,7 @@ document.addEventListener("DOMContentLoaded", () => {
     container.innerHTML = itensHTML;
 
     if (totalContainer) {
+      const totalPreco = totalPrecoCents / 100;
       const valorPortes = getPortesEstimados(totalPeso, totalPreco);
       const portesGratis = temPortesGratisEstimados(totalPreco);
       const mostrarNotaPortesGratis = atingiuLimitePortesGratis(totalPreco) && !portesGratis;

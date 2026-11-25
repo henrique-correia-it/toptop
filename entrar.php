@@ -1,8 +1,10 @@
 <?php
 require_once __DIR__ . '/config/session.php';
+require_once __DIR__ . '/config/auth.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/csrf.php';
 require_once __DIR__ . '/config/cliente_auth.php';
+require_once __DIR__ . '/config/rate_limit.php';
 
 function finalizar_login_admin(mysqli $conn, array $admin): void
 {
@@ -62,12 +64,17 @@ function cliente_esta_bloqueado(array $customer, int $lockout): bool
         && strtotime($customer['last_login_attempt']) > time() - $lockout;
 }
 
+$next = $_GET['next'] ?? ($_POST['next'] ?? '/minha-conta');
+if (!is_string($next) || !str_starts_with($next, '/') || str_starts_with($next, '//') || str_starts_with($next, '/\\') || preg_match('/[\r\n]/', $next)) {
+    $next = '/minha-conta';
+}
+
 if (isset($_SESSION['admin_logado']) && $_SESSION['admin_logado'] === true && !isset($_GET['dev_preview'])) {
     header('Location: /admin');
     exit;
 }
 if (is_cliente_logged_in()) {
-    header('Location: /minha-conta');
+    header('Location: ' . $next);
     exit;
 }
 
@@ -77,15 +84,11 @@ $aviso = '';
 $loginValor = '';
 $unlock_timestamp = 0;
 $mostrarEscolhaPerfil = false;
-$next = $_GET['next'] ?? ($_POST['next'] ?? '/minha-conta');
-if (!is_string($next) || !str_starts_with($next, '/') || str_starts_with($next, '//') || str_starts_with($next, '/\\') || preg_match('/[\r\n]/', $next)) {
-    $next = '/minha-conta';
-}
 
 // --- DEVELOPER PREVIEW MODE ---
 $is_dev_preview = false;
 if (isset($_GET['dev_preview'])) {
-    if (isset($_SESSION['admin_logado']) && $_SESSION['admin_role'] === 'desenvolvedor') {
+    if (is_developer()) {
         $is_dev_preview = true;
         $estado_preview = $_GET['dev_preview'];
         $loginValor = 'developer';
@@ -149,18 +152,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($login === '' || $password === '') {
             $erro = 'Preencha o utilizador/email e a palavra-passe.';
+        } elseif (!rate_limit_allow('login_ip', 20, 300)) {
+            $erro = 'Demasiadas tentativas de início de sessão. Aguarde alguns minutos e tente novamente.';
         } else {
             $admin = procurar_admin_login($conn, $login);
             $email = customer_clean_email($login);
             $customer = filter_var($email, FILTER_VALIDATE_EMAIL) ? customer_find_by_email($conn, $email) : null;
 
+            if (!$admin && !$customer) {
+                // Hash dummy constante para mitigar enumeração por timing attack
+                password_verify($password, '$2y$10$usesomesillystringfore7hnbRJHxXVLeakoG8K30oukPsA.ztMG');
+            }
+
             $adminBloqueado = $admin ? admin_esta_bloqueado($admin, $lockout) : false;
             $clienteBloqueado = $customer ? cliente_esta_bloqueado($customer, $lockout) : false;
             $adminValido = $admin && !$adminBloqueado && password_verify($password, $admin['password_hash']);
-            $clienteNaoVerificado = $customer && !$clienteBloqueado && (int)$customer['ativo'] === 0 && password_verify($password, $customer['password_hash']);
-            $clienteValido = $customer && !$clienteBloqueado && (int)$customer['ativo'] === 1 && password_verify($password, $customer['password_hash']);
+            $clientePasswordOk = $customer && !$clienteBloqueado && password_verify($password, $customer['password_hash']);
+            $clienteNaoVerificado = $clientePasswordOk && (int)$customer['ativo'] === 0;
+            $clienteValido = $clientePasswordOk && (int)$customer['ativo'] === 1;
 
             if ($adminValido && $clienteValido) {
+                log_app("Login com dupla escolha de perfil para {$login}.", 'INFO', 'entrar.php');
                 $_SESSION['login_perfis_pendentes'] = [
                     'admin_id' => (int)$admin['id'],
                     'cliente_id' => (int)$customer['id'],
@@ -169,34 +181,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ];
                 $mostrarEscolhaPerfil = true;
             } elseif ($adminValido) {
+                log_app("Login admin '{$admin['username']}' ({$admin['role']}).", 'INFO', 'entrar.php');
                 finalizar_login_admin($conn, $admin);
                 session_write_close();
                 header('Location: /admin');
                 exit;
             } elseif ($clienteValido) {
+                log_app("Login cliente #{$customer['id']} ({$customer['email']}).", 'INFO', 'entrar.php');
                 finalizar_login_cliente($conn, $customer);
                 header('Location: ' . $next);
                 exit;
             } else {
-                if ($adminBloqueado && !$customer) {
-                    $_rem = max(0, strtotime($admin['last_login_attempt']) + $lockout - time());
-                    $erro = 'Conta temporariamente bloqueada. Tente novamente em ' . floor($_rem / 60) . ':' . str_pad($_rem % 60, 2, '0', STR_PAD_LEFT) . '.';
-                } elseif ($clienteBloqueado && !$admin) {
-                    $erro = 'Conta temporariamente bloqueada. Tente novamente dentro de alguns minutos.';
-                } elseif ($clienteNaoVerificado) {
-                    $erro = 'Confirma o teu email antes de entrares. Verifica a caixa de entrada (e spam) para o link de ativação.';
-                } else {
-                    $erro = 'Utilizador/email ou palavra-passe incorretos.';
-                }
+                $mensagemBloqueio = 'Conta temporariamente bloqueada devido a várias tentativas falhadas. Tente novamente dentro de alguns minutos.';
 
-                if ($admin && !$adminBloqueado && !$clienteValido) {
-                    $janela_expirada = !empty($admin['last_login_attempt']) && strtotime($admin['last_login_attempt']) <= time() - $lockout;
-                    $novas_tentativas = $janela_expirada ? 1 : ((int)$admin['failed_login_attempts'] + 1);
-                    $agora = date('Y-m-d H:i:s');
-                    $stmt = $conn->prepare("UPDATE administradores SET failed_login_attempts = ?, last_login_attempt = ? WHERE id = ?");
-                    $stmt->bind_param("isi", $novas_tentativas, $agora, $admin['id']);
+                if ($admin && !$adminBloqueado && !$clienteValido && !$clienteNaoVerificado) {
+                    $stmt = $conn->prepare(
+                        "UPDATE administradores
+                         SET failed_login_attempts = CASE
+                                WHEN last_login_attempt IS NULL OR last_login_attempt <= DATE_SUB(NOW(), INTERVAL ? SECOND) THEN 1
+                                ELSE failed_login_attempts + 1
+                             END,
+                             last_login_attempt = NOW()
+                         WHERE id = ?"
+                    );
+                    $stmt->bind_param("ii", $lockout, $admin['id']);
                     $stmt->execute();
                     $stmt->close();
+
+                    $stmt_chk = $conn->prepare("SELECT failed_login_attempts FROM administradores WHERE id = ? LIMIT 1");
+                    $stmt_chk->bind_param("i", $admin['id']);
+                    $stmt_chk->execute();
+                    $row_chk = $stmt_chk->get_result()->fetch_assoc();
+                    $stmt_chk->close();
+                    $novas_tentativas = (int)($row_chk['failed_login_attempts'] ?? 1);
 
                     $ip = $_SERVER['REMOTE_ADDR'] ?? '';
                     $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
@@ -206,20 +223,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute();
                     $stmt->close();
 
-                    $tentativas_restantes = 5 - $novas_tentativas;
-                    if ($tentativas_restantes <= 0) {
-                        $erro = 'Conta temporariamente bloqueada. Tente novamente em ' . floor($lockout / 60) . ' minutos.';
+                    if ($novas_tentativas >= 5) {
+                        $adminBloqueado = true;
                     }
                 }
 
-                if ($customer && !$clienteBloqueado && !$adminValido) {
-                    $janela_expirada_c = !empty($customer['last_login_attempt']) && strtotime($customer['last_login_attempt']) <= time() - $lockout;
-                    $attempts = $janela_expirada_c ? 1 : ((int)$customer['failed_login_attempts'] + 1);
-                    $now = date('Y-m-d H:i:s');
-                    $stmt = $conn->prepare("UPDATE clientes SET failed_login_attempts = ?, last_login_attempt = ? WHERE id = ?");
-                    $stmt->bind_param('isi', $attempts, $now, $customer['id']);
+                if ($customer && !$clienteBloqueado && !$adminValido && !$clienteNaoVerificado) {
+                    $stmt = $conn->prepare(
+                        "UPDATE clientes
+                         SET failed_login_attempts = CASE
+                                WHEN last_login_attempt IS NULL OR last_login_attempt <= DATE_SUB(NOW(), INTERVAL ? SECOND) THEN 1
+                                ELSE failed_login_attempts + 1
+                             END,
+                             last_login_attempt = NOW()
+                         WHERE id = ?"
+                    );
+                    $stmt->bind_param('ii', $lockout, $customer['id']);
                     $stmt->execute();
                     $stmt->close();
+
+                    $stmt_chkc = $conn->prepare("SELECT failed_login_attempts FROM clientes WHERE id = ? LIMIT 1");
+                    $stmt_chkc->bind_param("i", $customer['id']);
+                    $stmt_chkc->execute();
+                    $row_chkc = $stmt_chkc->get_result()->fetch_assoc();
+                    $stmt_chkc->close();
+                    if ((int)($row_chkc['failed_login_attempts'] ?? 1) >= 5) {
+                        $clienteBloqueado = true;
+                    }
+                }
+
+                if ($clienteNaoVerificado) {
+                    log_seguranca("Tentativa de login em conta não verificada: {$email}.", 'entrar.php');
+                    $erro = 'Confirma o teu email antes de entrares. Verifica a caixa de entrada (e spam) para o link de ativação.';
+                } elseif ($adminBloqueado || $clienteBloqueado) {
+                    log_seguranca("Bloqueio por tentativas falhadas no login: {$login}.", 'entrar.php');
+                    $erro = $mensagemBloqueio;
+                } else {
+                    log_seguranca("Falha de login para '{$login}'.", 'entrar.php');
+                    $erro = 'Utilizador/email ou palavra-passe incorretos.';
                 }
             }
         }
@@ -286,15 +327,15 @@ include __DIR__ . '/templates/header.php';
                         <label for="senha">Palavra-passe</label>
                         <div class="password-wrapper">
                             <?php echo ui_input('senha', ['type' => 'password', 'id' => 'senha', 'required' => true, 'autocomplete' => 'current-password', 'placeholder' => 'A sua palavra-passe']); ?>
-                            <span class="toggle-senha" data-target="senha">
+                            <button type="button" class="toggle-senha" aria-label="Mostrar ou ocultar palavra-passe" data-target="senha" style="background:none;border:none;padding:0;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                            </span>
+                            </button>
                         </div>
                         <div id="caps-lock-warning" style="display:none; align-items:center; gap:7px; margin-top:8px; padding:7px 12px; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; font-size:0.78rem; font-weight:600; color:#92400e; letter-spacing:0.01em;">
                             Caps Lock ativo
                         </div>
                     </div>
-                    <?php echo ui_button('Entrar', ['type' => 'submit', 'class' => 'button add-btn']); ?>
+                    <?php echo ui_button('Entrar', ['type' => 'submit', 'class' => 'button add-btn', 'full' => true]); ?>
                 </form>
             <?php endif; ?>
 

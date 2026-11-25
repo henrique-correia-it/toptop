@@ -40,7 +40,7 @@
     position: relative;
     display: grid;
     /* Larguras proporcionais ao conteúdo: texto (Sobre/Pagamento) mais largo,
-       links (Informações) mais estreito — evita o espaçamento desequilibrado. */
+       links (Informações) mais estreito - evita o espaçamento desequilibrado. */
     grid-template-columns: 1.6fr 1fr 1.3fr 1.7fr;
     gap: clamp(32px, 4vw, 56px);
     max-width: 1280px;

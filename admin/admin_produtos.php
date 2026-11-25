@@ -16,26 +16,59 @@ if (empty($_SESSION['csrf_token'])) {
 
 $resultados_por_pagina = 15;
 $pagina_atual = filter_input(INPUT_GET, 'pagina', FILTER_VALIDATE_INT, ['options' => ['default' => 1, 'min_range' => 1]]);
-$offset = ($pagina_atual - 1) * $resultados_por_pagina;
 
-$so_visiveis = !empty($_GET['visiveis']) && $_GET['visiveis'] === '1';
-$where_visiveis = $so_visiveis ? " WHERE ativo = 1" : "";
-$total_resultados = $conn->query("SELECT COUNT(id) as total FROM produtos{$where_visiveis}")->fetch_assoc()['total'];
-$total_paginas = ceil($total_resultados / $resultados_por_pagina);
+$filtro_q    = trim((string)($_GET['q'] ?? ''));
+$filtro_cat  = trim((string)($_GET['categoria'] ?? ''));
 
-$ordenar_opcoes = [
-    'id_desc'       => ['col' => 'p.id',         'dir' => 'DESC'],
-    'nome_asc'      => ['col' => 'p.nome',        'dir' => 'ASC'],
-    'nome_desc'     => ['col' => 'p.nome',        'dir' => 'DESC'],
-    'preco_asc'     => ['col' => 'p.preco',       'dir' => 'ASC'],
-    'preco_desc'    => ['col' => 'p.preco',       'dir' => 'DESC'],
-    'stock_desc'    => ['col' => 'stock_total',   'dir' => 'DESC'],
-    'stock_asc'     => ['col' => 'stock_total',   'dir' => 'ASC'],
-    'categoria_asc' => ['col' => 'p.categoria',   'dir' => 'ASC'],
+$where_conds  = [];
+$where_params = [];
+$where_types  = '';
+if ($filtro_cat !== '') {
+    $where_conds[]  = "p.categoria = ?";
+    $where_params[] = $filtro_cat;
+    $where_types   .= 's';
+}
+if ($filtro_q !== '') {
+    $like = '%' . $filtro_q . '%';
+    $where_conds[]  = "(p.nome LIKE ? OR p.referencia LIKE ?)";
+    $where_params[] = $like;
+    $where_params[] = $like;
+    $where_types   .= 'ss';
+}
+$where_sql = $where_conds ? ' WHERE ' . implode(' AND ', $where_conds) : '';
+
+$stmt_cnt = $conn->prepare("SELECT COUNT(p.id) AS total FROM produtos p{$where_sql}");
+if ($where_params) {
+    $stmt_cnt->bind_param($where_types, ...$where_params);
+}
+$stmt_cnt->execute();
+$total_resultados = (int)$stmt_cnt->get_result()->fetch_assoc()['total'];
+$stmt_cnt->close();
+
+$total_paginas = max(1, (int)ceil($total_resultados / $resultados_por_pagina));
+$pagina_atual  = min($pagina_atual, $total_paginas);
+$offset        = ($pagina_atual - 1) * $resultados_por_pagina;
+
+$cats_filtro = ['' => 'Todas as categorias'];
+$res_cats_f = $conn->query("SELECT DISTINCT categoria FROM produtos WHERE categoria IS NOT NULL AND categoria != '' ORDER BY categoria ASC");
+if ($res_cats_f) {
+    while ($rc = $res_cats_f->fetch_assoc()) {
+        $cats_filtro[$rc['categoria']] = $rc['categoria'];
+    }
+}
+
+$sort_map = [
+    'id'         => 'p.id',
+    'nome'       => 'p.nome',
+    'referencia' => 'p.referencia',
+    'categoria'  => 'p.categoria',
+    'preco'      => 'CASE WHEN COALESCE(p.preco_promocional, 0) > 0 THEN p.preco_promocional ELSE p.preco END',
+    'stock'      => 'COALESCE(stock_total, 0)',
+    'estado'     => 'p.ativo',
 ];
-$ordenar_key = $_GET['ordenar'] ?? 'id_desc';
-if (!array_key_exists($ordenar_key, $ordenar_opcoes)) $ordenar_key = 'id_desc';
-$ordem = $ordenar_opcoes[$ordenar_key];
+$sort_by  = isset($_GET['sort']) && array_key_exists($_GET['sort'], $sort_map) ? $_GET['sort'] : 'id';
+$sort_dir = (isset($_GET['dir']) && strtolower((string)$_GET['dir']) === 'asc') ? 'asc' : (isset($_GET['dir']) ? 'desc' : 'desc');
+$ordem    = ['col' => $sort_map[$sort_by], 'dir' => strtoupper($sort_dir)];
 
 
 
@@ -44,13 +77,6 @@ $ordem = $ordenar_opcoes[$ordenar_key];
 
 <main class="dashboard-container animate-entry">
 
-<!-- Bloquear scroll automático no refresh -->
-<script>
-    if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-    }
-    window.scrollTo(0, 0);
-</script>
 
     <?php echo ui_page_header("Gerir Produtos da Loja", ['layout' => 'admin', 'back_url' => '/admin', 'back_title' => 'Voltar ao Painel']); ?>
 
@@ -64,46 +90,22 @@ $ordem = $ordenar_opcoes[$ordenar_key];
     <?php endif; ?>
 
     <!-- ── Toolbar ── -->
-    <div class="prod-toolbar">
-        <div class="prod-toolbar-left">
-            <?php echo ui_button('Adicionar Produto', ['href' => 'adicionar.php?return_to=admin_produtos', 'class' => 'button btn-with-plus btn-with-plus-text']); ?>
-        </div>
-        <div class="prod-toolbar-right">
-            <form method="GET" id="form-ordenar" style="display:flex; align-items:center; gap:10px;">
-                <?php
-                echo ui_switch('visiveis', 'Só visíveis', (bool)$so_visiveis, [
-                    'variant'  => 'compact',
-                    'value'    => '1',
-                    'title'    => 'Mostrar apenas produtos visíveis',
-                    'onchange' => 'this.form.submit()',
-                ]);
-                echo ui_select('ordenar', [
-                    'id_desc'       => 'Mais recente',
-                    'nome_asc'      => 'Nome (A → Z)',
-                    'nome_desc'     => 'Nome (Z → A)',
-                    'preco_asc'     => 'Preço (↑)',
-                    'preco_desc'    => 'Preço (↓)',
-                    'stock_desc'    => 'Stock (↓)',
-                    'stock_asc'     => 'Stock (↑)',
-                    'categoria_asc' => 'Categoria (A → Z)',
-                ], $ordenar_key, ['variant' => 'toolbar', 'onchange' => 'this.form.submit()', 'title' => 'Ordenar por']); ?>
-            </form>
-            <?php echo ui_select_mode_button(); ?>
-        </div>
-    </div>
-
-    <!-- ── Selection mode info bar ── -->
-    <?php echo ui_selection_bar(['spacer' => true]); ?>
+    <?php echo ui_table_toolbar([
+        'form_id'        => 'form-ordenar',
+        'primary_action' => ui_button('Adicionar Produto', ['href' => 'adicionar.php?return_to=admin_produtos', 'class' => 'button btn-with-plus btn-with-plus-text']),
+        'filter'         => ['name' => 'categoria', 'options' => $cats_filtro, 'value' => $filtro_cat, 'title' => 'Filtrar por categoria'],
+        'search'         => ['name' => 'q', 'value' => $filtro_q],
+    ]); ?>
 
     <!-- ── Table ── -->
-    <div class="table-wrapper" style="max-width: 1200px; width: 100%; margin-left:auto; margin-right:auto;" id="table-wrapper">
-        <?php
-        $where_sql = $so_visiveis ? " WHERE p.ativo = 1" : "";
-        $sql = "SELECT p.*, (SELECT SUM(pv.quantidade) FROM produto_variacoes pv WHERE pv.produto_id = p.id) as stock_total FROM produtos p{$where_sql} ORDER BY {$ordem['col']} {$ordem['dir']} LIMIT ? OFFSET ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ii", $resultados_por_pagina, $offset);
-        $stmt->execute();
-        $result = $stmt->get_result();
+    <?php
+    $sql = "SELECT p.*, (SELECT SUM(pv.quantidade) FROM produto_variacoes pv WHERE pv.produto_id = p.id) as stock_total FROM produtos p{$where_sql} ORDER BY {$ordem['col']} {$ordem['dir']} LIMIT ? OFFSET ?";
+    $stmt = $conn->prepare($sql);
+    $exec_params = array_merge($where_params, [$resultados_por_pagina, $offset]);
+    $exec_types  = $where_types . 'ii';
+    $stmt->bind_param($exec_types, ...$exec_params);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
         $prodRows = [];
         if ($result && $result->num_rows > 0) {
@@ -119,14 +121,22 @@ $ordem = $ordenar_opcoes[$ordenar_key];
                 $preco_fmt = number_format($row['preco'], 2, '.', '');
                 $promo_fmt = ($row['preco_promocional'] > 0) ? number_format($row['preco_promocional'], 2, '.', '') : '';
 
-                $fotoCell = "<div class='prod-foto-wrap'><img src='/public/images/" . ui_e($row['foto_principal']) . "' alt='" . ui_e($row['nome']) . "'>"
-                    . "<span class='prod-check-badge'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg></span></div>";
+                $fotoCell = "<div class='prod-foto-wrap'><img src='/public/images/" . ui_e($row['foto_principal']) . "' alt='" . ui_e($row['nome']) . "'></div>";
 
                 $acoesCell = '<div class="acoes-tabela" style="display:flex; gap:8px;">'
                     . ui_icon_button('edit', ['href' => 'editar.php?id=' . $id . '&return_to=admin_produtos', 'title' => 'Editar produto'])
                     . ui_icon_button('duplicate', ['class' => 'btn-duplicar', 'title' => 'Duplicar produto', 'attrs' => ['data-id' => $id, 'data-csrf' => $_SESSION['csrf_token']]])
-                    . ui_icon_button('delete', ['title' => 'Apagar produto', 'attrs' => ['data-id' => $id, 'data-nome' => $row['nome']]])
+                    . ui_icon_button('delete', ['class' => 'btn-del-single', 'title' => 'Apagar produto', 'attrs' => ['data-id' => $id, 'data-nome' => $row['nome']]])
                     . '</div>';
+
+                $temPromo = !empty($row['preco_promocional']) && $row['preco_promocional'] > 0;
+                $precoHtml = $temPromo
+                    ? "<span class='promo-tabela'>" . format_money($row['preco_promocional']) . "</span><br><small style='text-decoration:line-through;'>" . format_money($row['preco']) . '</small>'
+                    : "<span class='preco-tabela'>" . format_money($row['preco']) . '</span>';
+
+                $produtoHtml = "<span class='nome-produto-tabela'>" . ui_e($row['nome']) . '</span>';
+                $refTexto    = trim((string)($row['referencia'] ?? ''));
+                $refHtml     = "<span class='ref-produto-tabela'>" . ($refTexto !== '' ? ui_e($refTexto) : '-') . '</span>';
 
                 $prodRows[] = [
                     'attrs' => [
@@ -141,32 +151,53 @@ $ordem = $ordenar_opcoes[$ordenar_key];
                     ],
                     'cells' => [
                         $fotoCell,
-                        "<div class='nome-produto-tabela'>" . ui_e($row['nome']) . '</div>',
-                        ui_e($row['referencia']),
+                        $produtoHtml,
+                        $refHtml,
+                        ui_e($row['categoria']),
+                        ['class' => 'preco-cell', 'html' => $precoHtml],
                         ['class' => 'stock-cell', 'html' => "<span class='stock-value'>{$stock_total}</span>{$aviso_stock_html}"],
-                        ['style' => 'text-align:center;', 'html' => "<span class='badge " . ($ativo === 1 ? 'visivel' : 'oculto') . " interativo btn-toggle-status' data-id='{$id}'>" . ($ativo === 1 ? 'Visível' : 'Oculto') . '</span>'],
-                        "<span class='preco-tabela'>" . format_money($row['preco']) . '</span>',
-                        (!empty($row['preco_promocional']) && $row['preco_promocional'] > 0) ? "<span class='promo-tabela'>" . format_money($row['preco_promocional']) . '</span>' : '—',
-                        "<span style='font-size: 0.85rem; color: var(--cor-slate-500);'>" . ui_e($row['categoria']) . '</span>',
+                        ['style' => 'text-align:center;', 'html' => ui_badge($ativo === 1 ? 'Visível' : 'Oculto', $ativo === 1 ? 'success' : 'neutral', [
+                            'tag'         => 'button',
+                            'interactive' => true,
+                            'class'       => 'btn-toggle-status ' . ($ativo === 1 ? 'visivel' : 'oculto'),
+                            'title'       => 'Clique para alternar visibilidade',
+                            'attrs'       => ['data-id' => $id],
+                        ])],
                         $acoesCell,
                     ],
                 ];
             }
             $stmt->close();
         }
-        echo ui_table(['Foto', 'Nome', 'Referência', 'Stock', 'Estado', 'Preço', 'Promo', 'Categoria', 'Ações'], $prodRows, [
-            'wrap_class'    => 'ui-table-inner',
+        echo ui_table([
+            'Foto',
+            ['label' => 'Produto', 'sort' => 'nome'],
+            ['label' => 'Referência', 'sort' => 'referencia'],
+            ['label' => 'Categoria', 'sort' => 'categoria'],
+            ['label' => 'Preço', 'sort' => 'preco'],
+            ['label' => 'Stock', 'sort' => ['key' => 'stock', 'default_dir' => 'desc']],
+            ['label' => 'Estado', 'sort' => ['key' => 'estado', 'default_dir' => 'desc']],
+            'Ações',
+        ], $prodRows, [
+            'wrap_id'       => 'table-wrapper',
+            'wrap_style'    => 'max-width: 1200px; width: 100%; margin-left:auto; margin-right:auto;',
             'table_class'   => 'admin-table tabela-produtos',
-            'empty_message' => 'Ainda não há produtos registados.',
+            'empty_message' => ($filtro_q !== '' || $filtro_cat !== '') ? 'Nenhum produto encontrado com os filtros selecionados.' : 'Ainda não há produtos registados.',
+            'sort'          => ['by' => $sort_by, 'dir' => $sort_dir, 'page_param' => 'pagina', 'unset_params' => ['ordenar']],
         ]);
         ?>
-    </div>
 
     <?php
-    echo ui_pagination((int)$pagina_atual, (int)$total_paginas, function ($p) use ($ordenar_key, $so_visiveis) {
+    $pag_sort = isset($_GET['sort']) ? $sort_by : null;
+    $pag_dir  = isset($_GET['sort']) ? $sort_dir : null;
+    echo ui_pagination((int)$pagina_atual, (int)$total_paginas, function ($p) use ($filtro_q, $filtro_cat, $pag_sort, $pag_dir) {
         $params = [];
-        if ($ordenar_key && $ordenar_key !== 'mais_recentes') $params['ordenar'] = $ordenar_key;
-        if ($so_visiveis) $params['visiveis'] = '1';
+        if ($pag_sort) {
+            $params['sort'] = $pag_sort;
+            $params['dir']  = $pag_dir;
+        }
+        if ($filtro_cat !== '') $params['categoria'] = $filtro_cat;
+        if ($filtro_q !== '') $params['q'] = $filtro_q;
         $params['pagina'] = $p;
         return '?' . http_build_query($params);
     });
@@ -244,21 +275,9 @@ renderContextMenu([
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const CSRF = '<?php echo $_SESSION['csrf_token']; ?>';
-    const wrapper      = document.getElementById('table-wrapper');
-    const btnSelMode   = document.getElementById('btn-sel-mode');
-    const selModeBar   = document.getElementById('sel-mode-bar');
-    const selCountEl   = document.getElementById('sel-count');
-    const btnSelAll    = document.getElementById('btn-sel-all');
-    const bulkBar      = document.getElementById('bulk-bar');
-    const bulkCountEl  = document.getElementById('bulk-count');
-    const bulkCancel   = document.getElementById('bulk-cancel');
-    const bulkDel      = document.getElementById('bulk-del');
-    const formDelete   = document.getElementById('form-delete');
-    const formIds      = document.getElementById('form-ids');
-    
-    let selMode = false;
-    let selected = new Set();
+    const CSRF       = '<?php echo $_SESSION['csrf_token']; ?>';
+    const formDelete = document.getElementById('form-delete');
+    const formIds    = document.getElementById('form-ids');
 
     function renderStockCell(tr) {
         const cell = tr.querySelector('.stock-cell');
@@ -274,55 +293,10 @@ document.addEventListener('DOMContentLoaded', function () {
         cell.innerHTML = `<span class="stock-value">${stock}</span>${warning}`;
     }
 
-    function updateUI() {
-        const n = selected.size;
-        selCountEl.textContent = n;
-        bulkCountEl.textContent = n;
-        const total = document.querySelectorAll('.tabela-produtos tbody tr[data-id]').length;
-        btnSelAll.textContent = selected.size === total ? 'Desselecionar todos' : 'Selecionar todos';
-        bulkBar.classList.toggle('visible', n > 0);
-    }
-
-    btnSelMode.addEventListener('click', () => {
-        selMode = !selMode;
-        wrapper.classList.toggle('sel-mode', selMode);
-        btnSelMode.classList.toggle('active', selMode);
-        selModeBar.classList.toggle('visible', selMode);
-        if (!selMode) {
-            selected.clear();
-            document.querySelectorAll('.tabela-produtos tbody tr[data-id]').forEach(r => r.classList.remove('selecionado'));
-        }
-        updateUI();
-    });
-
-    bulkCancel.addEventListener('click', () => btnSelMode.click());
-
-    // Seleção de linhas
-    document.querySelector('.tabela-produtos tbody')?.addEventListener('click', function (e) {
-        if (!selMode || e.target.closest('.acoes-tabela')) return;
-        const tr = e.target.closest('tr');
-        if (!tr) return;
-        const id = tr.dataset.id;
-        if (selected.has(id)) { selected.delete(id); tr.classList.remove('selecionado'); }
-        else { selected.add(id); tr.classList.add('selecionado'); }
-        updateUI();
-    });
-
-    btnSelAll.addEventListener('click', () => {
-        const rows = document.querySelectorAll('.tabela-produtos tbody tr[data-id]');
-        const allSel = [...rows].every(r => selected.has(r.dataset.id));
-        rows.forEach(r => {
-            if (allSel) { selected.delete(r.dataset.id); r.classList.remove('selecionado'); }
-            else { selected.add(r.dataset.id); r.classList.add('selecionado'); }
-        });
-        updateUI();
-    });
-
     function escapeHtmlAdmin(str) {
         return String(str ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
     }
 
-    // Operações AJAX e Confirmações
     function submitDelete(ids) {
         formIds.innerHTML = '';
         ids.forEach(id => {
@@ -333,10 +307,10 @@ document.addEventListener('DOMContentLoaded', function () {
         formDelete.submit();
     }
 
-    bulkDel.addEventListener('click', () => {
-        const ids = [...selected];
-        if (!ids.length) return;
-        mostrarModalConfirmacao('Apagar Produtos', `Apagar permanentemente ${ids.length} produto(s)?`, () => submitDelete(ids));
+    const bulkSel = window.initAdminBulkSelection({
+        confirmTitle: 'Apagar Produtos',
+        confirmMessage: ids => `Apagar permanentemente ${ids.length} produto(s)?`,
+        onAction: ids => mostrarModalConfirmacao('Apagar Produtos', `Apagar permanentemente ${ids.length} produto(s)?`, () => submitDelete(ids)),
     });
 
     // Delegação para botões de ação na tabela
@@ -360,20 +334,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Toggle Status
         const btnToggle = e.target.closest('.btn-toggle-status');
-        if (btnToggle && !selMode) {
+        if (btnToggle && !(bulkSel && bulkSel.isSelMode())) {
             btnToggle.classList.add('loading');
             const fd = new FormData(); fd.append('id', tr.dataset.id); fd.append('csrf_token', CSRF);
             fetch('ajax_toggle_visibilidade.php', { method: 'POST', body: fd })
-                .then(r => r.json()).then(data => {
+                .then(r => {
+                    if (!r.ok) throw new Error('Erro HTTP ' + r.status);
+                    return r.json();
+                }).then(data => {
                     btnToggle.classList.remove('loading');
                     if (data.sucesso) {
                         btnToggle.textContent = data.label;
-                        btnToggle.classList.toggle('visivel', data.novo_estado == 1);
-                        btnToggle.classList.toggle('oculto', data.novo_estado != 1);
-                        tr.dataset.ativo = data.novo_estado == 1 ? '1' : '0';
+                        const isVis = data.novo_estado == 1;
+                        btnToggle.classList.toggle('visivel', isVis);
+                        btnToggle.classList.toggle('oculto', !isVis);
+                        btnToggle.classList.toggle('ui-badge--success', isVis);
+                        btnToggle.classList.toggle('ui-badge--neutral', !isVis);
+                        tr.dataset.ativo = isVis ? '1' : '0';
                         renderStockCell(tr);
                         mostrarPopup('Visibilidade atualizada.', 'sucesso');
+                    } else {
+                        mostrarPopup(data.mensagem || 'Não foi possível atualizar a visibilidade.', 'erro');
                     }
+                }).catch(() => {
+                    btnToggle.classList.remove('loading');
+                    mostrarPopup('Erro de comunicação ao atualizar visibilidade.', 'erro');
                 });
         }
     });
@@ -427,14 +412,18 @@ document.addEventListener('DOMContentLoaded', function () {
                         tr.dataset.nome = data.nome; tr.dataset.ref = data.referencia; tr.dataset.stock = data.stock;
                         tr.dataset.preco = data.preco.toFixed(2); tr.dataset.promo = data.preco_promocional ? data.preco_promocional.toFixed(2) : '';
                         tr.querySelector('.nome-produto-tabela').textContent = data.nome;
-                        tr.querySelector('td:nth-child(3)').textContent = data.referencia;
+                        const refEl = tr.querySelector('.ref-produto-tabela');
+                        if (refEl) refEl.textContent = (data.referencia && String(data.referencia).trim() !== '') ? data.referencia : '-';
                         renderStockCell(tr);
-                        tr.querySelector('.preco-tabela').textContent = '€' + data.preco.toFixed(2).replace('.', ',');
-                        const promoTd = tr.querySelector('td:nth-child(7)');
-                        if (promoTd) {
-                            promoTd.innerHTML = (data.preco_promocional && data.preco_promocional > 0)
-                                ? `<span class="promo-tabela">€${data.preco_promocional.toFixed(2).replace('.', ',')}</span>`
-                                : '—';
+                        const precoCell = tr.querySelector('.preco-cell');
+                        if (precoCell) {
+                            const precoStr = '€' + data.preco.toFixed(2).replace('.', ',');
+                            if (data.preco_promocional && data.preco_promocional > 0) {
+                                const promoStr = '€' + data.preco_promocional.toFixed(2).replace('.', ',');
+                                precoCell.innerHTML = `<span class="promo-tabela">${promoStr}</span><br><small style="text-decoration:line-through;">${precoStr}</small>`;
+                            } else {
+                                precoCell.innerHTML = `<span class="preco-tabela">${precoStr}</span>`;
+                            }
                         }
                     }
                     document.getElementById('qe-modal').style.display = 'none';

@@ -5,7 +5,7 @@ include 'templates/header.php';
 require_once __DIR__ . '/config/footer_functions.php';
 require_once __DIR__ . '/config/rate_limit.php';
 
-$isAdmin = isset($_SESSION['admin_logado']) && $_SESSION['admin_logado'] === true && in_array($_SESSION['admin_role'], ['superadmin', 'desenvolvedor']);
+$isAdmin = is_global_edit_mode();
 $adminClass = $isAdmin ? 'footer-editable' : '';
 $horarioFuncionamentoRaw = getFooterText('horario_funcionamento', '');
 
@@ -39,22 +39,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bind_param("ssss", $nome, $email, $mensagem, $data_agora);
 
             if ($stmt->execute()) {
+                $stmt->close();
+                require_once __DIR__ . '/admin/includes/email_handler.php';
+                enviarEmailNotificacaoLoja('novo_contacto_loja', [
+                    'nome_remetente'  => $nome,
+                    'email_remetente' => $email,
+                    'mensagem'        => $mensagem,
+                ]);
+                enviarEmailTemplate('confirmacao_contacto', $email, $nome, [
+                    '{nome_remetente}' => $nome,
+                    '{nome_cliente}'   => $nome,
+                    '{mensagem}'       => $mensagem,
+                ]);
                 $popupMensagem = "Mensagem enviada com sucesso! Responderemos assim que possível.";
                 $popupTipo = "sucesso";
             } else {
+                $stmt->close();
                 $popupMensagem = "Ocorreu um erro ao enviar a mensagem. Por favor, tente novamente.";
                 $popupTipo = "erro";
             }
-            $stmt->close();
         }
     }
 }
 ?>
-
-<style>
-.footer-editable-contacto svg { display: none !important; }
-.footer-editable-contacto { display: inline-block; border-radius: 4px; }
-</style>
 
 <main class="pagina-contacto">
 
@@ -128,16 +135,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="info-item-texto">
                     <h4>Redes Sociais</h4>
                     <div class="contacto-social-links <?php echo $adminClass; ?>" data-seccao="redes_sociais"
-                         data-wa="<?php echo getFooterText('link_whatsapp', 'https://chat.whatsapp.com/K7IhtBOBJNtHRGysYttqnY?fbclid=PAZXh0bgNhZW0CMTEAAafGr0PtcF54B-Xs-3vTdfud9IjlLX7_8aIYPl4AbcuzcyR6YggHigJmb1gQ0g_aem_FI_fPyaedJRcm1Ctl243uA'); ?>"
-                         data-ig="<?php echo getFooterText('link_instagram', 'https://www.instagram.com/toptop_clothingstore'); ?>"
-                         data-fb="<?php echo getFooterText('link_facebook', 'https://www.facebook.com/share/1AqqQZ8YmL/'); ?>">
-                        <a href="<?php echo getFooterText('link_whatsapp', 'https://chat.whatsapp.com/K7IhtBOBJNtHRGysYttqnY?fbclid=PAZXh0bgNhZW0CMTEAAafGr0PtcF54B-Xs-3vTdfud9IjlLX7_8aIYPl4AbcuzcyR6YggHigJmb1gQ0g_aem_FI_fPyaedJRcm1Ctl243uA'); ?>" target="_blank" title="WhatsApp" class="contacto-social-link wa">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                         data-wa="<?php echo htmlspecialchars(getFooterText('link_whatsapp', 'https://chat.whatsapp.com/K7IhtBOBJNtHRGysYttqnY'), ENT_QUOTES, 'UTF-8'); ?>"
+                         data-ig="<?php echo htmlspecialchars(getFooterText('link_instagram', 'https://www.instagram.com/toptop_clothingstore'), ENT_QUOTES, 'UTF-8'); ?>"
+                         data-fb="<?php echo htmlspecialchars(getFooterText('link_facebook', 'https://www.facebook.com/share/1AqqQZ8YmL/'), ENT_QUOTES, 'UTF-8'); ?>">
+                        <a href="<?php echo htmlspecialchars(getFooterText('link_whatsapp', 'https://chat.whatsapp.com/K7IhtBOBJNtHRGysYttqnY'), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" title="WhatsApp" class="contacto-social-link wa">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65 -3.8a9 9 0 1 1 3.4 2.9l-5.05 .9" /><path d="M9 10a.5 .5 0 0 0 1 0v-1a.5 .5 0 0 0 -1 0v1a5 5 0 0 0 5 5h1a.5 .5 0 0 0 0 -1h-1a.5 .5 0 0 0 0 1" /></svg>
                         </a>
-                        <a href="<?php echo getFooterText('link_instagram', 'https://www.instagram.com/toptop_clothingstore'); ?>" target="_blank" title="Instagram" class="contacto-social-link ig">
+                        <a href="<?php echo htmlspecialchars(getFooterText('link_instagram', 'https://www.instagram.com/toptop_clothingstore'), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" title="Instagram" class="contacto-social-link ig">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
                         </a>
-                        <a href="<?php echo getFooterText('link_facebook', 'https://www.facebook.com/share/1AqqQZ8YmL/'); ?>" target="_blank" title="Facebook" class="contacto-social-link fb">
+                        <a href="<?php echo htmlspecialchars(getFooterText('link_facebook', 'https://www.facebook.com/share/1AqqQZ8YmL/'), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" title="Facebook" class="contacto-social-link fb">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
                         </a>
                     </div>
@@ -147,7 +154,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <div class="form-coluna">
             <h3>Envie-nos uma Mensagem</h3>
-            <form id="formContacto" action="/contacto.php" method="post">
+            <form id="formContacto" action="/contacto" method="post">
                 <?php echo csrf_input(); ?>
                 <label for="nome">Nome</label>
                 <?php echo ui_input('nome', ['id' => 'nome', 'required' => true, 'autocomplete' => 'name']); ?>
@@ -174,6 +181,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <div class="mapa-wrapper-full" data-reveal>
         <iframe
+            title="Localização da loja TopTop em Lourosa no Google Maps"
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3011.918137026178!2d-8.539019487734008!3d40.98327337123456!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd247f5b2be8d2d3%3A0x221c8b982d8842cd!2sChafariz!5e0!3m2!1spt-PT!2spt!4v1757012161468!5m2!1spt-PT!2spt"
             width="600"
             height="450"
@@ -200,7 +208,7 @@ mensagemTextarea.addEventListener('input', () => {
     caracteresAtuaisSpan.textContent = mensagemTextarea.value.length;
 });
 
-// Reveal on scroll — apenas design (progressive enhancement, igual à home)
+// Reveal on scroll - apenas design (progressive enhancement, igual à home)
 (function () {
     var main = document.querySelector('.pagina-contacto');
     if (!main) return;

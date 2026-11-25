@@ -1,5 +1,5 @@
 /* ==========================================================================
-   TOPTOP UI PRIMITIVES — Biblioteca Mínima de Componentes (DESIGN.md)
+   TOPTOP UI PRIMITIVES - Biblioteca Mínima de Componentes (DESIGN.md)
    Fonte única de verdade para os 9 primitivos reutilizáveis do site.
    Zero !important, 100% baseado em tokens de base/_variables.css.
    ========================================================================== */
@@ -12,7 +12,7 @@
     gap: var(--space-2);
     padding: 10px 18px;
     border: 1px solid var(--button-border);
-    border-radius: var(--radius-pill);
+    border-radius: var(--button-radius);
     background: var(--button-bg);
     color: var(--button-color);
     box-shadow: var(--button-shadow);
@@ -22,6 +22,8 @@
     line-height: 1.2;
     text-align: center;
     text-decoration: none;
+    text-transform: none;
+    letter-spacing: 0;
     cursor: pointer;
     transition: var(--button-transition);
     -webkit-appearance: none;
@@ -199,48 +201,215 @@ a.ui-card--interactive:hover,
     background: var(--cor-slate-50);
 }
 
-/* ── 3. BADGE (.ui-badge) ── */
+/* ── 2b. FORM CARD (.form-card - componente global de cartões de formulário/detalhe) ── */
+.admin-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.form-card {
+    background: var(--cor-branco);
+    border: 1px solid #eef2f6;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    margin-bottom: 24px;
+    overflow: visible;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-card:hover {
+    border-color: var(--cor-slate-200);
+}
+
+.form-card--clip {
+    overflow: hidden;
+}
+
+.form-card-header {
+    padding: 16px 22px;
+    background: var(--cor-slate-50);
+    border-bottom: 1px solid var(--cor-slate-100);
+    border-radius: 15px 15px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.form-card-header h3 {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-slate-700);
+    display: flex;
+    align-items: center;
+}
+
+.form-card-body {
+    padding: 22px;
+}
+
+.form-card-body:first-child {
+    border-radius: 15px 15px 0 0;
+}
+
+/* Grupos de Formulário globais dentro de .form-card / formulários de backoffice */
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--cor-slate-600);
+    margin: 0 0 7px;
+    letter-spacing: 0.01em;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="number"],
+.form-group input[type="tel"],
+.form-group input[type="url"],
+.form-group textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--cor-slate-200);
+    border-radius: var(--button-radius, 14px);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    color: var(--cor-slate-900);
+    background: var(--cor-branco);
+    box-sizing: border-box;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.form-group .password-wrapper input[type="password"],
+.form-group .password-wrapper input[type="text"] {
+    padding-right: 44px;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="email"]:focus,
+.form-group input[type="password"]:focus,
+.form-group input[type="number"]:focus,
+.form-group input[type="tel"]:focus,
+.form-group input[type="url"]:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--cor-preto-suave);
+    box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.06);
+}
+
+.form-group textarea {
+    line-height: 1.6;
+    min-height: 120px;
+}
+
+@media (max-width: 1024px) {
+    .admin-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── 3. BADGE (.ui-badge - fonte única de verdade para todas as pílulas) ── */
 .ui-badge {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: var(--space-1);
-    padding: 4px 10px;
+    padding: 5px 12px;
     border-radius: var(--radius-pill);
     font-family: var(--font-sans);
-    font-size: var(--text-xs);
-    font-weight: 600;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     line-height: 1.2;
+    border: 1px solid transparent;
     white-space: nowrap;
+    vertical-align: middle;
+}
+
+button.ui-badge {
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    user-select: none;
 }
 
 .ui-badge--neutral {
-    background: var(--cor-slate-100);
+    background: var(--cor-slate-50);
     color: var(--cor-slate-600);
+    border-color: var(--cor-slate-200);
 }
 
 .ui-badge--success {
     background: var(--cor-sucesso-bg);
     color: #15803d;
+    border-color: #dcfce7;
 }
 
 .ui-badge--warning {
-    background: #fef3c7;
-    color: #b45309;
+    background: #fff7ed;
+    color: #c2410c;
+    border-color: #ffedd5;
 }
 
 .ui-badge--danger {
     background: var(--cor-perigo-bg);
     color: #b91c1c;
+    border-color: #fee2e2;
 }
 
 .ui-badge--info {
     background: #eff6ff;
-    color: var(--cor-info);
+    color: #1d4ed8;
+    border-color: #dbeafe;
+}
+
+.ui-badge--teal {
+    background: #f0fdfa;
+    color: #0f766e;
+    border-color: #ccfbf1;
+}
+
+.ui-badge--purple {
+    background: #faf5ff;
+    color: #7e22ce;
+    border-color: #f3e8ff;
 }
 
 .ui-badge--accent {
-    background: var(--tema-accent-tinte);
-    color: var(--cor-texto);
+    background: #fefce8;
+    color: #a16207;
+    border-color: #fef08a;
+}
+
+.ui-badge--interactive {
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+}
+
+.ui-badge--interactive:hover {
+    transform: scale(1.04);
+    filter: brightness(0.97);
+}
+
+.ui-badge--interactive.loading {
+    opacity: 0.5;
+    pointer-events: none;
 }
 
 /* ── 4. FORM FIELD (.ui-field) ── */
@@ -343,10 +512,59 @@ a.ui-card--interactive:hover,
     color: var(--cor-slate-500);
 }
 
+.ui-empty__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-slate-200);
+    color: var(--cor-slate-500);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.ui-empty__icon svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
 .ui-empty p {
     margin: 0;
     color: var(--cor-slate-500);
     font-size: var(--text-base);
+}
+
+.ui-product-placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 70px;
+    height: 70px;
+    border-radius: 14px;
+    background: var(--cor-slate-100);
+    border: 1px solid var(--cor-slate-200);
+    color: var(--cor-slate-400);
+    flex-shrink: 0;
+}
+
+.ui-product-placeholder svg {
+    width: 26px;
+    height: 26px;
+    display: block;
+}
+
+.ui-product-placeholder--sm {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+}
+
+.ui-product-placeholder--sm svg {
+    width: 20px;
+    height: 20px;
 }
 
 /* ── 6. PAGE HEADER (.ui-page-header) ── */
@@ -403,6 +621,70 @@ a.ui-card--interactive:hover,
     flex-wrap: wrap;
 }
 
+/* ── 6b. BACK BUTTON (.ui-back-btn) ── */
+.ui-back-btn,
+.btn-back-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    color: var(--cor-preto-suave);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease, transform 0.16s ease;
+}
+
+.ui-back-btn svg,
+.btn-back-arrow svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ui-back-btn:hover,
+.btn-back-arrow:hover {
+    background: rgba(17, 17, 17, 0.06);
+    color: var(--cor-preto);
+}
+
+.ui-back-btn:hover svg,
+.btn-back-arrow:hover svg {
+    transform: translateX(-2px);
+}
+
+.ui-back-btn:active,
+.btn-back-arrow:active {
+    background: rgba(17, 17, 17, 0.11);
+    transform: scale(0.94);
+}
+
+.ui-back-btn:focus-visible,
+.btn-back-arrow:focus-visible {
+    outline: 2px solid var(--cor-preto-suave);
+    outline-offset: 2px;
+}
+
+@media (max-width: 576px) {
+    .ui-back-btn,
+    .btn-back-arrow {
+        width: 34px;
+        height: 34px;
+    }
+
+    .ui-back-btn svg,
+    .btn-back-arrow svg {
+        width: 19px;
+        height: 19px;
+    }
+}
+
 /* ── 7. TABLE WRAPPER (.ui-table-wrap) ── */
 .ui-table-wrap {
     width: 100%;
@@ -415,7 +697,8 @@ a.ui-card--interactive:hover,
 .ui-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: var(--text-sm);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
     text-align: left;
 }
 
@@ -434,7 +717,10 @@ a.ui-card--interactive:hover,
 .ui-table td {
     padding: var(--space-3) var(--space-4);
     border-bottom: 1px solid var(--cor-divisor-cartao);
-    color: var(--cor-texto);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--cor-slate-800);
     vertical-align: middle;
 }
 
@@ -446,7 +732,45 @@ a.ui-card--interactive:hover,
     background: var(--cor-slate-50);
 }
 
+/* Tipografia unificada em todas as células de dados das tabelas da app */
+.admin-table td:not(.attr-subrow-cell):not(.portes-subrow-cell):not(.email-subrow-cell),
+.ui-table td,
+.cliente-orders-table td,
+.reservation-table td,
+#guia-conteudo td {
+    font-family: var(--font-sans) !important;
+    font-size: 0.9rem !important;
+    font-weight: 400 !important;
+    font-style: normal !important;
+    color: var(--cor-slate-800) !important;
+}
+
+.admin-table td:not(.attr-subrow-cell):not(.portes-subrow-cell):not(.email-subrow-cell) :is(span, strong, b, small, p, div, a, code):not(.ui-badge):not(.badge):not(.badge-status):not(.ui-badge__dot):not(.iso-badge):not(.ui-btn):not(.button):not([class*="btn-"]):not(.stock-zero-warning):not(.ui-checkbox__box):not(.ui-checkbox__label):not(.toggle-track):not(.toggle-thumb):not(.acoes-tabela):not(.gc-foto):not(.gc-foto-overlay):not(.gc-foto-placeholder),
+.ui-table td :is(span, strong, b, small, p, div, a, code):not(.ui-badge):not(.badge):not(.badge-status):not(.ui-badge__dot):not(.iso-badge):not(.ui-btn):not(.button):not([class*="btn-"]):not(.ui-checkbox__box):not(.ui-checkbox__label):not(.toggle-track):not(.toggle-thumb),
+.cliente-orders-table td :is(span, strong, b, small, p, div, a, code):not(.ui-badge):not(.badge):not(.badge-status):not(.ui-badge__dot):not(.ui-btn):not(.button):not([class*="btn-"]),
+.reservation-table td :is(span, strong, b, small, p, div, a, code):not(.ui-badge):not(.badge):not(.badge-status):not(.ui-btn):not(.button):not([class*="btn-"]),
+#guia-conteudo td :is(span, strong, b, small, p, div, a, code) {
+    font-family: var(--font-sans) !important;
+    font-size: 0.9rem !important;
+    font-weight: 400 !important;
+    font-style: normal !important;
+    color: var(--cor-slate-800) !important;
+}
+
 @media (max-width: 768px) {
+    .admin-table td:not(.attr-subrow-cell):not(.portes-subrow-cell):not(.email-subrow-cell),
+    .ui-table td,
+    .cliente-orders-table td,
+    .reservation-table td,
+    #guia-conteudo td,
+    .admin-table td:not(.attr-subrow-cell):not(.portes-subrow-cell):not(.email-subrow-cell) :is(span, strong, b, small, p, div, a, code):not(.ui-badge):not(.badge):not(.badge-status):not(.ui-badge__dot):not(.iso-badge):not(.ui-btn):not(.button):not([class*="btn-"]):not(.stock-zero-warning):not(.ui-checkbox__box):not(.ui-checkbox__label):not(.toggle-track):not(.toggle-thumb):not(.acoes-tabela):not(.gc-foto):not(.gc-foto-overlay):not(.gc-foto-placeholder),
+    .ui-table td :is(span, strong, b, small, p, div, a, code):not(.ui-badge):not(.badge):not(.badge-status):not(.ui-badge__dot):not(.iso-badge):not(.ui-btn):not(.button):not([class*="btn-"]):not(.ui-checkbox__box):not(.ui-checkbox__label):not(.toggle-track):not(.toggle-thumb),
+    .cliente-orders-table td :is(span, strong, b, small, p, div, a, code):not(.ui-badge):not(.badge):not(.badge-status):not(.ui-badge__dot):not(.ui-btn):not(.button):not([class*="btn-"]),
+    .reservation-table td :is(span, strong, b, small, p, div, a, code):not(.ui-badge):not(.badge):not(.badge-status):not(.ui-btn):not(.button):not([class*="btn-"]),
+    #guia-conteudo td :is(span, strong, b, small, p, div, a, code) {
+        font-size: 0.84rem !important;
+    }
+
     .ui-card__header,
     .ui-card__body,
     .ui-card__footer {
@@ -486,7 +810,7 @@ a.ui-card--interactive:hover,
     border-color: #fecaca;
 }
 
-/* ── 9. BADGE EXTENSIONS (dot, interactive) ── */
+/* ── 9. BADGE EXTENSIONS (dot) ── */
 .ui-badge__dot {
     width: 7px;
     height: 7px;
@@ -495,15 +819,152 @@ a.ui-card--interactive:hover,
     display: inline-block;
 }
 
-.ui-badge--interactive {
-    cursor: pointer;
+/* ── 9b. SORTABLE TABLE HEADERS (minimalista: só texto limpo + chevron SVG na coluna ativa) ── */
+th.is-sortable {
     user-select: none;
-    transition: transform 0.15s ease, filter 0.15s ease;
+    cursor: pointer;
+    transition: color 0.15s ease;
 }
 
-.ui-badge--interactive:hover {
-    filter: brightness(0.95);
-    transform: translateY(-1px);
+th.is-sortable:hover {
+    color: var(--cor-slate-900);
+}
+
+th.is-sorted {
+    color: var(--cor-slate-900);
+}
+
+.th-sort-link,
+button.th-sort-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    min-height: 0;
+    min-width: 0;
+    height: auto;
+    width: auto;
+    color: inherit;
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    font: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    transform: none;
+}
+
+.th-sort-link:hover,
+button.th-sort-link:hover {
+    color: var(--cor-slate-900);
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+}
+
+.th-sort-icon {
+    position: absolute;
+    left: calc(100% + 4px);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 11px;
+    height: 11px;
+    color: var(--cor-preto);
+    pointer-events: none;
+}
+
+table.is-sorting {
+    cursor: progress;
+}
+
+/* ── 9c. CANONICAL SEARCH INPUT (ui_search_input() - usado no header, tabelas e envios) ── */
+.search-input-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.search-input-wrap .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--cor-slate-400);
+    pointer-events: none;
+    display: flex;
+    flex-shrink: 0;
+}
+
+.search-input-toolbar {
+    width: 180px;
+    max-width: 100%;
+    height: 44px;
+    padding: 0 34px 0 40px;
+    border-radius: var(--button-radius);
+    border: 1px solid var(--cor-borda-subtil);
+    background: var(--cor-branco);
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--cor-texto);
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, width 0.25s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.search-clear-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--cor-slate-400);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.search-input-wrap.has-value .search-clear-btn {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.search-clear-btn:hover {
+    background: var(--cor-slate-100);
+    color: var(--cor-slate-700);
+}
+
+.search-input-toolbar:focus {
+    outline: none;
+    border-color: var(--cor-preto-suave);
+    box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.06);
+}
+
+.search-input-toolbar::placeholder {
+    color: var(--cor-slate-400);
+}
+
+.search-input-toolbar::-webkit-search-cancel-button {
+    -webkit-appearance: none;
 }
 
 /* ── 10. FIELD PREFIX & CHECKBOX ── */
@@ -536,12 +997,19 @@ a.ui-card--interactive:hover,
 .ui-checkbox {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: 10px;
     cursor: pointer;
     user-select: none;
     font-size: var(--text-sm);
+    font-weight: 500;
     color: var(--cor-texto);
     position: relative;
+}
+
+.ui-checkbox--solo {
+    gap: 0;
+    justify-content: center;
+    vertical-align: middle;
 }
 
 .ui-checkbox input {
@@ -549,39 +1017,115 @@ a.ui-card--interactive:hover,
     opacity: 0;
     width: 1px;
     height: 1px;
+    margin: 0;
+    pointer-events: none;
 }
 
 .ui-checkbox__box {
-    width: 18px;
-    height: 18px;
-    border-radius: var(--radius-sm);
+    position: relative;
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
     border: 1.5px solid var(--cor-slate-300);
-    background: var(--cor-branco);
+    background-color: var(--cor-branco);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.ui-checkbox__box::after {
+    content: "";
+    display: block;
+    width: 13px;
+    height: 13px;
+    background-color: var(--cor-preto-suave);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    opacity: 0;
+    transform: scale(0.3) rotate(-14deg);
+    transition: opacity 0.16s ease, transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ui-checkbox--solo .ui-checkbox__box {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+}
+
+.ui-checkbox--solo .ui-checkbox__box::after {
+    width: 17px;
+    height: 17px;
+}
+
+.ui-checkbox:hover .ui-checkbox__box {
+    background-color: var(--cor-slate-50);
+    border-color: var(--cor-preto-suave);
+    transform: scale(1.06);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.ui-checkbox--solo:hover .ui-checkbox__box {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.ui-checkbox:active .ui-checkbox__box {
+    transform: scale(0.92);
 }
 
 .ui-checkbox input:checked + .ui-checkbox__box {
-    background: var(--cor-preto-suave);
+    background-color: var(--cor-branco);
     border-color: var(--cor-preto-suave);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 }
 
 .ui-checkbox input:checked + .ui-checkbox__box::after {
-    content: "";
-    width: 5px;
-    height: 9px;
-    border: solid var(--cor-branco);
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-    margin-bottom: 2px;
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+}
+
+.ui-checkbox:hover input:checked + .ui-checkbox__box {
+    background-color: var(--cor-slate-50);
+    border-color: #000000;
+    transform: scale(1.06);
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12);
+}
+
+.ui-checkbox--solo:hover input:checked + .ui-checkbox__box {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+.ui-checkbox:active input:checked + .ui-checkbox__box {
+    transform: scale(0.92);
 }
 
 .ui-checkbox input:focus-visible + .ui-checkbox__box {
-    outline: 2px solid var(--cor-texto);
+    outline: 2px solid var(--cor-preto-suave);
     outline-offset: 2px;
+}
+
+.ui-checkbox input:disabled + .ui-checkbox__box {
+    opacity: 0.5;
+    transform: none;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.ui-checkbox:has(input:disabled) {
+    cursor: not-allowed;
 }
 
 /* ── 11. TABS (.ui-tabs) ── */
@@ -609,6 +1153,11 @@ a.ui-card--interactive:hover,
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ui-tab:hover:not(.is-active) {
+    color: var(--cor-texto);
+    background: rgba(255, 255, 255, 0.55);
 }
 
 .ui-tab.is-active {

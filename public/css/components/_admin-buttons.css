@@ -112,6 +112,54 @@
 .btn-del-single { color: var(--cor-perigo) !important; }
 .btn-del-single:hover { background-color: var(--cor-perigo-bg) !important; transform: translateY(-2px) scale(1.05) !important; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2) !important; }
 
+/* Expandir subtabela (Cinzento suave com seta preta) */
+.btn-expand-single {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 10px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    padding: 0 !important;
+    background-color: var(--cor-slate-100) !important;
+    color: var(--cor-preto-suave) !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+}
+.btn-expand-single::after {
+    content: "";
+    display: block;
+    width: 17px;
+    height: 17px;
+    background-color: currentColor;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-expand-single:hover {
+    color: #000000 !important;
+    background-color: var(--cor-slate-200) !important;
+    transform: translateY(-2px) scale(1.05) !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1) !important;
+}
+.btn-expand-single.is-open {
+    background-color: var(--cor-slate-200) !important;
+    color: var(--cor-preto-suave) !important;
+}
+.btn-expand-single.is-open::after {
+    transform: rotate(180deg);
+}
+
 /* ── Botões de Admin (Padrão Retangular) ── */
 .btn-admin-primary,
 .btn-admin-secondary,
@@ -138,27 +186,5 @@
 
 .btn-admin-danger { background: #fee2e2; color: var(--cor-perigo); }
 .btn-admin-danger:hover { background: var(--cor-perigo); color: var(--cor-branco); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
-
-/* Ajustes para Botão Voltar (Global) */
-.btn-back-admin {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: var(--cor-branco);
-    border: 1px solid var(--cor-slate-200);
-    border-radius: 10px;
-    color: var(--cor-slate-500);
-    font-weight: 600;
-    font-size: 0.85rem;
-    transition: all 0.2s ease;
-}
-
-.btn-back-admin:hover {
-    border-color: var(--cor-slate-300);
-    color: var(--cor-slate-800);
-    background: var(--cor-slate-50);
-    transform: translateX(-3px);
-}
 
 /* O estilo .action-btn-pill foi centralizado em components/_button-system.css. */

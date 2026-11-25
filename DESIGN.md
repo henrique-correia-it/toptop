@@ -30,7 +30,6 @@ components_library:
   php: "includes/ui/ui.php"
   css: "public/css/ui/_primitives.css"
   tokens_css: "public/css/base/_variables.css"
-  showcase: "/dev/design_system.php"
 ---
 
 # DESIGN.md — TopTop Design System
@@ -167,6 +166,7 @@ Every UI element on the site MUST be composed from these **16 minimal composable
 
 ### 7. Page Chrome & Navigation (`ui_page_header`, `ui_back_button`, `ui_toolbar`, `ui_pagination`)
 - `ui_page_header($title, $opts)`: Supports storefront/default layout (`kicker`, `heading_tag`, `subtitle`, `center`, `actions`) and `'layout' => 'admin'` (`.admin-page-header` + `ui_back_button()`).
+- `ui_back_button($url, $title, $opts)` (`.ui-back-btn`): Minimalist frameless `36×36px` black left-chevron button (`#111111`), transparent at rest with a subtle circular grey hover tint.
 - `ui_toolbar($leftHtml, $rightHtml)`: Unified left/right flex toolbar.
 - `ui_pagination($currentPage, $totalPages, $urlBuilder)`: Single canonical pagination bar.
 
@@ -200,7 +200,6 @@ Every UI element on the site MUST be composed from these **16 minimal composable
 - **DO** use `var(--cor-*)`, `var(--space-*)`, `var(--radius-*)`, and `var(--sombra-*)` tokens exclusively.
 - **DO** keep all text outputs escaped via `htmlspecialchars(..., ENT_QUOTES, 'UTF-8')` (handled automatically by `includes/ui/ui.php`).
 - **DO** bump `config/versao_site.php` whenever any CSS or JS file is modified.
-- **DO** verify new/edited UI in `/dev/design_system.php` (dev-only live showcase).
 
 ### Don't
 - **DON'T** invent new ad-hoc button classes (`.btn-foo`, `.my-custom-btn`) — use `ui_button()` / `.ui-btn`.
@@ -217,7 +216,7 @@ Every UI element on the site MUST be composed from these **16 minimal composable
 When an AI agent builds or modifies any page in TopTop:
 1. **Read `DESIGN.md` first** to align with tokens, shapes, and the 9 primitives.
 2. **Never duplicate markup** — call `ui_button()`, `ui_card()`, `ui_badge()`, `ui_field()`, `ui_alert()`, `ui_empty_state()`, `ui_page_header()`, `ui_modal()`, or `ui_product_card()` from `includes/ui/ui.php`.
-3. **Need a new variant?** Add a minimal modifier to `public/css/ui/_primitives.css` and document it in `DESIGN.md` and `/dev/design_system.php` instead of creating a one-off page style.
+3. **Need a new variant?** Add a minimal modifier to `public/css/ui/_primitives.css` and document it in `DESIGN.md` instead of creating a one-off page style.
 4. **Keep storefront fast:** Storefront visitors load `public/css/style.php?scope=public`; admin-only styles stay in `$adminOnlyPartials`.
 
 ---

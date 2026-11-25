@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const fecharCategoriasDesktop = () => {
+            clearTimeout(fecharCategoriasTimer);
             categoriasDesktopItem.classList.remove('aberto');
             categoriasDesktopToggle.setAttribute('aria-expanded', 'false');
         };
@@ -67,7 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
             hamburgerBtn.setAttribute('aria-expanded', 'true');
             hamburgerBtn.setAttribute('aria-label', 'Fechar menu');
             document.body.classList.add('app-panel-open');
-            document.body.style.overflow = 'hidden';
+            if (window.ttScrollLock) window.ttScrollLock.lock('menu');
+            else document.body.style.overflow = 'hidden';
         };
 
         const fecharMenu = () => {
@@ -82,7 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 categoriasMobileToggle.setAttribute('aria-expanded', 'false');
             }
             document.body.classList.remove('app-panel-open');
-            document.body.style.overflow = '';
+            if (window.ttScrollLock) window.ttScrollLock.unlock('menu');
+            else document.body.style.overflow = '';
         };
 
         const alternarMenu = () => {
@@ -96,9 +99,18 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('app:close-main-nav', fecharMenu);
         window.fecharMainNav = fecharMenu;
 
+        let resizeRaf = 0;
+        const onResize = () => {
+            if (resizeRaf) return;
+            resizeRaf = requestAnimationFrame(() => {
+                resizeRaf = 0;
+                atualizarAlturaHeader();
+            });
+        };
+
         atualizarAlturaHeader();
-        window.addEventListener('resize', atualizarAlturaHeader);
-        window.addEventListener('orientationchange', atualizarAlturaHeader);
+        window.addEventListener('resize', onResize, { passive: true });
+        window.addEventListener('orientationchange', onResize, { passive: true });
 
         hamburgerBtn.addEventListener('click', alternarMenu);
         if (fecharMenuBtn) fecharMenuBtn.addEventListener('click', fecharMenu);

@@ -10,7 +10,11 @@ if (!admin_has_role(['desenvolvedor'])) {
     json_error('Acesso negado.', 403);
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_from_post()) {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Allow: POST');
+    json_error('Método não permitido.', 405);
+}
+if (!csrf_from_post()) {
     json_error('Erro de validacao CSRF.', 403);
 }
 

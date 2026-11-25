@@ -28,12 +28,15 @@ function mostrarPopup(mensagem, tipo = 'sucesso') {
     if (tipo === 'erro') {
         if (titulo) titulo.textContent = 'Erro!';
         popup.classList.add('erro');
+        popup.setAttribute('role', 'alert');
     } else {
         if (titulo) titulo.textContent = 'Sucesso!';
         popup.classList.add('sucesso');
+        popup.setAttribute('role', 'status');
     }
 
-    // Mostra o pop-up
+    // Força reflow para reiniciar animação em toasts consecutivos
+    void popup.offsetWidth;
     popup.classList.add('ativo');
 
     // Esconde o pop-up automaticamente após 5 segundos

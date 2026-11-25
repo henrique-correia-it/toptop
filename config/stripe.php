@@ -1,17 +1,18 @@
 <?php
+require_once __DIR__ . '/env.php';
+require_once __DIR__ . '/loja_config.php';
+
 function getStripeKeys(): array {
-    $env_path = dirname(__DIR__) . '/.env';
-
     $mode = getLojaConfig('stripe_mode', 'live');
+    $env_vars = tt_load_env();
 
-    if (file_exists($env_path)) {
-        $env_vars = parse_ini_file($env_path);
+    if (!empty($env_vars)) {
         $prefix = ($mode === 'test') ? 'STRIPE_TEST_' : 'STRIPE_LIVE_';
 
         return [
-            'secret'         => $env_vars[$prefix . 'SECRET_KEY'] ?? '',
-            'public'         => $env_vars[$prefix . 'PUBLIC_KEY'] ?? '',
-            'webhook_secret' => $env_vars[$prefix . 'WEBHOOK_SECRET'] ?? '',
+            'secret'         => (string) ($env_vars[$prefix . 'SECRET_KEY'] ?? ''),
+            'public'         => (string) ($env_vars[$prefix . 'PUBLIC_KEY'] ?? ''),
+            'webhook_secret' => (string) ($env_vars[$prefix . 'WEBHOOK_SECRET'] ?? ''),
             'mode'           => $mode
         ];
     }
@@ -19,9 +20,28 @@ function getStripeKeys(): array {
 }
 
 function stripeRequest(string $method, string $endpoint, array $data = [], string $secret_key = '', array $extra_headers = []): array {
-    $url = 'https://api.stripe.com/v1/' . $endpoint;
-    $headers = array_merge(['Content-Type: application/x-www-form-urlencoded'], $extra_headers);
+    $method = strtoupper(trim($method));
+    $clean_endpoint = ltrim($endpoint, '/');
+    $url = 'https://api.stripe.com/v1/' . $clean_endpoint;
+
+    $is_write = in_array($method, ['POST', 'PUT', 'PATCH'], true);
+    if ($method === 'GET' && !empty($data)) {
+        $sep = (strpos($url, '?') === false) ? '?' : '&';
+        $url .= $sep . http_build_query($data);
+    }
+
+    $headers = $is_write
+        ? array_merge(['Content-Type: application/x-www-form-urlencoded'], $extra_headers)
+        : $extra_headers;
+
     $ch = curl_init($url);
+    if ($ch === false) {
+        if (function_exists('log_stripe')) {
+            log_stripe("Falha ao inicializar cURL em {$method} {$clean_endpoint}", 'ERROR');
+        }
+        return ['_http_code' => 0, '_curl_error' => 'curl_init failed'];
+    }
+
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_USERPWD        => $secret_key . ':',
@@ -34,6 +54,11 @@ function stripeRequest(string $method, string $endpoint, array $data = [], strin
     if ($method === 'POST') {
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+    } elseif ($method !== 'GET') {
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+        if ($is_write && !empty($data)) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+        }
     }
 
     $response  = curl_exec($ch);
@@ -43,14 +68,27 @@ function stripeRequest(string $method, string $endpoint, array $data = [], strin
 
     if ($response === false) {
         if (function_exists('log_stripe')) {
-            log_stripe("Erro cURL em {$method} {$endpoint}: {$curl_err}", 'ERROR');
+            log_stripe("Erro cURL em {$method} {$clean_endpoint}: {$curl_err}", 'ERROR');
         }
         return ['_http_code' => 0, '_curl_error' => $curl_err];
     }
 
     $decoded = json_decode($response, true);
     if (!is_array($decoded)) {
+        if (function_exists('log_stripe')) {
+            log_stripe("Resposta não-JSON da Stripe em {$method} {$clean_endpoint} (HTTP {$http_code})", 'WARNING');
+        }
         $decoded = [];
+    }
+    if (function_exists('log_stripe')) {
+        if ($http_code >= 400) {
+            $errMsg  = (string)($decoded['error']['message'] ?? 'Erro desconhecido');
+            $errCode = (string)($decoded['error']['code'] ?? ($decoded['error']['type'] ?? 'api_error'));
+            log_stripe("Stripe {$method} {$clean_endpoint} falhou (HTTP {$http_code}, {$errCode}): {$errMsg}", 'ERROR', 'stripe.php');
+        } elseif ($is_write) {
+            $objId = (string)($decoded['id'] ?? '');
+            log_stripe("Stripe {$method} {$clean_endpoint} OK (HTTP {$http_code}" . ($objId !== '' ? ", id:{$objId}" : '') . ")", 'INFO', 'stripe.php');
+        }
     }
     $decoded['_http_code'] = $http_code;
     return $decoded;
@@ -62,6 +100,9 @@ function stripeRequest(string $method, string $endpoint, array $data = [], strin
  */
 function stripeVerifyWebhookSignature(string $payload, string $sig_header, string $webhook_secret): ?array {
     if ($webhook_secret === '' || $sig_header === '') {
+        if (function_exists('log_stripe')) {
+            log_stripe("Webhook Stripe rejeitado: secret ou cabeçalho Stripe-Signature em falta.", 'WARNING', 'stripe.php');
+        }
         return null;
     }
 
@@ -77,10 +118,26 @@ function stripeVerifyWebhookSignature(string $payload, string $sig_header, strin
         if ($key === 'v1') $signatures[] = $val;
     }
 
-    if (!$timestamp || !ctype_digit($timestamp) || empty($signatures)) return null;
+    if (!$timestamp || !ctype_digit($timestamp) || empty($signatures)) {
+        if (function_exists('log_stripe')) {
+            log_stripe("Webhook Stripe rejeitado: formato de assinatura inválido.", 'WARNING', 'stripe.php');
+        }
+        if (function_exists('log_seguranca')) {
+            log_seguranca("Webhook Stripe com formato de assinatura inválido.", 'stripe_webhook');
+        }
+        return null;
+    }
 
     // Rejeita eventos com mais de 5 minutos (recomendação oficial Stripe para prevenir replay attacks)
-    if (abs(time() - (int)$timestamp) > 300) return null;
+    if (abs(time() - (int)$timestamp) > 300) {
+        if (function_exists('log_stripe')) {
+            log_stripe("Webhook Stripe rejeitado: timestamp expirado (>300s).", 'WARNING', 'stripe.php');
+        }
+        if (function_exists('log_seguranca')) {
+            log_seguranca("Webhook Stripe com timestamp expirado.", 'stripe_webhook');
+        }
+        return null;
+    }
 
     $signed_payload = $timestamp . '.' . $payload;
     $expected       = hash_hmac('sha256', $signed_payload, $webhook_secret);
@@ -92,5 +149,11 @@ function stripeVerifyWebhookSignature(string $payload, string $sig_header, strin
         }
     }
 
+    if (function_exists('log_stripe')) {
+        log_stripe("Webhook Stripe rejeitado: assinatura HMAC inválida.", 'ERROR', 'stripe.php');
+    }
+    if (function_exists('log_seguranca')) {
+        log_seguranca("Webhook Stripe com assinatura HMAC inválida.", 'stripe_webhook');
+    }
     return null;
 }

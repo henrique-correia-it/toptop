@@ -1,7 +1,10 @@
-document.addEventListener('DOMContentLoaded', () => {
+function bootGame404() {
     const gameGrid = document.getElementById('memory-game');
     const statsDisplay = document.getElementById('game-stats');
     const resetBtn = document.getElementById('reset-game');
+    if (!gameGrid || !statsDisplay || !resetBtn) return;
+
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const emojis = ['👗', '👕', '👖', '👠', '🎒', '👒', '👟', '🧥'];
     let cards = [...emojis, ...emojis];
@@ -22,16 +25,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createCard(emoji, index) {
-        const card = document.createElement('div');
+        const card = document.createElement('button');
+        card.type = 'button';
         card.classList.add('memory-card');
         card.dataset.emoji = emoji;
         card.dataset.index = index;
+        card.setAttribute('aria-label', `Carta ${index + 1}`);
+        card.setAttribute('aria-pressed', 'false');
 
         card.innerHTML = `
-            <div class="card-inner">
-                <div class="card-front"></div>
-                <div class="card-back">${emoji}</div>
-            </div>
+            <span class="card-inner">
+                <span class="card-front"></span>
+                <span class="card-back" aria-hidden="true">${emoji}</span>
+            </span>
         `;
 
         card.addEventListener('click', flipCard);
@@ -42,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isLocked || this.classList.contains('flipped') || this.classList.contains('matched')) return;
 
         this.classList.add('flipped');
+        this.setAttribute('aria-pressed', 'true');
         flippedCards.push(this);
 
         if (flippedCards.length === 2) {
@@ -73,6 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
             mismatchTimer = setTimeout(() => {
                 card1.classList.remove('flipped');
                 card2.classList.remove('flipped');
+                card1.setAttribute('aria-pressed', 'false');
+                card2.setAttribute('aria-pressed', 'false');
                 flippedCards = [];
                 isLocked = false;
             }, 1000);
@@ -80,14 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showWinModal() {
-        finalAttemptsSpan.textContent = attempts;
-        winModal.classList.add('active');
+        if (finalAttemptsSpan) finalAttemptsSpan.textContent = attempts;
+        if (winModal) winModal.classList.add('active');
         
-        // Disparar Confetis (se biblioteca disponível)
-        if (typeof confetti !== 'function') return;
+        // Disparar Confetis (se biblioteca disponível e sem preferência de movimento reduzido)
+        if (prefersReducedMotion || typeof confetti !== 'function') return;
         const duration = 3 * 1000;
         const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 2600 };
 
         function randomInRange(min, max) {
             return Math.random() * (max - min) + min;
@@ -109,9 +118,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 250);
     }
 
-    closeWinModalBtn.addEventListener('click', () => {
-        winModal.classList.remove('active');
-        initGame();
+    if (closeWinModalBtn && winModal) {
+        closeWinModalBtn.addEventListener('click', () => {
+            winModal.classList.remove('active');
+            initGame();
+        });
+    }
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && winModal && winModal.classList.contains('active')) {
+            winModal.classList.remove('active');
+            initGame();
+        }
     });
 
     function initGame() {
@@ -133,4 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
     resetBtn.addEventListener('click', initGame);
 
     initGame();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootGame404);
+} else {
+    bootGame404();
+}

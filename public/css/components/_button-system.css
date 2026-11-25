@@ -260,11 +260,23 @@ input[type="submit"]:disabled {
     box-shadow: var(--button-shadow);
 }
 
+.ui-btn--full,
+.login-card input[type="submit"],
+.login-card button[type="submit"]:not(.choice-btn),
+.login-card .button,
+.login-card .ui-btn,
 .ck-btn,
 .sc-btns .sc-btn-primary,
 .sc-btns .sc-btn-secondary,
 .btn-aplicar-mobile {
     width: 100%;
+}
+
+.login-card input[type="submit"],
+.login-card button[type="submit"]:not(.choice-btn),
+.login-card .button,
+.login-card .ui-btn {
+    min-height: 48px;
 }
 
 .filtro-acoes .link-limpar {

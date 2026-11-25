@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/config/session.php';
+require_once __DIR__ . '/config/auth.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/csrf.php';
 require_once __DIR__ . '/config/http.php';
@@ -23,7 +24,7 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     json_error('Email invalido.', 400);
 }
 
-if (is_cliente_logged_in() || (isset($_SESSION['admin_logado']) && $_SESSION['admin_role'] === 'desenvolvedor')) {
+if (is_cliente_logged_in() || is_developer()) {
     json_success(['existe' => false]);
 }
 

@@ -93,7 +93,7 @@
     background: #fafafa;
 }
 
-/* --- Estatísticas --- */
+/* --- EstatÃ­sticas --- */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -147,7 +147,7 @@
     stroke-width: 1.8;
 }
 
-/* Variações de cor ultra-clean */
+/* VariaÃ§Ãµes de cor ultra-clean */
 .stat-card:nth-of-type(1):hover {
     border-color: var(--cor-preto);
 }
@@ -178,7 +178,7 @@
 
 .stat-card-info .stat-number {
     font-size: 2rem;
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1;
     color: var(--cor-preto);
     display: block;
@@ -204,7 +204,7 @@
 
 .dashboard-section-title {
     font-size: 0.9rem;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--cor-preto);
     margin: 0 0 25px;
     padding-bottom: 15px;
@@ -221,7 +221,7 @@
     margin-top: 50px;
 }
 
-/* --- Cartões de Navegação --- */
+/* --- CartÃµes de NavegaÃ§Ã£o --- */
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -323,21 +323,8 @@
 }
 
 .reservation-countdown {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 64px;
-    padding: 6px 10px;
-    border-radius: 999px;
-    background: #eef2ff;
-    color: #4338ca;
-    font-weight: 800;
+    min-width: 68px;
     font-variant-numeric: tabular-nums;
-}
-
-.reservation-countdown.ending {
-    background: #fff7ed;
-    color: #c2410c;
 }
 
 .reservation-empty {

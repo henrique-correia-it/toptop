@@ -85,7 +85,7 @@ try {
             $stmt_delete_enc->close();
 
             $return_to = $dados['return_to'] ?? 'encomendas.php';
-            $redirects_permitidos = ['admin.php', 'encomendas.php', '/dev', 'reservas_stock.php'];
+            $redirects_permitidos = ['admin.php', 'encomendas.php', 'reservas_stock.php'];
             if (!in_array($return_to, $redirects_permitidos, true)) {
                 $return_to = 'encomendas.php';
             }
@@ -200,13 +200,14 @@ try {
 
     $conn->commit();
     $in_transaction = false;
+    log_app("Encomenda #{$encomenda_id} ação '{$acao}' concluída.", 'INFO', 'ajax_gerir_encomenda.php');
 
     if ($email_pos_commit !== null) {
         try {
             enviarEmailEncomenda($email_pos_commit['tipo'], $email_pos_commit['dados']);
             $response['mensagem'] .= ' Email de notificação enviado.';
         } catch (\Throwable $e) {
-            log_email($e->getMessage(), 'ajax_gerir_encomenda.php');
+            log_email($e->getMessage(), 'ajax_gerir_encomenda.php', 'ERROR');
             $response['mensagem'] .= ' (Aviso: o envio do email falhou.)';
         }
     }
@@ -215,7 +216,7 @@ try {
     if ($in_transaction && isset($conn)) {
         $conn->rollback();
     }
-    log_app($e->getMessage(), 'ERROR', 'ajax_gerir_encomenda.php enc#' . ($encomenda_id ?? 0));
+    log_exception($e, 'ajax_gerir_encomenda.php enc#' . ($encomenda_id ?? 0));
     $response['sucesso'] = false;
     $response['mensagem'] = ($e instanceof Exception && !($e instanceof mysqli_sql_exception)) ? $e->getMessage() : 'Ocorreu um erro interno ao processar a ação.';
     http_response_code(400);

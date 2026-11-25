@@ -1,4 +1,4 @@
-/* ── PÁGINA DO CARRINHO (PREMIUM REDESIGN) ── */
+/* â”€â”€ PÃGINA DO CARRINHO (PREMIUM REDESIGN) â”€â”€ */
 
 .pagina-carrinho {
     max-width: 1200px;
@@ -11,6 +11,7 @@
     text-align: center; /* FIX: Igual ao Fale Connosco */
 }
 
+.cart-header h1,
 .cart-header h2 {
     font-size: 1.5rem;
     font-weight: 600;
@@ -32,35 +33,35 @@
     display: block;
 }
 
-/* ── Lista de Itens ── */
+/* â”€â”€ Lista de Itens â”€â”€ */
 .cart-items-wrapper {
     background: transparent;
     min-width: 0; /* Evita quebra de grid com textos longos */
 }
 
 /* Overrides de tamanho sobre a estrutura partilhada (_unified-cart-item.css) */
-.item-carrinho {
+.pagina-carrinho .item-carrinho {
     grid-template-columns: 86px minmax(0, 1fr) auto;
     padding: 24px 0;
     background: transparent;
     border-bottom-color: var(--cor-divisor-pagina);
 }
 
-.item-carrinho:first-child {
+.pagina-carrinho .item-carrinho:first-child {
     padding-top: 0;
 }
 
-.item-carrinho img {
+.pagina-carrinho .item-carrinho img {
     width: 86px;
     height: 108px;
 }
 
-/* Empurra o qty-editor para baixo dentro da coluna de ações */
-.item-carrinho .cart-qty-editor {
+/* Empurra o qty-editor para baixo dentro da coluna de aÃ§Ãµes */
+.pagina-carrinho .item-carrinho .cart-qty-editor {
     margin-top: auto;
 }
 
-/* ── Sumário Lateral ── */
+/* â”€â”€ SumÃ¡rio Lateral â”€â”€ */
 .cart-summary-wrapper {
     position: sticky;
     top: 120px;
@@ -125,7 +126,7 @@
     padding-top: 24px;
     border-top: 1px solid var(--cor-divisor-cartao);
     color: var(--cor-preto);
-    font-weight: 800;
+    font-weight: 700;
     font-size: 1.3rem;
 }
 
@@ -177,20 +178,11 @@
     height: 14px;
 }
 
-/* Ações Inferiores */
+/* AÃ§Ãµes Inferiores */
 .cart-actions-bottom {
     margin-top: 30px;
     padding-top: 30px;
     border-top: 1px solid var(--cor-divisor-pagina);
-}
-
-.site-bg-dark .cart-header h2,
-.site-bg-dark .btn-continue-shopping {
-    color: var(--cor-texto-pagina);
-}
-
-.site-bg-dark .cart-security-note {
-    color: var(--cor-texto-pagina-suave);
 }
 
 .btn-continue-shopping {
@@ -219,7 +211,7 @@
     padding: 100px 0;
 }
 
-.spinner {
+.pagina-carrinho .spinner {
     width: 40px;
     height: 40px;
     border: 3px solid var(--cor-slate-100);
@@ -229,9 +221,7 @@
     animation: spin 1s linear infinite;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── Responsividade ── */
+/* â”€â”€ Responsividade â”€â”€ */
 @media (max-width: 992px) {
     .cart-container {
         grid-template-columns: 1fr;

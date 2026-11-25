@@ -14,4 +14,4 @@ Disallow: /checkout
 Disallow: /sucesso
 Disallow: /ajax_
 
-Sitemap: https://www.toptop.pt/sitemap.php
+Sitemap: https://toptop.pt/sitemap.xml

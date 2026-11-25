@@ -19,7 +19,7 @@ main.sucesso-main {
     text-align: center;
 }
 
-/* ── Icon ── */
+/* â”€â”€ Icon â”€â”€ */
 .sc-icon-wrap {
     width: 88px;
     height: 88px;
@@ -40,7 +40,7 @@ main.sucesso-main {
     100% { transform: scale(1); opacity: 1; }
 }
 
-/* ── Typography ── */
+/* â”€â”€ Typography â”€â”€ */
 .sc-badge {
     display: inline-flex;
     align-items: center;
@@ -57,7 +57,7 @@ main.sucesso-main {
 
 .sc-card h1 {
     font-size: 1.65rem;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--cor-preto-suave);
     margin: 0 0 14px;
     line-height: 1.2;
@@ -70,14 +70,14 @@ main.sucesso-main {
     margin: 0 0 10px;
 }
 
-/* ── Divider ── */
+/* â”€â”€ Divider â”€â”€ */
 .sc-divider {
     border: none;
     border-top: 1px solid var(--cor-cinza-claro);
     margin: 32px 0;
 }
 
-/* ── Buttons ── */
+/* â”€â”€ Buttons â”€â”€ */
 .sc-btns {
     display: flex;
     flex-direction: column;

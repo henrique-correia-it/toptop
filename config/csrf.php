@@ -17,7 +17,12 @@ if (!function_exists('csrf_token')) {
 if (!function_exists('csrf_verify')) {
     function csrf_verify(?string $token, string $key = 'csrf_token'): bool
     {
-        return !empty($_SESSION[$key]) && is_string($token) && hash_equals($_SESSION[$key], $token);
+        $ok = !empty($_SESSION[$key]) && is_string($token) && hash_equals($_SESSION[$key], $token);
+        if (!$ok && function_exists('log_seguranca')) {
+            $estado = empty($_SESSION[$key]) ? 'sessão sem token' : (is_string($token) && $token !== '' ? 'token inválido' : 'token em falta');
+            log_seguranca("Falha de validação CSRF ({$estado}, key:{$key}).", 'csrf.php');
+        }
+        return $ok;
     }
 }
 

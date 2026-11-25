@@ -1,91 +1,39 @@
 <?php
 require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../config/csrf.php';
+require_once __DIR__ . '/../config/logger.php';
+require_once __DIR__ . '/includes/storage_helper.php';
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($_SESSION['admin_logado']) || $_SESSION['admin_logado'] !== true || $_SESSION['admin_role'] !== 'desenvolvedor') {
+    http_response_code(403);
     echo json_encode(['sucesso' => false, 'mensagem' => 'Acesso negado.']);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    header('Allow: POST');
+    echo json_encode(['sucesso' => false, 'mensagem' => 'Método não permitido.']);
     exit;
 }
 
 $dados = json_decode(file_get_contents('php://input'), true);
 
-if (
-    !$dados
-    || !isset($dados['csrf_token'], $_SESSION['csrf_token'])
-    || !hash_equals($_SESSION['csrf_token'], $dados['csrf_token'])
-) {
-    echo json_encode(['sucesso' => false, 'mensagem' => 'Erro de segurança.']);
+if (!is_array($dados) || !csrf_from_array($dados)) {
+    http_response_code(403);
+    echo json_encode(['sucesso' => false, 'mensagem' => 'Erro de segurança (CSRF).']);
     exit;
 }
 
-$action      = $dados['action'] ?? '';
-$images_dir  = __DIR__ . '/../public/images/';
-$cats_dir    = __DIR__ . '/../public/assets/img_categorias/';
-$logos_dir   = __DIR__ . '/../public/assets/header/';
-$allowed_ext = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
+$action = $dados['action'] ?? '';
 
 // ── ANALISAR: encontrar fotos fantasma ────────────────────────────────────
 if ($action === 'analisar') {
     include '../config/database.php';
 
-    // 1. Recolher todos os nomes de ficheiro referenciados na BD
-    $referenciados = [];
-
-    $queries = [
-        "SELECT foto_principal   AS f FROM produtos         WHERE foto_principal  IS NOT NULL AND foto_principal  != ''",
-        "SELECT nome_ficheiro    AS f FROM produto_imagens   WHERE nome_ficheiro   IS NOT NULL AND nome_ficheiro   != ''",
-        "SELECT foto_snapshot    AS f FROM encomenda_itens   WHERE foto_snapshot   IS NOT NULL AND foto_snapshot   != ''",
-        "SELECT foto_capa        AS f FROM categorias        WHERE foto_capa       IS NOT NULL AND foto_capa       != ''",
-        "SELECT conteudo         AS f FROM header_config     WHERE seccao = 'logo_src' AND conteudo IS NOT NULL AND conteudo != ''",
-    ];
-
-    foreach ($queries as $sql) {
-        $res = $conn->query($sql);
-        if ($res) {
-            while ($row = $res->fetch_assoc()) {
-                $nome = basename($row['f']); // só o nome do ficheiro, sem path
-                $referenciados[$nome] = true;
-            }
-        }
-    }
-
-    // 2. Comparar com os ficheiros em disco
-    $fantasmas = [];
-    
-    // Scan produtos
-    if (is_dir($images_dir)) {
-        foreach (scandir($images_dir) as $ficheiro) {
-            if ($ficheiro === '.' || $ficheiro === '..') continue;
-            if (!is_file($images_dir . $ficheiro)) continue;
-            $ext = strtolower(pathinfo($ficheiro, PATHINFO_EXTENSION));
-            if (!in_array($ext, $allowed_ext)) continue;
-            if (!isset($referenciados[$ficheiro])) $fantasmas[] = $ficheiro;
-        }
-    }
-
-    // Scan categorias
-    if (is_dir($cats_dir)) {
-        foreach (scandir($cats_dir) as $ficheiro) {
-            if ($ficheiro === '.' || $ficheiro === '..') continue;
-            if (!is_file($cats_dir . $ficheiro)) continue;
-            $ext = strtolower(pathinfo($ficheiro, PATHINFO_EXTENSION));
-            if (!in_array($ext, $allowed_ext)) continue;
-            if (!isset($referenciados[$ficheiro])) $fantasmas[] = $ficheiro;
-        }
-    }
-
-    // Scan logos
-    if (is_dir($logos_dir)) {
-        foreach (scandir($logos_dir) as $ficheiro) {
-            if ($ficheiro === '.' || $ficheiro === '..') continue;
-            if (!is_file($logos_dir . $ficheiro)) continue;
-            $ext = strtolower(pathinfo($ficheiro, PATHINFO_EXTENSION));
-            if (!in_array($ext, $allowed_ext)) continue;
-            if (!isset($referenciados[$ficheiro])) $fantasmas[] = $ficheiro;
-        }
-    }
-
+    $fantasmas = dev_listar_fantasmas($conn);
     echo json_encode(['sucesso' => true, 'fantasmas' => $fantasmas, 'total' => count($fantasmas)]);
     exit;
 }
@@ -94,59 +42,80 @@ if ($action === 'analisar') {
 if ($action === 'apagar') {
     include '../config/database.php';
 
-    $ficheiro = $dados['ficheiro'] ?? '';
+    $relInput = ltrim(str_replace('\\', '/', trim((string)($dados['rel'] ?? ''))), '/');
+    $ficheiro = basename(str_replace('\\', '/', (string)($dados['ficheiro'] ?? '')));
+    $tipo     = (string)($dados['tipo'] ?? '');
 
-    // Sanitizar: apenas nome do ficheiro, sem slashes nem path traversal
-    $ficheiro = basename($ficheiro);
-    if (empty($ficheiro)) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Nome de ficheiro inválido.']);
+    if ($relInput !== '') {
+        if (str_contains($relInput, '..')) {
+            echo json_encode(['sucesso' => false, 'mensagem' => 'Caminho inválido.']);
+            exit;
+        }
+        $ficheiro = basename($relInput);
+    }
+
+    $protegidos = dev_galeria_protegidos();
+    if ($ficheiro === '' || in_array($ficheiro, $protegidos, true)) {
+        echo json_encode(['sucesso' => false, 'mensagem' => 'Este ficheiro está protegido ou é inválido.']);
         exit;
     }
 
     $ext = strtolower(pathinfo($ficheiro, PATHINFO_EXTENSION));
-    if (!in_array($ext, $allowed_ext)) {
+    if (!in_array($ext, dev_galeria_extensoes(), true)) {
         echo json_encode(['sucesso' => false, 'mensagem' => 'Tipo de ficheiro não permitido.']);
         exit;
     }
 
-    // Verificar que ainda não está referenciada em lado nenhum (segurança extra)
-    $queries_check = [
-        "SELECT COUNT(*) as n FROM produtos        WHERE foto_principal LIKE ? ESCAPE '\\\\'",
-        "SELECT COUNT(*) as n FROM produto_imagens WHERE nome_ficheiro  LIKE ? ESCAPE '\\\\'",
-        "SELECT COUNT(*) as n FROM encomenda_itens WHERE foto_snapshot  LIKE ? ESCAPE '\\\\'",
-        "SELECT COUNT(*) as n FROM categorias      WHERE foto_capa       LIKE ? ESCAPE '\\\\'",
-        "SELECT COUNT(*) as n FROM header_config   WHERE seccao = 'logo_src' AND conteudo LIKE ? ESCAPE '\\\\'",
-    ];
-    $escaped_ficheiro = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $ficheiro);
-    $search_term = "%{$escaped_ficheiro}%";
-    foreach ($queries_check as $sql) {
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $search_term);
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        if ($row['n'] > 0) {
-            echo json_encode(['sucesso' => false, 'mensagem' => 'A imagem está referenciada na base de dados e não pode ser apagada.']);
-            exit;
+    $referenciados = dev_recolher_referencias_imagens($conn);
+    $esta_ref = ($tipo !== '' && isset($referenciados[$tipo][$ficheiro])) || isset($referenciados['any'][$ficheiro]);
+    if ($esta_ref) {
+        echo json_encode(['sucesso' => false, 'mensagem' => 'A imagem está referenciada na base de dados e não pode ser apagada.']);
+        exit;
+    }
+
+    $pastasPermitidas = dev_galeria_pastas_permitidas();
+    $candidatos = [];
+
+    if ($relInput !== '') {
+        foreach ($pastasPermitidas as $prefix => $absDir) {
+            // Verifica match exato de prefixo + nome direto (sem subpastas extras)
+            if ($relInput === $prefix . $ficheiro) {
+                $candidatos[$prefix] = $absDir;
+                break;
+            }
+        }
+    } else {
+        $tipoToPrefix = [
+            'produto'   => ['images/'],
+            'categoria' => ['assets/img_categorias/'],
+            'logo'      => ['assets/header/', 'assets/'],
+            'hero'      => ['assets/hero/', 'assets/'],
+            'outros'    => ['assets/'],
+        ];
+        $prefixes = $tipoToPrefix[$tipo] ?? array_keys($pastasPermitidas);
+        foreach ($prefixes as $prefix) {
+            if (isset($pastasPermitidas[$prefix])) {
+                $candidatos[$prefix] = $pastasPermitidas[$prefix];
+            }
         }
     }
 
-    // Tentar apagar da pasta indicada (se fornecida) ou de todas as pastas (seguro pois $ficheiro é basename)
-    $tipo = (string)($dados['tipo'] ?? '');
-    $dirs_map = [
-        'produto'   => $images_dir,
-        'categoria' => $cats_dir,
-        'logo'      => $logos_dir,
-    ];
-    $pastas_alvo = isset($dirs_map[$tipo]) ? [$dirs_map[$tipo]] : [$images_dir, $cats_dir, $logos_dir];
     $apagado = false;
-    foreach ($pastas_alvo as $dir) {
-        $caminho = $dir . $ficheiro;
-        if (file_exists($caminho) && is_file($caminho)) {
-            if (unlink($caminho)) {
-                $apagado = true;
-                break;
-            }
+    $deletedRel = '';
+    foreach ($candidatos as $prefix => $dir) {
+        $dir_real = realpath($dir);
+        $caminho  = $dir . $ficheiro;
+        if (!$dir_real || !file_exists($caminho) || !is_file($caminho) || is_link($caminho)) {
+            continue;
+        }
+        $file_real = realpath($caminho);
+        if (!$file_real || dirname($file_real) !== $dir_real || !str_starts_with($file_real, $dir_real . DIRECTORY_SEPARATOR)) {
+            continue;
+        }
+        if (unlink($file_real)) {
+            $apagado = true;
+            $deletedRel = $prefix . $ficheiro;
+            break;
         }
     }
 
@@ -155,6 +124,7 @@ if ($action === 'apagar') {
         exit;
     }
 
+    log_app("Imagem fantasma apagada: {$deletedRel}", 'INFO', 'galeria');
     echo json_encode(['sucesso' => true]);
     exit;
 }

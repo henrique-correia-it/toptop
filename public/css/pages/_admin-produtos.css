@@ -15,9 +15,13 @@
     align-items: center;
     gap: 12px;
 }
+.prod-toolbar-left:empty {
+    display: none;
+}
 .prod-toolbar-right {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 12px;
     margin-left: auto;
 }
@@ -148,5 +152,73 @@
 
 /* Hide single-row actions in select mode */
 .sel-mode .acoes-tabela { pointer-events: none; opacity: .25; }
+
+/* ── Mobile Responsive Toolbar (padrão backoffice: CTA -> Pesquisa 100% -> [Filtro | Selecionar]) ── */
+@media (max-width: 768px) {
+    .prod-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+    .prod-toolbar-left,
+    .prod-toolbar-right,
+    .prod-toolbar-right form {
+        display: contents !important;
+    }
+
+    /* 1. Ação principal (quando existe: Adicionar Produto / Novo Admin) */
+    .prod-toolbar-left > * {
+        grid-column: 1 / -1;
+        order: 1;
+        width: 100%;
+        height: 44px;
+        min-height: 44px;
+        justify-content: center;
+    }
+
+    /* 2. Barra de pesquisa sempre a 100% para digitação confortável */
+    .prod-toolbar .search-input-wrap {
+        grid-column: 1 / -1;
+        order: 2;
+        width: 100%;
+        min-width: 0;
+    }
+    .prod-toolbar .search-input-toolbar {
+        width: 100%;
+        height: 44px;
+        font-size: 0.88rem;
+    }
+
+    /* 3. Linha de controlos secundários: Filtro (esquerda, expande) + Selecionar (direita, compacto) */
+    .prod-toolbar .select-wrapper,
+    .prod-toolbar .select-wrapper.sort-select-wrapper {
+        grid-column: 1;
+        order: 3;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    .prod-toolbar .select-wrapper .custom-select-trigger {
+        width: 100%;
+        height: 42px;
+        min-height: 42px;
+        font-size: 0.85rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .prod-toolbar .btn-sel-mode {
+        grid-column: 2;
+        order: 4;
+        width: auto;
+        height: 42px;
+        min-height: 42px;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+        font-size: 0.84rem;
+        white-space: nowrap;
+    }
+}
 
 

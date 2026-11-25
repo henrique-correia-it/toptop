@@ -23,7 +23,6 @@ $adminOnlyPartials = [
     'pages/_editar-admin.css'         => true,
     'pages/_login-logs.css'           => true,
     'pages/_portes.css'               => true,
-    'pages/_paleta-cores.css'         => true,
     'pages/_admin-produtos.css'       => true,
     'pages/_galeria-imagens.css'      => true,
     'pages/_gerir_categorias.css'     => true,
@@ -34,7 +33,7 @@ $adminOnlyPartials = [
    FICHEIRO MESTRE - TOPTOP (BUNDLE)
    Os parciais são concatenados num ÚNICO ficheiro: 1 pedido, sem a cascata
    de @import (que era render-blocking). A ordem é preservada para a cascata
-   correcta — _button-system.css fica sempre em último.
+   correcta - _button-system.css fica sempre em último.
    ========================================================================== */
 
 $partials = [
@@ -89,7 +88,6 @@ $partials = [
     'pages/_editar-admin.css',
     'pages/_login-logs.css',
     'pages/_portes.css',
-    'pages/_paleta-cores.css',
     'pages/_admin-produtos.css',
     'pages/_galeria-imagens.css',
     'pages/_gerir_categorias.css',
