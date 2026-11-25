@@ -1,1 +1,2 @@
-<?php $versao_site = 1795220000; ?>
+<?php
+return '1795644958';
