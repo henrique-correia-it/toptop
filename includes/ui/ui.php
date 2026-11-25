@@ -1487,6 +1487,7 @@ if (!function_exists('ui_tabs')) {
         foreach ($tabs as $tab) {
             $key    = (string)($tab['key'] ?? '');
             $label  = (string)($tab['label'] ?? '');
+            $icon   = !empty($tab['icon']) ? (string)$tab['icon'] . ' ' : '';
             $active = ($key !== '' && $key === $activeKey) || !empty($tab['active']);
             $badge  = !empty($tab['badge']) ? ' ' . ui_badge((string)$tab['badge'], (string)($tab['badge_tone'] ?? 'neutral')) : '';
             $tAttrs = is_array($tab['attrs'] ?? null) ? $tab['attrs'] : [];
@@ -1495,7 +1496,7 @@ if (!function_exists('ui_tabs')) {
             $tAttrs['aria-selected'] = $active ? 'true' : 'false';
             $tAttrs['data-tab']      = $key;
             $tAttrs['class']         = trim('ui-tab ' . ($active ? 'is-active active ' : '') . ($tab['class'] ?? ''));
-            $html .= '<button' . ui_attrs($tAttrs) . '>' . ui_e($label) . $badge . '</button>';
+            $html .= '<button' . ui_attrs($tAttrs) . '>' . $icon . '<span>' . ui_e($label) . '</span>' . $badge . '</button>';
         }
         $html .= '</div>';
         return $html;

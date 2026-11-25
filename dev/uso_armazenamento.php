@@ -88,6 +88,7 @@ $rows = [
             'Ações',
         ], $rows, [
             'table_class' => 'admin-table storage-table',
+            'client_sort' => true,
         ]);
         ?>
     </div>

@@ -75,6 +75,7 @@ $portes_por_pais = $portes_js ?? [];
                 'wrap_style'  => 'max-width: 1200px; margin: 0 auto;',
                 'table_class' => 'admin-table tabela-portes',
                 'tbody_id'    => 'portes-tbody',
+                'client_sort' => true,
                 'show_empty'  => false,
             ]
         ); ?>
@@ -293,12 +294,13 @@ function renderizarPaises(reabrirIso = '') {
         return;
     }
 
-    isos.forEach(iso => {
+    isos.forEach((iso, idx) => {
         const nome   = getNomePais(iso);
         const regras = dadosPortes[iso] || [];
         const total  = regras.length;
         const tr     = document.createElement('tr');
         tr.dataset.id = iso;
+        tr.dataset.origIdx = String(idx);
         tr.innerHTML = `
             <td>${esc(nome)} (${esc(iso)})</td>
             <td>${total} ${total === 1 ? 'escalão' : 'escalões'}</td>
@@ -312,6 +314,11 @@ function renderizarPaises(reabrirIso = '') {
         `;
         tbody.appendChild(tr);
     });
+
+    const tbl = tbody.closest('table');
+    if (tbl && typeof tbl._applyClientSort === 'function') {
+        tbl._applyClientSort();
+    }
 
     if (prevOpen && dadosPortes[prevOpen] && isos.includes(prevOpen)) {
         const tr = tbody.querySelector(`tr[data-id="${prevOpen}"]`);
@@ -589,8 +596,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('btn-sel-mode')?.addEventListener('click', () => fecharSubtabela(false));
 
-    // Delegação na tabela (seta, remover, duplo clique)
+    // Fecha subtabela aberta antes de reordenar por coluna
     const tableWrap = document.getElementById('table-wrapper');
+    tableWrap?.querySelector('table')?.addEventListener('table:beforeClientSort', () => fecharSubtabela(true));
+
+    // Delegação na tabela (seta, remover, duplo clique)
     tableWrap?.addEventListener('click', e => {
         if (bulkSel && bulkSel.isSelMode()) return;
 

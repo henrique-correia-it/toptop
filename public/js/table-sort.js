@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── 2. Filtros e pesquisa da toolbar (sem refresh) ──
     document.querySelectorAll('.prod-toolbar form[method="GET"], .prod-toolbar form[method="get"]').forEach(form => {
         const table = document.querySelector('#table-wrapper table.admin-table, table.admin-table');
-        if (!table) return;
+        if (!table || table.hasAttribute('data-client-sort')) return;
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
@@ -216,6 +216,28 @@ document.addEventListener('DOMContentLoaded', function () {
             return { type: 'num', val: parseFloat(wMatch[1].replace(',', '.')) };
         }
 
+        const bytesMatch = text.match(/^(\d+(?:[.,]\d+)?)\s*(B|KB|MB|GB|TB)$/i);
+        if (bytesMatch) {
+            const units = { B: 1, KB: 1024, MB: 1048576, GB: 1073741824, TB: 1099511627776 };
+            const unit  = bytesMatch[2].toUpperCase();
+            return { type: 'num', val: parseFloat(bytesMatch[1].replace(',', '.')) * (units[unit] || 1) };
+        }
+
+        const pctMatch = text.match(/^(\d+(?:[.,]\d+)?)\s*%$/);
+        if (pctMatch) {
+            return { type: 'num', val: parseFloat(pctMatch[1].replace(',', '.')) };
+        }
+
+        const rangeMatch = text.match(/^€\s*(\d+(?:[.,]\d+)?)\s*-\s*€\s*(\d+(?:[.,]\d+)?)$/);
+        if (rangeMatch) {
+            return { type: 'num', val: parseFloat(rangeMatch[1].replace(',', '.')) };
+        }
+
+        const cntMatch = text.match(/^(\d+)\s+(?:escalão|escalões|ficheiro|ficheiros|item|itens|registo|registos)\b/i);
+        if (cntMatch) {
+            return { type: 'num', val: parseInt(cntMatch[1], 10) };
+        }
+
         const cleaned = text.replace(/[€£$#\s]/g, '').replace(/\.(?=\d{3}(?:[,.]|$))/g, '').replace(',', '.');
         if (/^-?\d+(?:\.\d+)?$/.test(cleaned)) {
             return { type: 'num', val: parseFloat(cleaned) };
@@ -243,10 +265,72 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!thead || !tbody) return;
 
         const ths = Array.from(thead.querySelectorAll('th'));
-        Array.from(tbody.querySelectorAll('tr')).forEach((tr, idx) => {
-            tr.dataset.origIdx = String(idx);
-        });
-        ths.forEach((th, colIdx) => {
+        const getDataRows = () => Array.from(tbody.querySelectorAll('tr')).filter(tr => !tr.querySelector('td[colspan]'));
+        const ensureOrigIdx = (rows) => {
+            rows.forEach((tr, idx) => {
+                if (tr.dataset.origIdx === undefined) {
+                    tr.dataset.origIdx = String(idx);
+                }
+            });
+        };
+
+        ensureOrigIdx(getDataRows());
+
+        const applySort = (targetTh, dir) => {
+            table.dispatchEvent(new CustomEvent('table:beforeClientSort'));
+            const rows = getDataRows();
+            if (rows.length === 0) return;
+            ensureOrigIdx(rows);
+
+            ths.forEach(other => {
+                if (other.classList.contains('is-sortable')) {
+                    other.classList.remove('is-sorted');
+                    other.setAttribute('aria-sort', 'none');
+                    delete other.dataset.sortDir;
+                    const ic = other.querySelector('.th-sort-icon');
+                    if (ic) ic.remove();
+                }
+            });
+
+            if (!targetTh || dir === '') {
+                rows.sort((ra, rb) => (parseInt(ra.dataset.origIdx || '0', 10) - parseInt(rb.dataset.origIdx || '0', 10)));
+                rows.forEach(r => tbody.appendChild(r));
+                return;
+            }
+
+            const colIdx = ths.indexOf(targetTh);
+            if (colIdx === -1) return;
+
+            targetTh.classList.add('is-sorted');
+            targetTh.dataset.sortDir = dir;
+            targetTh.setAttribute('aria-sort', dir === 'asc' ? 'ascending' : 'descending');
+            const btn = targetTh.querySelector('.th-sort-link');
+            if (btn) {
+                btn.insertAdjacentHTML(
+                    'beforeend',
+                    '<svg class="th-sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                    (dir === 'asc' ? '<path d="M18 15l-6-6-6 6"/>' : '<path d="M6 9l6 6 6-6"/>') +
+                    '</svg>'
+                );
+            }
+
+            if (rows.length < 2) return;
+            rows.sort((ra, rb) => {
+                const ca = ra.children[colIdx] ? ra.children[colIdx].textContent : '';
+                const cb = rb.children[colIdx] ? rb.children[colIdx].textContent : '';
+                return compareCells(ca, cb, dir);
+            });
+            rows.forEach(r => tbody.appendChild(r));
+        };
+
+        table._applyClientSort = () => {
+            const activeTh = ths.find(h => h.dataset.sortDir === 'asc' || h.dataset.sortDir === 'desc');
+            if (activeTh) {
+                applySort(activeTh, activeTh.dataset.sortDir);
+            }
+        };
+
+        ths.forEach((th) => {
             if (th.classList.contains('col-sel') || th.hasAttribute('data-no-sort') || th.querySelector('.th-sort-link')) {
                 return;
             }
@@ -267,44 +351,12 @@ document.addEventListener('DOMContentLoaded', function () {
             th.appendChild(btn);
 
             th.addEventListener('click', () => {
-                const rows = Array.from(tbody.querySelectorAll('tr')).filter(tr => !tr.querySelector('td[colspan]'));
+                const rows = getDataRows();
                 if (rows.length < 2) return;
 
                 const curDir = th.dataset.sortDir === 'asc' ? 'asc' : (th.dataset.sortDir === 'desc' ? 'desc' : '');
                 const nextDir = curDir === '' ? 'asc' : (curDir === 'asc' ? 'desc' : '');
-
-                ths.forEach(other => {
-                    if (other.classList.contains('is-sortable')) {
-                        other.classList.remove('is-sorted');
-                        other.setAttribute('aria-sort', 'none');
-                        delete other.dataset.sortDir;
-                        const ic = other.querySelector('.th-sort-icon');
-                        if (ic) ic.remove();
-                    }
-                });
-
-                if (nextDir === '') {
-                    rows.sort((ra, rb) => (parseInt(ra.dataset.origIdx || '0', 10) - parseInt(rb.dataset.origIdx || '0', 10)));
-                    rows.forEach(r => tbody.appendChild(r));
-                    return;
-                }
-
-                th.classList.add('is-sorted');
-                th.dataset.sortDir = nextDir;
-                th.setAttribute('aria-sort', nextDir === 'asc' ? 'ascending' : 'descending');
-                btn.insertAdjacentHTML(
-                    'beforeend',
-                    '<svg class="th-sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-                    (nextDir === 'asc' ? '<path d="M18 15l-6-6-6 6"/>' : '<path d="M6 9l6 6 6-6"/>') +
-                    '</svg>'
-                );
-
-                rows.sort((ra, rb) => {
-                    const ca = ra.children[colIdx] ? ra.children[colIdx].textContent : '';
-                    const cb = rb.children[colIdx] ? rb.children[colIdx].textContent : '';
-                    return compareCells(ca, cb, nextDir);
-                });
-                rows.forEach(r => tbody.appendChild(r));
+                applySort(th, nextDir);
             });
         });
     });

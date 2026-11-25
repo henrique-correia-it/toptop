@@ -12,69 +12,16 @@ include '../config/database.php';
 
 $titulo_pagina = 'Registos de Erros';
 include '../templates/header.php';
-
-$headerActions = ui_button('Atualizar', [
-    'id'      => 'btn-refresh',
-    'variant' => 'default',
-    'size'    => 'sm',
-    'icon'    => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>',
-]) . ui_button('Descarregar', [
-    'id'      => 'btn-download',
-    'variant' => 'default',
-    'size'    => 'sm',
-    'icon'    => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
-]) . ui_button('Limpar Log', [
-    'id'      => 'btn-limpar',
-    'variant' => 'danger',
-    'size'    => 'sm',
-    'icon'    => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
-]) . ui_button('Limpar Todos', [
-    'id'      => 'btn-limpar-todos',
-    'variant' => 'ghost',
-    'size'    => 'sm',
-    'class'   => 'log-btn-clear-all',
-]);
-
-$logTabs = [
-    'app'       => 'App',
-    'sql'       => 'SQL',
-    'email'     => 'Email',
-    'stripe'    => 'Stripe',
-    'seguranca' => 'Segurança',
-    'js'        => 'JS',
-];
 ?>
 
 <main class="dashboard-container animate-entry">
 <div class="logs-page">
 
     <?php echo ui_page_header('Registos de Erros', [
-        'layout'        => 'admin',
-        'back_url'      => '/dev',
-        'back_title'    => 'Voltar ao Painel Dev',
-        'actions'       => $headerActions,
-        'actions_class' => 'header-actions log-header-actions',
+        'layout'     => 'admin',
+        'back_url'   => '/dev',
+        'back_title' => 'Voltar ao Painel Dev',
     ]); ?>
-
-    <div class="log-tabs-bar">
-        <div class="ui-tabs log-tabs" id="log-tabs" role="tablist">
-            <?php foreach ($logTabs as $tabKey => $tabLabel): $isFirst = ($tabKey === 'app'); ?>
-                <button type="button"
-                        class="ui-tab log-tab<?php echo $isFirst ? ' is-active' : ''; ?>"
-                        role="tab"
-                        aria-selected="<?php echo $isFirst ? 'true' : 'false'; ?>"
-                        data-log="<?php echo ui_e($tabKey); ?>">
-                    <span><?php echo ui_e($tabLabel); ?></span>
-                    <span class="log-tab-badge" id="badge-<?php echo ui_e($tabKey); ?>" style="display:none"></span>
-                </button>
-            <?php endforeach; ?>
-        </div>
-
-        <?php echo ui_switch('auto_refresh', 'Tempo real (10s)', false, [
-            'id'      => 'log-auto-refresh',
-            'variant' => 'compact',
-        ]); ?>
-    </div>
 
     <?php
     $leftFilters = '<div class="log-filters-left">'
@@ -84,85 +31,138 @@ $logTabs = [
             'avisos' => 'Avisos / Segurança / 404',
             'info'   => 'Apenas Info',
         ], '', ['id' => 'log-nivel', 'variant' => 'toolbar', 'title' => 'Filtrar por gravidade'])
-        . ui_select('linhas', [
-            '200'  => 'Últimas 200',
-            '500'  => 'Últimas 500',
-            '1000' => 'Últimas 1000',
-            '2000' => 'Últimas 2000',
-        ], '500', ['id' => 'log-linhas', 'variant' => 'toolbar', 'title' => 'Número de linhas'])
+        . ui_select('tipo', [
+            ''          => 'Todos os tipos',
+            'app'       => 'App',
+            'sql'       => 'SQL',
+            'email'     => 'Email',
+            'stripe'    => 'Stripe',
+            'seguranca' => 'Segurança',
+            'js'        => 'JS',
+        ], '', ['id' => 'log-tipo', 'variant' => 'toolbar', 'title' => 'Filtrar por tipo de log'])
+        . ui_search_input('', 'Pesquisa', ['id' => 'log-search'])
         . '</div>';
 
-    $rightFilters = ui_search_input('', 'Pesquisar mensagem, ficheiro, IP...', ['id' => 'log-search']);
+    $rightActions = '<div class="log-toolbar-actions">'
+        . ui_button('Copiar tudo', [
+            'id'    => 'btn-copy-all',
+            'class' => 'button btn-sel-mode',
+            'type'  => 'button',
+            'html'  => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
+                . "\n                    Copiar tudo",
+        ])
+        . ui_select_mode_button()
+        . '</div>';
 
-    echo ui_toolbar($leftFilters, $rightFilters, ['class' => 'log-toolbar']);
+    echo ui_toolbar($leftFilters, $rightActions, ['class' => 'log-toolbar']);
     ?>
 
-    <div class="ui-table-wrap log-table-wrap">
-        <div class="log-table-status">
-            <span id="log-meta" class="log-meta-text">A carregar registos...</span>
-            <?php echo ui_button('Copiar tudo', [
-                'id'      => 'btn-copy-all',
-                'variant' => 'ghost',
-                'size'    => 'sm',
-                'icon'    => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
-            ]); ?>
-        </div>
-
-        <div class="log-table-scroll" id="log-scroll" role="log" aria-live="polite">
-            <table class="ui-table log-table">
-                <thead>
-                    <tr>
-                        <th style="width: 156px;">Data / Hora</th>
-                        <th style="width: 144px;">Nível</th>
-                        <th>Evento</th>
-                        <th style="width: 52px;"></th>
-                    </tr>
-                </thead>
-                <tbody id="log-tbody">
-                    <tr>
-                        <td colspan="4">
-                            <div class="log-state-cell">
-                                <span class="ui-spinner" aria-hidden="true"></span>
-                                <span>A carregar registos...</span>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <?php echo ui_table(
+        [
+            ['label' => 'Data'],
+            ['label' => 'Tipo'],
+            ['label' => 'Nível'],
+            ['label' => 'Origem'],
+            ['label' => 'Mensagem', 'class' => 'log-col-msg'],
+            ['label' => 'Ações', 'sortable' => false],
+        ],
+        [],
+        [
+            'wrap_id'     => 'table-wrapper',
+            'table_class' => 'admin-table tabela-logs',
+            'tbody_id'    => 'log-tbody',
+            'client_sort' => true,
+            'tbody_html'  => '<tr><td colspan="6" class="reservation-empty">A carregar registos...</td></tr>',
+        ]
+    ); ?>
 
 </div>
 </main>
+
+<?php echo ui_selection_bar(); ?>
+<?php echo ui_bulk_bar('', '', [
+    'unit'         => 'registo(s)',
+    'action_label' => 'Eliminar Selecionados',
+]); ?>
+
+<?php
+$detailBodyHtml = '<div class="log-detail-grid">'
+    . '<div class="log-detail-item"><span class="log-detail-label">Data</span><span class="log-detail-value" id="log-detail-ts">-</span></div>'
+    . '<div class="log-detail-item"><span class="log-detail-label">Tipo</span><span class="log-detail-value" id="log-detail-tipo">-</span></div>'
+    . '<div class="log-detail-item"><span class="log-detail-label">Nível</span><span class="log-detail-value" id="log-detail-lvl">-</span></div>'
+    . '<div class="log-detail-item"><span class="log-detail-label">Origem</span><span class="log-detail-value" id="log-detail-ctx">-</span></div>'
+    . '</div>'
+    . '<div class="log-detail-section"><span class="log-detail-label">Mensagem</span><div class="log-detail-text" id="log-detail-msg"></div></div>'
+    . '<div class="log-detail-section" id="log-detail-meta-wrap" hidden><span class="log-detail-label">Contexto</span><div class="log-detail-text" id="log-detail-meta"></div></div>'
+    . '<div class="log-detail-section"><span class="log-detail-label">Linha completa</span><pre class="log-detail-raw" id="log-detail-raw"></pre></div>';
+
+echo ui_modal(
+    'modal-log-detail',
+    'Detalhes do Registo',
+    $detailBodyHtml,
+    [
+        'class'  => 'log-detail-modal',
+        'footer' => ui_button('Copiar linha', ['id' => 'btn-modal-copy-log', 'variant' => 'default'])
+            . ui_button('Fechar', ['id' => 'btn-modal-close-log', 'variant' => 'primary']),
+    ]
+);
+?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const CSRF         = <?php echo json_encode($_SESSION['csrf_token'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
     const tbody        = document.getElementById('log-tbody');
-    const scrollBox    = document.getElementById('log-scroll');
     const selectNivel  = document.getElementById('log-nivel');
-    const selectLinhas = document.getElementById('log-linhas');
+    const selectTipo   = document.getElementById('log-tipo');
     const inputSearch  = document.getElementById('log-search');
-    const metaEl       = document.getElementById('log-meta');
+    const detailModal  = document.getElementById('modal-log-detail');
 
-    let logAtivo       = 'app';
-    let ultimoConteudo = '';
-    let timer          = null;
+    const LOG_TYPE_META = {
+        app:       { label: 'App',       tone: 'ui-badge--neutral' },
+        sql:       { label: 'SQL',       tone: 'ui-badge--warning' },
+        email:     { label: 'Email',     tone: 'ui-badge--info' },
+        stripe:    { label: 'Stripe',    tone: 'ui-badge--accent' },
+        seguranca: { label: 'Segurança', tone: 'ui-badge--danger' },
+        js:        { label: 'JS',        tone: 'ui-badge--warning' },
+    };
+
     let searchTimer    = null;
     let loadController = null;
+    let modalRawLine   = '';
+    let registosAtuais = [];
 
-    const COPY_ICON_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-    const EMPTY_ICON_SVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>';
-
-    function escHtml(s) {
-        return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    function copiarTexto(texto, msgSucesso) {
+        if (!texto) return;
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(texto)
+                .then(() => mostrarPopup(msgSucesso, 'sucesso'))
+                .catch(() => copiarFallback(texto, msgSucesso));
+            return;
+        }
+        copiarFallback(texto, msgSucesso);
     }
 
-    function fmt(bytes) {
-        if (!bytes) return '0 B';
-        if (bytes < 1024)    return bytes + ' B';
-        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-        return (bytes / 1048576).toFixed(1) + ' MB';
+    function copiarFallback(texto, msgSucesso) {
+        const ta = document.createElement('textarea');
+        ta.value = texto;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+            mostrarPopup(msgSucesso, 'sucesso');
+        } catch (e) {
+            mostrarPopup('Não foi possível copiar para a área de transferência.', 'erro');
+        }
+        ta.remove();
+    }
+
+    function formatTs(ts) {
+        const m = String(ts || '').match(/^(\d{4})-(\d{2})-(\d{2})(.*)$/);
+        if (m) return `${m[3]}/${m[2]}/${m[1]}${m[4]}`;
+        return String(ts || '-');
     }
 
     function badgeTone(lvl) {
@@ -170,9 +170,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (['ERROR', 'FATAL', 'FATAL-SHUTDOWN', 'FATAL-EXCEPTION', 'PHP-ERROR', 'SQL', 'EMAIL', 'JS-ERROR', 'JS-PROMISE', 'JS-FETCH', 'JS-RESOURCE'].includes(u) || u.startsWith('HTTP-5')) {
             return 'ui-badge--danger';
         }
-        if (u === 'SECURITY') return 'ui-badge--purple';
+        if (u === 'SECURITY') return 'ui-badge--accent';
         if (['WARNING', 'NOTICE', 'DEPRECATED', '404'].includes(u)) return 'ui-badge--warning';
         return 'ui-badge--info';
+    }
+
+    function getTipoMeta(logKey) {
+        return LOG_TYPE_META[logKey] || { label: String(logKey || 'App').toUpperCase(), tone: 'ui-badge--neutral' };
     }
 
     function parseLine(rawLine) {
@@ -181,9 +185,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const body = m[4];
             const pipeIdx = body.indexOf(' | ');
             return {
-                ts:   m[1],
+                ts:   formatTs(m[1]),
                 lvl:  m[2],
-                ctx:  m[3] || '',
+                ctx:  m[3] || '-',
                 msg:  pipeIdx !== -1 ? body.slice(0, pipeIdx) : body,
                 meta: pipeIdx !== -1 ? body.slice(pipeIdx + 3) : '',
             };
@@ -193,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (mp) {
             const isFatal = /fatal|parse|uncaught/i.test(mp[2]);
             return {
-                ts:   mp[1],
+                ts:   formatTs(mp[1]),
                 lvl:  isFatal ? 'PHP-ERROR' : 'PHP-SYS',
                 ctx:  'php',
                 msg:  mp[2],
@@ -201,130 +205,181 @@ document.addEventListener('DOMContentLoaded', function () {
             };
         }
 
-        return { ts: '-', lvl: 'INFO', ctx: '', msg: rawLine, meta: '' };
+        return { ts: '-', lvl: 'INFO', ctx: '-', msg: rawLine, meta: '' };
     }
 
-    function buildLogRow(rawLine) {
-        const parsed = parseLine(rawLine);
+    function buildLogRow(item) {
+        const logKey  = item.log || 'app';
+        const rawLine = item.raw || '';
+        const parsed  = parseLine(rawLine);
+        const tipo    = getTipoMeta(logKey);
+
         const tr = document.createElement('tr');
-        tr.dataset.raw = rawLine;
+        tr.dataset.id   = item.id || (logKey + ':' + rawLine);
+        tr.dataset.raw  = rawLine;
+        tr.dataset.log  = logKey;
+        tr.dataset.ts   = parsed.ts;
+        tr.dataset.lvl  = parsed.lvl;
+        tr.dataset.ctx  = parsed.ctx;
+        tr.dataset.msg  = parsed.msg;
+        tr.dataset.meta = parsed.meta;
 
         const tdTs = document.createElement('td');
         tdTs.className = 'log-cell-ts';
         tdTs.textContent = parsed.ts;
         tr.appendChild(tdTs);
 
+        const tdTipo = document.createElement('td');
+        const tipoBadge = document.createElement('span');
+        tipoBadge.className = 'ui-badge ' + tipo.tone;
+        tipoBadge.textContent = tipo.label;
+        tdTipo.appendChild(tipoBadge);
+        tr.appendChild(tdTipo);
+
         const tdLvl = document.createElement('td');
-        tdLvl.className = 'log-cell-lvl';
         const badge = document.createElement('span');
         badge.className = 'ui-badge ' + badgeTone(parsed.lvl);
         badge.textContent = parsed.lvl;
         tdLvl.appendChild(badge);
         tr.appendChild(tdLvl);
 
-        const tdEvent = document.createElement('td');
-        tdEvent.className = 'log-cell-event';
+        const tdCtx = document.createElement('td');
+        tdCtx.textContent = parsed.ctx;
+        tr.appendChild(tdCtx);
 
-        const topRow = document.createElement('div');
-        topRow.className = 'log-msg-main';
-        if (parsed.ctx) {
-            const src = document.createElement('span');
-            src.className = 'log-src-tag';
-            src.textContent = parsed.ctx;
-            topRow.appendChild(src);
-        }
-        const msgText = document.createTextNode(parsed.msg);
-        topRow.appendChild(msgText);
-        tdEvent.appendChild(topRow);
-
-        if (parsed.meta) {
-            const metaLine = document.createElement('div');
-            metaLine.className = 'log-meta-line';
-            metaLine.textContent = parsed.meta;
-            tdEvent.appendChild(metaLine);
-        }
-        tr.appendChild(tdEvent);
+        const tdMsg = document.createElement('td');
+        tdMsg.className = 'log-cell-msg';
+        const msgClamp = document.createElement('div');
+        msgClamp.className = 'log-msg-clamp';
+        msgClamp.textContent = parsed.msg;
+        tdMsg.appendChild(msgClamp);
+        tr.appendChild(tdMsg);
 
         const tdAct = document.createElement('td');
-        tdAct.className = 'log-cell-act';
+        const actionsWrap = document.createElement('div');
+        actionsWrap.className = 'acoes-tabela';
+
         const copyBtn = document.createElement('button');
         copyBtn.type = 'button';
-        copyBtn.className = 'log-copy-btn';
-        copyBtn.title = 'Copiar linha';
-        copyBtn.setAttribute('aria-label', 'Copiar linha');
-        copyBtn.innerHTML = COPY_ICON_SVG;
-        tdAct.appendChild(copyBtn);
+        copyBtn.className = 'btn-duplicate-single btn-log-copy';
+        copyBtn.title = 'Copiar registo';
+        copyBtn.setAttribute('aria-label', 'Copiar registo');
+        actionsWrap.appendChild(copyBtn);
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'btn-del-single btn-log-del';
+        delBtn.title = 'Eliminar registo';
+        delBtn.setAttribute('aria-label', 'Eliminar registo');
+        actionsWrap.appendChild(delBtn);
+
+        tdAct.appendChild(actionsWrap);
         tr.appendChild(tdAct);
 
         return tr;
     }
 
-    function renderStateRow(message, isLoading = false) {
+    function renderStateRow(message) {
         tbody.textContent = '';
         const tr = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = 4;
-
-        if (isLoading) {
-            const box = document.createElement('div');
-            box.className = 'log-state-cell';
-            const spin = document.createElement('span');
-            spin.className = 'ui-spinner';
-            spin.setAttribute('aria-hidden', 'true');
-            const span = document.createElement('span');
-            span.textContent = message;
-            box.appendChild(spin);
-            box.appendChild(span);
-            td.appendChild(box);
-        } else {
-            const empty = document.createElement('div');
-            empty.className = 'ui-empty';
-            const iconWrap = document.createElement('span');
-            iconWrap.className = 'ui-empty__icon';
-            iconWrap.setAttribute('aria-hidden', 'true');
-            iconWrap.innerHTML = EMPTY_ICON_SVG;
-            const p = document.createElement('p');
-            p.textContent = message;
-            empty.appendChild(iconWrap);
-            empty.appendChild(p);
-            td.appendChild(empty);
-        }
-
+        td.colSpan = 6;
+        td.className = 'reservation-empty';
+        td.textContent = message;
         tr.appendChild(td);
         tbody.appendChild(tr);
     }
 
-    function renderLogLines(conteudo) {
-        if (!conteudo) {
-            const hasFilters = Boolean((selectNivel && selectNivel.value !== '') || (inputSearch && inputSearch.value.trim() !== ''));
-            renderStateRow(hasFilters ? 'Nenhum registo encontrado com os filtros atuais.' : 'Sem registos neste log.');
+    function renderRegistos(registos) {
+        if (!Array.isArray(registos) || registos.length === 0) {
+            const hasFilters = Boolean(
+                (selectNivel && selectNivel.value !== '')
+                || (selectTipo && selectTipo.value !== '')
+                || (inputSearch && inputSearch.value.trim() !== '')
+            );
+            renderStateRow(hasFilters ? 'Nenhum registo encontrado com os filtros atuais.' : 'Sem registos de log.');
             return;
         }
 
-        const lines = conteudo.split(/\r?\n/).filter(Boolean).reverse();
         const frag = document.createDocumentFragment();
-        lines.forEach(line => frag.appendChild(buildLogRow(line)));
+        registos.forEach((item, idx) => {
+            if (!item || !item.raw) return;
+            const tr = buildLogRow(item);
+            tr.dataset.origIdx = String(idx);
+            frag.appendChild(tr);
+        });
 
         tbody.textContent = '';
         tbody.appendChild(frag);
-        if (scrollBox) scrollBox.scrollTop = 0;
+        const tbl = tbody.closest('table');
+        if (tbl && typeof tbl._applyClientSort === 'function') {
+            tbl._applyClientSort();
+        }
+        if (bulkSel && typeof bulkSel.updateUI === 'function') {
+            bulkSel.updateUI();
+        }
     }
 
-    function carregarLog(log, showSpinner = false) {
+    function abrirDetalheModal(row) {
+        if (!detailModal || !row) return;
+        modalRawLine = row.dataset.raw || '';
+
+        const tipo = getTipoMeta(row.dataset.log || 'app');
+        document.getElementById('log-detail-ts').textContent  = row.dataset.ts || '-';
+        document.getElementById('log-detail-ctx').textContent = row.dataset.ctx || '-';
+        document.getElementById('log-detail-msg').textContent = row.dataset.msg || '';
+        document.getElementById('log-detail-raw').textContent = modalRawLine;
+
+        const tipoEl = document.getElementById('log-detail-tipo');
+        tipoEl.textContent = '';
+        const tipoBadge = document.createElement('span');
+        tipoBadge.className = 'ui-badge ' + tipo.tone;
+        tipoBadge.textContent = tipo.label;
+        tipoEl.appendChild(tipoBadge);
+
+        const lvlEl = document.getElementById('log-detail-lvl');
+        lvlEl.textContent = '';
+        const badge = document.createElement('span');
+        badge.className = 'ui-badge ' + badgeTone(row.dataset.lvl || 'INFO');
+        badge.textContent = row.dataset.lvl || 'INFO';
+        lvlEl.appendChild(badge);
+
+        const metaWrap = document.getElementById('log-detail-meta-wrap');
+        const metaText = document.getElementById('log-detail-meta');
+        if (row.dataset.meta) {
+            metaText.textContent = row.dataset.meta;
+            metaWrap.hidden = false;
+        } else {
+            metaText.textContent = '';
+            metaWrap.hidden = true;
+        }
+
+        detailModal.style.display = 'flex';
+        document.documentElement.classList.add('scroll-lock');
+    }
+
+    function fecharDetalheModal() {
+        if (!detailModal) return;
+        detailModal.style.display = 'none';
+        document.documentElement.classList.remove('scroll-lock');
+    }
+
+    function carregarLogs(showLoading = false) {
         if (loadController) loadController.abort();
         loadController = new AbortController();
 
-        if (showSpinner) {
-            renderStateRow('A carregar registos...', true);
+        if (showLoading) {
+            renderStateRow('A carregar registos...');
         }
 
-        const nivel  = selectNivel ? selectNivel.value : '';
-        const linhas = selectLinhas ? selectLinhas.value : '500';
-        const q      = inputSearch ? inputSearch.value.trim() : '';
+        const nivel = selectNivel ? selectNivel.value : '';
+        const tipo  = selectTipo ? selectTipo.value : '';
+        const q     = inputSearch ? inputSearch.value.trim() : '';
 
         const url = 'ajax_ver_logs.php?acao=ler'
-            + '&log=' + encodeURIComponent(log)
-            + '&linhas=' + encodeURIComponent(linhas)
+            + '&log=todos'
+            + '&linhas=all'
+            + '&tipo=' + encodeURIComponent(tipo)
             + '&nivel=' + encodeURIComponent(nivel)
             + '&q=' + encodeURIComponent(q);
 
@@ -332,174 +387,120 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
             .then(d => {
                 if (d.sucesso) {
-                    ultimoConteudo = d.conteudo || '';
-                    renderLogLines(ultimoConteudo);
-                    metaEl.textContent = fmt(d.tamanho)
-                        + ' · ' + d.linhas_filtradas + ' de ' + d.total_linhas + ' linhas'
-                        + ' · Atualizado às ' + new Date().toLocaleTimeString('pt-PT');
+                    registosAtuais = Array.isArray(d.registos) ? d.registos : [];
+                    renderRegistos(registosAtuais);
                 } else {
-                    renderStateRow('Erro: ' + (d.mensagem || 'Não foi possível ler o log.'));
+                    registosAtuais = [];
+                    renderStateRow('Erro: ' + (d.mensagem || 'Não foi possível ler os logs.'));
                 }
             })
             .catch(err => {
                 if (err && err.name === 'AbortError') return;
+                registosAtuais = [];
                 renderStateRow('Erro de ligação ao servidor.');
             });
     }
 
-    function carregarTamanhos() {
-        fetch('ajax_ver_logs.php?acao=tamanhos')
-            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-            .then(d => {
-                if (!d.sucesso) return;
-                const erros = d.erros || {};
-                Object.entries(d.tamanhos || {}).forEach(([nome, tam]) => {
-                    const badge = document.getElementById('badge-' + nome);
-                    if (!badge) return;
-                    const errCount = erros[nome] || 0;
-                    if (errCount > 0) {
-                        badge.textContent = errCount;
-                        badge.className = 'log-tab-badge log-tab-badge--err';
-                        badge.title = errCount + ' erro(s) recente(s) · ' + fmt(tam);
-                        badge.style.display = 'inline-flex';
-                    } else if (tam > 0) {
-                        badge.textContent = fmt(tam);
-                        badge.className = 'log-tab-badge log-tab-badge--info';
-                        badge.title = fmt(tam);
-                        badge.style.display = 'inline-flex';
-                    } else {
-                        badge.style.display = 'none';
-                    }
-                });
-            })
-            .catch(() => {});
+    function apagarRegistos(ids, exitSelMode = false) {
+        if (!Array.isArray(ids) || ids.length === 0) return;
+        fetch('ajax_ver_logs.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ acao: 'apagar_linhas', ids, csrf_token: CSRF })
+        })
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(d => {
+            if (d.sucesso) {
+                mostrarPopup(d.mensagem, 'sucesso');
+                if (exitSelMode && bulkSel) bulkSel.setMode(false);
+                carregarLogs(false);
+            } else {
+                mostrarPopup(d.mensagem || 'Erro ao eliminar.', 'erro');
+            }
+        })
+        .catch(() => mostrarPopup('Erro de ligação.', 'erro'));
     }
 
-    // Copiar linha no botão de ação
-    tbody.addEventListener('click', e => {
-        const btn = e.target.closest('.log-copy-btn');
-        if (!btn || !navigator.clipboard) return;
-        const row = btn.closest('tr');
-        const raw = row ? (row.dataset.raw || '') : '';
-        if (!raw) return;
-        navigator.clipboard.writeText(raw).then(() => {
-            mostrarPopup('Linha copiada.', 'sucesso');
-        });
+    const bulkSel = window.initAdminBulkSelection({
+        onAction: ids => {
+            window.mostrarModalConfirmacao(
+                'Eliminar Registos',
+                `Eliminar permanentemente <strong>${ids.length} registo(s)</strong> selecionado(s)?`,
+                () => apagarRegistos(ids, true)
+            );
+        }
     });
 
-    // Troca de tab
-    document.getElementById('log-tabs').addEventListener('click', e => {
-        const tab = e.target.closest('.log-tab');
-        if (!tab) return;
-        document.querySelectorAll('.log-tab').forEach(b => {
-            b.classList.remove('is-active');
-            b.setAttribute('aria-selected', 'false');
-        });
-        tab.classList.add('is-active');
-        tab.setAttribute('aria-selected', 'true');
-        logAtivo = tab.dataset.log;
-        carregarLog(logAtivo, true);
+    // Abrir detalhe no olho, eliminar linha, ou duplo clique na linha
+    tbody.addEventListener('click', e => {
+        if (bulkSel && bulkSel.isSelMode()) return;
+
+        const copyBtn = e.target.closest('.btn-log-copy');
+        if (copyBtn) {
+            const row = copyBtn.closest('tr[data-raw]');
+            if (!row) return;
+            copiarTexto(`[${getTipoMeta(row.dataset.log).label.toUpperCase()}] ${row.dataset.raw}`, 'Registo copiado.');
+            return;
+        }
+
+        const delBtn = e.target.closest('.btn-log-del');
+        if (delBtn) {
+            const row = delBtn.closest('tr[data-id]');
+            if (!row) return;
+            window.mostrarModalConfirmacao(
+                'Eliminar Registo',
+                'Eliminar permanentemente este registo de log?',
+                () => apagarRegistos([row.dataset.id], false)
+            );
+        }
+    });
+
+    tbody.addEventListener('dblclick', e => {
+        if (bulkSel && bulkSel.isSelMode()) return;
+        if (e.target.closest('button')) return;
+        const row = e.target.closest('tr[data-raw]');
+        if (row) abrirDetalheModal(row);
+    });
+
+    document.getElementById('btn-modal-close-log')?.addEventListener('click', fecharDetalheModal);
+    detailModal?.addEventListener('click', e => { if (e.target === detailModal) fecharDetalheModal(); });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && detailModal?.style.display === 'flex') fecharDetalheModal();
+    });
+    document.getElementById('btn-modal-copy-log')?.addEventListener('click', () => {
+        copiarTexto(modalRawLine, 'Linha copiada.');
     });
 
     // Filtros
-    selectNivel?.addEventListener('change', () => carregarLog(logAtivo, false));
-    selectLinhas?.addEventListener('change', () => carregarLog(logAtivo, false));
+    selectNivel?.addEventListener('change', () => carregarLogs(false));
+    selectTipo?.addEventListener('change', () => carregarLogs(false));
     inputSearch?.addEventListener('input', () => {
         clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => carregarLog(logAtivo, false), 220);
+        searchTimer = setTimeout(() => carregarLogs(false), 220);
     });
 
-    // Atualizar
-    document.getElementById('btn-refresh').addEventListener('click', () => {
-        carregarLog(logAtivo, false);
-        carregarTamanhos();
-    });
-
-    // Download
-    document.getElementById('btn-download').addEventListener('click', () => {
-        window.location.href = 'ajax_ver_logs.php?acao=download&log=' + encodeURIComponent(logAtivo);
-    });
-
-    // Copiar tudo visível
-    document.getElementById('btn-copy-all').addEventListener('click', () => {
-        if (!ultimoConteudo || !navigator.clipboard) {
-            mostrarPopup('Não há linhas visíveis para copiar.', 'info');
+    // Copiar todos os registos visíveis com detalhe completo
+    document.getElementById('btn-copy-all')?.addEventListener('click', () => {
+        if (registosAtuais.length === 0) {
+            mostrarPopup('Não há registos visíveis para copiar.', 'erro');
             return;
         }
-        navigator.clipboard.writeText(ultimoConteudo).then(() => {
-            mostrarPopup('Conteúdo do log copiado.', 'sucesso');
-        });
+        const textoCompleto = registosAtuais
+            .filter(item => item && item.raw)
+            .map(item => `[${getTipoMeta(item.log).label.toUpperCase()}] ${item.raw}`)
+            .join('\n');
+        copiarTexto(textoCompleto, 'Todos os registos copiados.');
     });
 
-    // Limpar Log atual
-    document.getElementById('btn-limpar').addEventListener('click', () => {
-        const alvo = logAtivo;
-        window.mostrarModalConfirmacao(
-            'Limpar Log',
-            'Apagar todo o conteúdo de <strong>' + escHtml(alvo) + '.log</strong>? Esta ação é irreversível.',
-            () => {
-                fetch('ajax_ver_logs.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ acao: 'limpar', log: alvo, csrf_token: CSRF })
-                })
-                .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-                .then(d => {
-                    if (d.sucesso) {
-                        mostrarPopup(d.mensagem, 'sucesso');
-                        carregarLog(alvo, false);
-                        carregarTamanhos();
-                    } else {
-                        mostrarPopup(d.mensagem || 'Erro ao limpar.', 'erro');
-                    }
-                })
-                .catch(() => mostrarPopup('Erro de ligação.', 'erro'));
-            }
-        );
-    });
-
-    // Limpar Todos os logs
-    document.getElementById('btn-limpar-todos').addEventListener('click', () => {
-        window.mostrarModalConfirmacao(
-            'Limpar Todos os Logs',
-            'Apagar o conteúdo dos 6 ficheiros de log (App, SQL, Email, Stripe, Segurança e JS)?',
-            () => {
-                fetch('ajax_ver_logs.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ acao: 'limpar_todos', csrf_token: CSRF })
-                })
-                .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-                .then(d => {
-                    if (d.sucesso) {
-                        mostrarPopup(d.mensagem, 'sucesso');
-                        carregarLog(logAtivo, false);
-                        carregarTamanhos();
-                    } else {
-                        mostrarPopup(d.mensagem || 'Erro ao limpar.', 'erro');
-                    }
-                })
-                .catch(() => mostrarPopup('Erro de ligação.', 'erro'));
-            }
-        );
-    });
-
-    // Auto-refresh
-    document.getElementById('log-auto-refresh')?.addEventListener('change', function () {
-        clearInterval(timer);
-        if (this.checked) {
-            timer = setInterval(() => {
-                carregarLog(logAtivo, false);
-                carregarTamanhos();
-            }, 10000);
-        } else {
-            timer = null;
+    // Auto-refresh em tempo real sempre ativo (a cada 10s, pausado durante seleção)
+    setInterval(() => {
+        if (!document.hidden && !(bulkSel && bulkSel.isSelMode())) {
+            carregarLogs(false);
         }
-    });
+    }, 10000);
 
     // Arranque
-    carregarLog('app', true);
-    carregarTamanhos();
+    carregarLogs(true);
 });
 </script>
 

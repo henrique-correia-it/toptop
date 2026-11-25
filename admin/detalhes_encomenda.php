@@ -383,20 +383,25 @@ include '../templates/header.php';
                 <?php echo ui_badge($map_nomes[$encomenda['estado']] ?? ucfirst($encomenda['estado']), $map_badges[$encomenda['estado']] ?? 'neutral'); ?>
             </div>
             <?php if (!$is_encomenda_incompleta): ?>
-            <div class="painel-acoes-tabs">
-                <button type="button" class="tab-link ativo" data-tab="tab-acoes">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-                    Ações
-                </button>
-                <button type="button" class="tab-link" data-tab="tab-comunicar">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                    Comunicar
-                </button>
-                <button type="button" class="tab-link" data-tab="tab-notas">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    Notas
-                </button>
-            </div>
+            <?php
+            echo ui_tabs([
+                [
+                    'key'   => 'tab-acoes',
+                    'label' => 'Ações',
+                    'icon'  => '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>',
+                ],
+                [
+                    'key'   => 'tab-comunicar',
+                    'label' => 'Comunicar',
+                    'icon'  => '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>',
+                ],
+                [
+                    'key'   => 'tab-notas',
+                    'label' => 'Notas',
+                    'icon'  => '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>',
+                ],
+            ], 'tab-acoes', ['class' => 'painel-acoes-tabs']);
+            ?>
             <?php endif; ?>
 
             <div id="tab-acoes" class="tab-content ativo">
@@ -409,28 +414,36 @@ include '../templates/header.php';
                     );
                     ?>
                 <?php elseif ($is_encomenda_incompleta): ?>
-                    <div class="incomplete-order-notice">
-                        <strong>Encomenda a aguardar pagamento</strong>
-                        <p>Esta encomenda foi criada no checkout e reservou stock temporariamente, mas o cliente ainda não concluiu o pagamento. Não altere o estado manualmente.</p>
-                    </div>
+                    <?php
+                    echo ui_alert(
+                        'Encomenda a aguardar pagamento: esta encomenda foi criada no checkout e reservou stock temporariamente, mas o cliente ainda não concluiu o pagamento. Não altere o estado manualmente.',
+                        'warning',
+                        ['class' => 'order-incomplete-alert']
+                    );
+                    ?>
                     <div class="zona-perigo">
                         <?php echo ui_button('Cancelar e Repor Stock', ['id' => 'btn-eliminar-incompleta', 'variant' => 'danger', 'style' => 'width: 100%; margin-bottom: 10px;']); ?>
                         <p>Repõe as unidades reservadas no stock e elimina esta encomenda incompleta.</p>
                     </div>
                 <?php else: ?>
-                    <div class="form-group">
-                        <label for="select-estado">Alterar Estado da Encomenda</label>
-                        <?php
-                        $opcoes_estado_detalhe = [];
-                        foreach ($estados_permitidos_para_esta_encomenda as $estado) {
-                            $opcoes_estado_detalhe[$estado] = $map_nomes[$estado] ?? ucfirst($estado);
-                        }
-                        echo ui_select('', $opcoes_estado_detalhe, $encomenda['estado'], ['id' => 'select-estado']);
-                        ?>
-                    </div>
-                    <div id="campos-contexto-tracking" class="form-group" style="display:none;">
-                        <label for="codigo_tracking">Código de Tracking (Opcional)</label>
-                        <?php echo ui_input('', ['id' => 'codigo_tracking', 'class' => 'qe-in', 'placeholder' => 'Ex: PT123456789PT', 'value' => $encomenda['codigo_tracking'] ?? '']); ?>
+                    <?php
+                    $opcoes_estado_detalhe = [];
+                    foreach ($estados_permitidos_para_esta_encomenda as $estado) {
+                        $opcoes_estado_detalhe[$estado] = $map_nomes[$estado] ?? ucfirst($estado);
+                    }
+                    echo ui_field('', 'Alterar Estado da Encomenda', [
+                        'type'    => 'select',
+                        'id'      => 'select-estado',
+                        'options' => $opcoes_estado_detalhe,
+                        'value'   => $encomenda['estado'],
+                    ]);
+                    ?>
+                    <div id="campos-contexto-tracking" style="display:none;">
+                        <?php echo ui_field('', 'Código de Tracking (Opcional)', [
+                            'id'          => 'codigo_tracking',
+                            'placeholder' => 'Ex: PT123456789PT',
+                            'value'       => $encomenda['codigo_tracking'] ?? '',
+                        ]); ?>
                     </div>
                     <?php echo ui_button('Guardar Alterações', ['id' => 'btn-atualizar-estado', 'variant' => 'primary', 'style' => 'width: 100%;']); ?>
                     <?php if (in_array($encomenda['estado'], ['pendente', 'pago'])): ?>
@@ -450,23 +463,33 @@ include '../templates/header.php';
 
             <?php if (!$is_encomenda_incompleta): ?>
             <div id="tab-comunicar" class="tab-content">
-                <div class="form-group">
-                    <label for="email-assunto">Assunto do Email</label>
-                    <?php echo ui_input('', ['id' => 'email-assunto', 'class' => 'qe-in', 'placeholder' => 'Assunto da sua mensagem']); ?>
-                </div>
-                <div class="form-group">
-                    <label for="email-mensagem">Mensagem para o Cliente</label>
-                    <?php echo ui_textarea('', '', ['id' => 'email-mensagem', 'class' => 'qe-in auto-resize-textarea', 'rows' => 6, 'placeholder' => 'Escreva aqui a sua mensagem...']); ?>
-                </div>
-                <?php echo ui_button('Enviar Email', ['id' => 'btn-enviar-email', 'variant' => 'primary', 'style' => 'width: 100%;']); ?>
+                <?php
+                echo ui_field('', 'Assunto do Email', [
+                    'id'          => 'email-assunto',
+                    'placeholder' => 'Assunto da sua mensagem',
+                ]);
+                echo ui_field('', 'Mensagem para o Cliente', [
+                    'type'          => 'textarea',
+                    'id'            => 'email-mensagem',
+                    'control_class' => 'auto-resize-textarea',
+                    'rows'          => 6,
+                    'placeholder'   => 'Escreva aqui a sua mensagem...',
+                ]);
+                echo ui_button('Enviar Email', ['id' => 'btn-enviar-email', 'variant' => 'primary', 'style' => 'width: 100%;']);
+                ?>
             </div>
 
             <div id="tab-notas" class="tab-content">
-                <div class="form-group">
-                    <label for="notas-internas">Notas internas (apenas visível para si)</label>
-                    <?php echo ui_textarea('', (string)($encomenda['notas_internas'] ?? ''), ['id' => 'notas-internas', 'class' => 'qe-in auto-resize-textarea', 'rows' => 6]); ?>
-                </div>
-                <?php echo ui_button('Guardar Notas', ['id' => 'btn-guardar-notas', 'variant' => 'default', 'style' => 'width: 100%;']); ?>
+                <?php
+                echo ui_field('', 'Notas internas (apenas visível para si)', [
+                    'type'          => 'textarea',
+                    'id'            => 'notas-internas',
+                    'value'         => (string)($encomenda['notas_internas'] ?? ''),
+                    'control_class' => 'auto-resize-textarea',
+                    'rows'          => 6,
+                ]);
+                echo ui_button('Guardar Notas', ['id' => 'btn-guardar-notas', 'variant' => 'default', 'style' => 'width: 100%;']);
+                ?>
             </div>
             <?php endif; ?>
             <?php echo ui_card(ob_get_clean(), ['variant' => 'form', 'class' => 'order-actions-card', 'body_style' => 'padding: 0;']); ?>
@@ -480,15 +503,15 @@ include '../templates/header.php';
         <p id="modal-subtitulo">A alterar estado para: <strong id="modal-novo-estado-texto"></strong></p>
 
         <div class="qe-body">
-            <div class="qe-f">
-                <label for="modal-assunto">Assunto do Email</label>
-                <?php echo ui_input('', ['id' => 'modal-assunto', 'class' => 'qe-in']); ?>
-            </div>
-
-            <div class="qe-f">
-                <label for="modal-mensagem">Mensagem a enviar (pode editar)</label>
-                <?php echo ui_textarea('', '', ['id' => 'modal-mensagem', 'class' => 'qe-in auto-resize-textarea', 'rows' => 6]); ?>
-            </div>
+            <?php
+            echo ui_field('', 'Assunto do Email', ['id' => 'modal-assunto']);
+            echo ui_field('', 'Mensagem a enviar (pode editar)', [
+                'type'          => 'textarea',
+                'id'            => 'modal-mensagem',
+                'control_class' => 'auto-resize-textarea',
+                'rows'          => 6,
+            ]);
+            ?>
         </div>
 
         <div class="modal-confirmacao-acoes">
@@ -741,13 +764,18 @@ document.addEventListener('DOMContentLoaded', function() {
         autoResizeTextarea.call(t);
     });
 
-    document.querySelectorAll('.tab-link').forEach(link => {
+    document.querySelectorAll('.painel-acoes-tabs .ui-tab').forEach(link => {
         link.addEventListener('click', () => {
             const tabId = link.dataset.tab;
-            document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('ativo'));
+            document.querySelectorAll('.painel-acoes-tabs .ui-tab').forEach(l => {
+                l.classList.remove('is-active', 'active');
+                l.setAttribute('aria-selected', 'false');
+            });
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('ativo'));
-            link.classList.add('ativo');
+            link.classList.add('is-active', 'active');
+            link.setAttribute('aria-selected', 'true');
             const activeTab = document.getElementById(tabId);
+            if (!activeTab) return;
             activeTab.classList.add('ativo');
             const textarea = activeTab.querySelector('.auto-resize-textarea');
             if (textarea) autoResizeTextarea.call(textarea);

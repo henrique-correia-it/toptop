@@ -58,6 +58,6 @@ if ($has_scope_col && ($row['scope'] ?? '') !== 'loja') {
 }
 
 echo json_encode([
-    'subject' => $row['subject'],
-    'body' => $row['body'],
+    'assunto' => $row['subject'],
+    'corpo'   => $row['body'],
 ]);
